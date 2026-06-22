@@ -55,5 +55,6 @@ func NewRootCmd() *cobra.Command {
 		newWhoamiCmd(),
 		newAPICmd(),
 	)
+	registerGeneratedCommands(root)
 	return root
 }
