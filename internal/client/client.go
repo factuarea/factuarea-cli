@@ -7,7 +7,10 @@ import (
 	"encoding/hex"
 	"io"
 	"math"
+	"mime/multipart"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -86,6 +89,9 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 		if c.apiVersion != "" {
 			req.Header.Set("Factuarea-Version", c.apiVersion)
 		}
+		// extraHeaders se aplica al final, así que un Content-Type explícito
+		// (p.ej. el boundary de multipart) gana sobre el application/json por
+		// defecto. Igual con una Idempotency-Key explícita.
 		for k, v := range extraHeaders {
 			req.Header.Set(k, v)
 		}
@@ -153,4 +159,45 @@ func newIdempotencyKey() string {
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)
 	return "cli_" + hex.EncodeToString(b)
+}
+
+// MultipartBody arma un cuerpo multipart/form-data real (no base64) con campos
+// de texto y ficheros leídos de disco. El nombre del fichero subido es su
+// basename. Devuelve el body y el Content-Type con boundary, listo para pasarse
+// a Do vía extraHeaders["Content-Type"].
+func MultipartBody(fields, files map[string]string) (body []byte, contentType string, err error) {
+	var buf bytes.Buffer
+	mw := multipart.NewWriter(&buf)
+	for k, v := range fields {
+		if err := mw.WriteField(k, v); err != nil {
+			return nil, "", err
+		}
+	}
+	for field, path := range files {
+		if err := writeFormFile(mw, field, path); err != nil {
+			return nil, "", err
+		}
+	}
+	if err := mw.Close(); err != nil {
+		return nil, "", err
+	}
+	return buf.Bytes(), mw.FormDataContentType(), nil
+}
+
+// writeFormFile copia un fichero de disco al writer multipart, garantizando el
+// cierre del descriptor aunque falle a media escritura.
+func writeFormFile(mw *multipart.Writer, field, path string) error {
+	f, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	w, err := mw.CreateFormFile(field, filepath.Base(path))
+	if err != nil {
+		return err
+	}
+	if _, err := io.Copy(w, f); err != nil {
+		return err
+	}
+	return nil
 }
