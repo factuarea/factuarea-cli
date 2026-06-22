@@ -75,6 +75,10 @@ homebrew_casks:
       fish: completions/factuarea.fish
     manpages:
       - manpages/*.1
+    hooks:
+      post:
+        install: |
+          system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/factuarea"], must_succeed: false
 
 release:
   github:

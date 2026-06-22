@@ -42,7 +42,13 @@ func main() {
 		log.Fatal(err)
 	}
 	hdr := &doc.GenManHeader{Title: "FACTUAREA", Section: "1"}
-	if err := doc.GenManTree(root, hdr, "manpages"); err != nil {
+	man, err := os.Create("manpages/factuarea.1")
+	if err != nil {
 		log.Fatal(err)
 	}
+	if err := doc.GenMan(root, hdr, man); err != nil {
+		man.Close()
+		log.Fatal(err)
+	}
+	man.Close()
 }
