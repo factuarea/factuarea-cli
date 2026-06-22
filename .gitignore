@@ -5,3 +5,5 @@ dist/
 .DS_Store
 /completions/
 /manpages/
+npm/dist-packages/
+npm/node_modules/
