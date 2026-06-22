@@ -88,7 +88,7 @@ func createInvoice(ctx context.Context, c *client.Client, ov map[string]string) 
 		"issued_on": time.Now().Format("2006-01-02"),
 		"due_on":    time.Now().AddDate(0, 0, 30).Format("2006-01-02"),
 		"lines": []map[string]any{{
-			"description": "Servicio de prueba (trigger)",
+			"description": orDefault(ov, "description", "Servicio de prueba (trigger)"),
 			"quantity":    1,
 			"unit_price":  100,
 			"tax_rate_id": taxID,
@@ -119,7 +119,7 @@ func createQuote(ctx context.Context, c *client.Client, ov map[string]string) (s
 		"issued_on": time.Now().Format("2006-01-02"),
 		"due_on":    time.Now().AddDate(0, 0, 30).Format("2006-01-02"),
 		"lines": []map[string]any{{
-			"description": "Servicio de prueba (trigger)",
+			"description": orDefault(ov, "description", "Servicio de prueba (trigger)"),
 			"quantity":    1,
 			"unit_price":  100,
 			"tax_rate_id": taxID,
