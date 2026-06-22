@@ -90,6 +90,9 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 
 		httpResp, err := c.hc.Do(req)
 		if err != nil {
+			if ctx.Err() != nil {
+				return nil, &apierr.TransportError{Err: ctx.Err()}
+			}
 			lastErr = &apierr.TransportError{Err: err}
 			if attempt < c.maxRetries {
 				c.sleep(backoff(attempt))
