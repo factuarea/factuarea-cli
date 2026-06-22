@@ -82,3 +82,5 @@ release:
     name: factuarea-cli
   draft: false
   prerelease: auto
+  extra_files:
+    - glob: ./install.sh
