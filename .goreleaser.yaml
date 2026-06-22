@@ -62,6 +62,8 @@ homebrew_casks:
   - repository:
       owner: factuarea
       name: homebrew-tap
+      # PAT con push al tap (no el GITHUB_TOKEN, que solo cubre este repo).
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     homepage: "https://factuarea.com"
     description: "CLI oficial de Factuarea para la API pública v1"
     license: "MIT"
