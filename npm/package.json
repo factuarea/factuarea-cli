@@ -1,0 +1,16 @@
+{
+  "name": "@factuarea/cli",
+  "version": "0.0.0",
+  "description": "CLI oficial de Factuarea para la API pública v1",
+  "license": "MIT",
+  "bin": { "factuarea": "bin/factuarea.js" },
+  "files": ["bin/factuarea.js"],
+  "optionalDependencies": {
+    "@factuarea/cli-darwin-arm64": "0.0.0",
+    "@factuarea/cli-darwin-x64": "0.0.0",
+    "@factuarea/cli-linux-arm64": "0.0.0",
+    "@factuarea/cli-linux-x64": "0.0.0",
+    "@factuarea/cli-win32-x64": "0.0.0"
+  },
+  "engines": { "node": ">=20" }
+}
