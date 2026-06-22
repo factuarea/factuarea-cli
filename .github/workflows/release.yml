@@ -15,15 +15,13 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: write # crear el release y subir assets
-  id-token: write # OIDC para cosign keyless (firma sin claves)
-  packages: write
-
 jobs:
   goreleaser:
     name: goreleaser
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # crear el release y subir assets
+      id-token: write # OIDC para cosign keyless (firma sin claves)
     steps:
       - uses: actions/checkout@v4
         with:
@@ -60,6 +58,9 @@ jobs:
     name: npm publish
     needs: goreleaser
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # provenance (Sigstore) en npm publish
+      contents: read # checkout
     steps:
       - uses: actions/checkout@v4
 
@@ -81,14 +82,15 @@ jobs:
 
       - name: Publish platform packages
         # Primero los paquetes por plataforma (optionalDependencies del principal),
-        # luego el paquete principal @factuarea/cli.
+        # luego el paquete principal @factuarea/cli. --provenance firma con Sigstore
+        # (requiere id-token: write + NPM_TOKEN automation token).
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           set -euo pipefail
           for pkg in npm/dist-packages/*/; do
             echo "publishing $pkg"
-            npm publish "$pkg" --access public
+            npm publish "$pkg" --provenance --access public
           done
           echo "publishing main package npm/"
-          npm publish ./npm --access public
+          npm publish ./npm --provenance --access public
