@@ -4,5 +4,5 @@ package buildinfo
 var (
 	Version  = "dev"
 	Commit   = "none"
-	SpecHash = "unknown" // hash del openapi.json embebido (lo fija el Plan 2)
+	SpecHash = "unknown" // SpecHash: ya no se usa; el hash real se deriva del spec embebido vía spec.Hash()
 )
