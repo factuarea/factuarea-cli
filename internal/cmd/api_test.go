@@ -42,7 +42,6 @@ func TestAPICommandLiveGuardBlocksMutation(t *testing.T) {
 	var out bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&out)
-	// POST en live sin --live debe fallar ANTES de cualquier red.
 	root.SetArgs([]string{"api", "post", "/v1/invoices", "-d", "{}"})
 	err := root.Execute()
 	if err == nil || !strings.Contains(err.Error(), "LIVE") {

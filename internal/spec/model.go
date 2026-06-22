@@ -1,13 +1,9 @@
 package spec
 
-// Operation es la representación que el CLI consume de una operación del spec:
-// el operationId resuelto (grupos + acción), sus parámetros, su body y, si la
-// respuesta es binaria, su content-type. El generador (Task 4) emite la tabla de
-// comandos a partir de este modelo.
 type Operation struct {
 	OperationID    string
-	Method         string // GET, POST, PUT, PATCH, DELETE
-	Path           string // /invoices/{invoice}
+	Method         string
+	Path           string
 	Groups         []string
 	Action         string
 	Summary        string
@@ -18,27 +14,22 @@ type Operation struct {
 	BinaryResponse *BinaryResponse
 }
 
-// Param es un parámetro de path o query.
 type Param struct {
 	Name        string
-	In          string // path | query
+	In          string
 	Required    bool
 	Type        string
 	Description string
 }
 
-// Body describe el cuerpo de la petición: json (con un example serializado) o
-// multipart (con los nombres de los campos binarios a subir como fichero).
 type Body struct {
-	Kind       string   // "json" | "multipart"
-	Example    string   // JSON example (solo json)
-	FileFields []string // campos binarios (solo multipart)
+	Kind       string
+	Example    string
+	FileFields []string
 }
 
-// BinaryResponse marca una operación cuya respuesta 200 es un binario (PDF, etc.).
 type BinaryResponse struct{ ContentType string }
 
-// Mutating indica si la operación modifica estado (todo lo que no es GET).
 func (o Operation) Mutating() bool {
 	switch o.Method {
 	case "POST", "PUT", "PATCH", "DELETE":
@@ -47,7 +38,6 @@ func (o Operation) Mutating() bool {
 	return false
 }
 
-// Paginated indica si la operación pagina por cursor (query param starting_after).
 func (o Operation) Paginated() bool {
 	for _, p := range o.QueryParams {
 		if p.Name == "starting_after" {

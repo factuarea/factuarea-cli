@@ -15,8 +15,6 @@ const (
 	Plain
 )
 
-// ResolveFormat: flag explícito > autodetección TTY. --json y --plain son
-// mutuamente excluyentes. Sin flags: Human en TTY, JSON fuera de TTY.
 func ResolveFormat(jsonFlag, plainFlag, isTTY bool) (Format, error) {
 	if jsonFlag && plainFlag {
 		return Human, &apierr.UsageError{Err: errors.New("--json y --plain son mutuamente excluyentes")}

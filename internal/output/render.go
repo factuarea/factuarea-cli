@@ -9,9 +9,6 @@ import (
 	"github.com/factuarea/factuarea-cli/internal/apierr"
 )
 
-// PrintBody vuelca el cuerpo de respuesta. En JSON/Plain se emite crudo (es el
-// body exacto de la API). En Human, por ahora también crudo; el render de
-// tablas se añade en el Plan 2 sobre el spec.
 func PrintBody(w io.Writer, body []byte, f Format) error {
 	_, err := w.Write(body)
 	if len(body) > 0 && body[len(body)-1] != '\n' {
@@ -20,8 +17,6 @@ func PrintBody(w io.Writer, body []byte, f Format) error {
 	return err
 }
 
-// PrintError escribe el error a stderr: JSON estructurado bajo --json, legible
-// en humano. Mantiene el shape del backend.
 func PrintError(stderr io.Writer, err error, f Format) {
 	var api *apierr.APIError
 	if errors.As(err, &api) {

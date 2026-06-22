@@ -22,7 +22,6 @@ func TestMultipartBody(t *testing.T) {
 	if !strings.Contains(string(body), "certificate_password") || !strings.Contains(string(body), "BINARY") {
 		t.Fatal("multipart no contiene campo/archivo")
 	}
-	// El nombre del fichero subido debe ser el basename, no la ruta completa.
 	if !strings.Contains(string(body), `filename="cert.p12"`) {
 		t.Fatalf("filename no es el basename: %s", body)
 	}
@@ -35,8 +34,6 @@ func TestMultipartBodyMissingFileFails(t *testing.T) {
 	}
 }
 
-// TestDoRespectsExplicitContentType comprueba que un Content-Type explícito en
-// extraHeaders (multipart) NO se pisa por el application/json por defecto.
 func TestDoRespectsExplicitContentType(t *testing.T) {
 	const wantCT = "multipart/form-data; boundary=abc123"
 	c, _ := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
@@ -55,8 +52,6 @@ func TestDoRespectsExplicitContentType(t *testing.T) {
 	}
 }
 
-// TestDoRespectsExplicitIdempotencyKey comprueba que una Idempotency-Key
-// explícita en extraHeaders gana sobre la autogenerada.
 func TestDoRespectsExplicitIdempotencyKey(t *testing.T) {
 	const wantKey = "my-explicit-key"
 	c, _ := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {

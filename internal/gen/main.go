@@ -1,9 +1,5 @@
 //go:build ignore
 
-// Binario del generador. Ejecuta gen.Generate(), escribe la tabla en
-// internal/cmd/resources_gen.go (ruta relativa a la raíz del repo, así que
-// córrelo desde la raíz: `go run internal/gen/main.go`) y logea a stderr los
-// operationIds NO conformes que se omitieron de la tabla. NUNCA los silencia.
 package main
 
 import (

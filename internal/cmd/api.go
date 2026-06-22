@@ -28,7 +28,6 @@ func newAPICmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// El guard --live se hereda para métodos mutadores.
 			if isMutating(method) {
 				if err := safety.RequireLive(cc.res.Environment, g.Live); err != nil {
 					return err

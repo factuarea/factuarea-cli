@@ -8,12 +8,8 @@ import (
 	"github.com/factuarea/factuarea-cli/internal/apierr"
 )
 
-// parseError construye un APIError. Si el cuerpo es JSON con sobre {"error":{...}}
-// se usa tal cual; si no (kill-switch 503, 5xx sin body, HTML de proxy), se
-// sintetiza el type a partir del status code para que el exit code sea correcto.
 func parseError(resp *Response) error {
 	if strings.Contains(resp.ContentType, "json") {
-		// doc_url / request_id vienen en snake_case en el JSON:
 		var raw struct {
 			Error map[string]any `json:"error"`
 		}

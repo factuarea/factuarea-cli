@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// cliContext resuelve credenciales, cliente y formato a partir de los flags.
 type cliContext struct {
 	res    config.Resolution
 	client *client.Client
@@ -18,7 +17,7 @@ type cliContext struct {
 	g      *GlobalFlags
 }
 
-const envBaseURL = "FACTUAREA_BASE_URL" // override para tests/staging
+const envBaseURL = "FACTUAREA_BASE_URL"
 
 func newCLIContext(g *GlobalFlags, stdinKey string) (*cliContext, error) {
 	store, _ := config.NewStore()
@@ -45,7 +44,6 @@ func newCLIContext(g *GlobalFlags, stdinKey string) (*cliContext, error) {
 	}, nil
 }
 
-// globalsFrom recupera el puntero a GlobalFlags guardado por NewRootCmd.
 func globalsFrom(cmd *cobra.Command) *GlobalFlags {
 	if g, ok := cmd.Context().Value(globalsKey{}).(*GlobalFlags); ok && g != nil {
 		return g
@@ -55,9 +53,6 @@ func globalsFrom(cmd *cobra.Command) *GlobalFlags {
 
 type globalsKey struct{}
 
-// AlreadyReported envuelve un error cuyo mensaje YA se imprimió (vía
-// output.PrintError). main.go lo detecta para no imprimirlo dos veces, pero
-// exit.ForError sigue derivando el código correcto a través de Unwrap.
 type AlreadyReported struct{ Err error }
 
 func (e *AlreadyReported) Error() string { return e.Err.Error() }

@@ -10,22 +10,6 @@ import (
 	"time"
 )
 
-// TestSpecOperationParity es un drift-guard OPT-IN: solo corre con
-// FACTUAREA_CHECK_DRIFT=1. El objetivo es cazar "el binario distribuido NO
-// conoce endpoints nuevos de la API" — un problema real para un CLI que se
-// distribuye compilado.
-//
-// Compara el CONJUNTO de operationIds (no el hash byte-a-byte), porque el spec
-// embebido es de develop y puede diferir byte-a-byte del de producción (orden
-// de ejemplos, etc.) sin que falte ningún comando. Comparar el set tolera ese
-// skew y solo señala lo que de verdad importa: operationIds que el spec vivo
-// expone y el embebido NO tiene (= el CLI va por detrás de la API).
-//
-// Direccionalidad:
-//   - vivo ⊄ embebido (faltan en el embebido)  → FALLA (regenerar el CLI).
-//   - embebido ⊋ vivo  (develop adelantado a prod) → NO falla, solo informa.
-//
-// Sin red → t.Skip (no ensucia el pipeline offline).
 func TestSpecOperationParity(t *testing.T) {
 	if os.Getenv("FACTUAREA_CHECK_DRIFT") != "1" {
 		t.Skip("drift-guard opt-in: exporta FACTUAREA_CHECK_DRIFT=1 para activarlo")
@@ -46,13 +30,13 @@ func TestSpecOperationParity(t *testing.T) {
 
 	embedded := embeddedOperationIDs(t)
 
-	var missing []string // en el vivo pero NO en el embebido → CLI por detrás
+	var missing []string
 	for id := range live {
 		if _, ok := embedded[id]; !ok {
 			missing = append(missing, id)
 		}
 	}
-	var extra []string // en el embebido pero NO en el vivo → develop adelantado
+	var extra []string
 	for id := range embedded {
 		if _, ok := live[id]; !ok {
 			extra = append(extra, id)
@@ -73,8 +57,6 @@ func TestSpecOperationParity(t *testing.T) {
 	}
 }
 
-// fetchOperationIDs baja el spec vivo y extrae el conjunto de operationIds de
-// paths.*.{get,post,put,patch,delete}.operationId.
 func fetchOperationIDs(url string) (map[string]struct{}, error) {
 	httpClient := &http.Client{Timeout: 30 * time.Second}
 	resp, err := httpClient.Get(url)
@@ -92,14 +74,12 @@ func fetchOperationIDs(url string) (map[string]struct{}, error) {
 	return parseOperationIDs(body)
 }
 
-// httpStatusError reporta un código HTTP no-200 del spec vivo.
 type httpStatusError struct{ code int }
 
 func (e *httpStatusError) Error() string {
 	return "estado HTTP inesperado: " + http.StatusText(e.code)
 }
 
-// minimalSpec es la vista mínima del OpenAPI necesaria para extraer operationIds.
 type minimalSpec struct {
 	Paths map[string]map[string]struct {
 		OperationID string `json:"operationId"`
@@ -110,7 +90,6 @@ var httpMethods = map[string]struct{}{
 	"get": {}, "post": {}, "put": {}, "patch": {}, "delete": {},
 }
 
-// parseOperationIDs extrae el conjunto de operationIds de un documento OpenAPI.
 func parseOperationIDs(raw []byte) (map[string]struct{}, error) {
 	var doc minimalSpec
 	if err := json.Unmarshal(raw, &doc); err != nil {
@@ -130,9 +109,6 @@ func parseOperationIDs(raw []byte) (map[string]struct{}, error) {
 	return ids, nil
 }
 
-// embeddedOperationIDs devuelve el conjunto COMPLETO de operationIds del spec
-// embebido: Load() da las operaciones conformes y nonConforming las que no
-// resuelven a un comando; la unión cubre todo lo que el spec embebido declara.
 func embeddedOperationIDs(t *testing.T) map[string]struct{} {
 	t.Helper()
 	ops, nonConforming, err := Load()

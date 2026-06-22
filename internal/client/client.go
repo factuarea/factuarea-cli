@@ -36,8 +36,6 @@ func WithHTTPClient(hc *http.Client) Option { return func(c *Client) { c.hc = hc
 func WithMaxRetries(n int) Option           { return func(c *Client) { c.maxRetries = n } }
 func WithAPIVersion(v string) Option        { return func(c *Client) { c.apiVersion = v } }
 
-// WithSleep inyecta la función de espera entre reintentos. Los tests la
-// stubean con un no-op para que el backoff no duerma de verdad.
 func WithSleep(fn func(time.Duration)) Option { return func(c *Client) { c.sleep = fn } }
 
 func New(apiKey string, opts ...Option) *Client {
@@ -62,9 +60,6 @@ type Response struct {
 	RequestID   string
 }
 
-// Do ejecuta una petición. body puede ser nil. extraHeaders sobreescribe los
-// por defecto (p.ej. una Idempotency-Key explícita). Reintenta 429/5xx con
-// backoff respetando Retry-After.
 func (c *Client) Do(ctx context.Context, method, path string, body []byte, extraHeaders map[string]string) (*Response, error) {
 	url := c.baseURL + path
 	idempotencyKey := extraHeaders["Idempotency-Key"]
@@ -89,9 +84,6 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 		if c.apiVersion != "" {
 			req.Header.Set("Factuarea-Version", c.apiVersion)
 		}
-		// extraHeaders se aplica al final, así que un Content-Type explícito
-		// (p.ej. el boundary de multipart) gana sobre el application/json por
-		// defecto. Igual con una Idempotency-Key explícita.
 		for k, v := range extraHeaders {
 			req.Header.Set(k, v)
 		}
@@ -141,8 +133,6 @@ func isRetryable(status int) bool {
 }
 
 func backoff(attempt int) time.Duration {
-	// 200ms, 400ms, 800ms... Los tests inyectan WithSleep (no-op) para no esperar;
-	// se puede añadir jitter real en producción sin afectar a la lógica de reintento.
 	return time.Duration(math.Pow(2, float64(attempt))) * 200 * time.Millisecond
 }
 
@@ -161,10 +151,6 @@ func newIdempotencyKey() string {
 	return "cli_" + hex.EncodeToString(b)
 }
 
-// MultipartBody arma un cuerpo multipart/form-data real (no base64) con campos
-// de texto y ficheros leídos de disco. El nombre del fichero subido es su
-// basename. Devuelve el body y el Content-Type con boundary, listo para pasarse
-// a Do vía extraHeaders["Content-Type"].
 func MultipartBody(fields, files map[string]string) (body []byte, contentType string, err error) {
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
@@ -184,8 +170,6 @@ func MultipartBody(fields, files map[string]string) (body []byte, contentType st
 	return buf.Bytes(), mw.FormDataContentType(), nil
 }
 
-// writeFormFile copia un fichero de disco al writer multipart, garantizando el
-// cierre del descriptor aunque falle a media escritura.
 func writeFormFile(mw *multipart.Writer, field, path string) error {
 	f, err := os.Open(path)
 	if err != nil {

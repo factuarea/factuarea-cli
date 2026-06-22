@@ -13,11 +13,6 @@ type pageEnvelope struct {
 	NextCursor *string           `json:"next_cursor"`
 }
 
-// Paginate itera todas las páginas de un listado cursor, invocando each por
-// objeto de data. Sigue el cursor mientras has_more sea true y next_cursor no
-// esté vacío. Degrada a una sola página si la respuesta no trae has_more/
-// next_cursor (catálogos enum como /v1/taxes/active devuelven {data:[...]} sin
-// cursor). Propaga el error de Do o de each.
 func (c *Client) Paginate(ctx context.Context, path string, query url.Values, each func(item json.RawMessage) error) error {
 	for {
 		u := path

@@ -7,9 +7,6 @@ import (
 	"github.com/factuarea/factuarea-cli/internal/apierr"
 )
 
-// RequireLive exige el flag --live para operaciones mutadoras en entorno live.
-// Fail-closed: cualquier entorno distinto de "test" (incluido "unknown") exige
-// --live, para que una key con prefijo desconocido nunca mute sin confirmación.
 func RequireLive(environment string, liveFlag bool) error {
 	if environment == "test" || liveFlag {
 		return nil
@@ -20,7 +17,6 @@ func RequireLive(environment string, liveFlag bool) error {
 	return apierr.Usagef("entorno de la API desconocido (%q): revisa tu API key o añade --live para operar", environment)
 }
 
-// RequireSandbox exige entorno sandbox (key fact_test_). Lo usa `trigger`.
 func RequireSandbox(environment string) error {
 	if environment != "test" {
 		return apierr.Usagef("este comando solo funciona en sandbox: usa una key fact_test_ (entorno actual: %s)", environment)
@@ -28,8 +24,6 @@ func RequireSandbox(environment string) error {
 	return nil
 }
 
-// Confirm exige confirmación tipada del id exacto para operaciones irreversibles.
-// Nunca bloquea esperando stdin: si no es TTY o es --no-input, falla de inmediato.
 func Confirm(resourceID, confirmFlag string, isTTY, noInput bool, prompt func(string) (string, error)) error {
 	if confirmFlag != "" {
 		if confirmFlag == resourceID {

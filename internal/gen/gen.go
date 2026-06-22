@@ -1,7 +1,3 @@
-// Package gen es el generador build-time del CLI: parsea el spec embebido (vía
-// spec.Load), emite la tabla de datos compacta []genOp y la devuelve gofmt-eada.
-// El builder de runtime (Task 6) consume generatedOps() para construir cada
-// comando Cobra sin reparsear el spec en cada arranque.
 package gen
 
 import (
@@ -13,9 +9,6 @@ import (
 	"github.com/factuarea/factuarea-cli/internal/spec"
 )
 
-// Generate parsea el spec embebido y devuelve el contenido de resources_gen.go,
-// la lista de operationIds NO conformes (omitidos de la tabla, que el llamador
-// DEBE logear — nunca silenciar) y un error solo si el parseo o el gofmt fallan.
 func Generate() (src []byte, nonConforming []string, err error) {
 	ops, nonConforming, err := spec.Load()
 	if err != nil {
