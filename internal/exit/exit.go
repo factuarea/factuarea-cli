@@ -51,5 +51,9 @@ func ForError(err error) int {
 	if errors.As(err, &transport) {
 		return Network
 	}
+	var usage *apierr.UsageError
+	if errors.As(err, &usage) {
+		return Usage
+	}
 	return CLIBug
 }
