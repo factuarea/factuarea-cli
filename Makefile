@@ -15,8 +15,8 @@ run:
 	go run ./cmd/factuarea $(ARGS)
 generate:
 	curl -fsSL $(SPEC_URL) -o internal/spec/openapi.json
-	go generate ./...
+	go run internal/gen/main.go
 generate-dev:
 	docker exec factuarea-backend php artisan scramble:export --api=public-api --path=/tmp/openapi.json
 	docker cp factuarea-backend:/tmp/openapi.json internal/spec/openapi.json
-	go generate ./...
+	go run internal/gen/main.go
