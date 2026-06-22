@@ -3,6 +3,7 @@ package cmd
 import (
 	"os"
 
+	"github.com/factuarea/factuarea-cli/internal/apierr"
 	"github.com/factuarea/factuarea-cli/internal/client"
 	"github.com/factuarea/factuarea-cli/internal/config"
 	"github.com/factuarea/factuarea-cli/internal/output"
@@ -24,6 +25,9 @@ func newCLIContext(g *GlobalFlags, stdinKey string) (*cliContext, error) {
 	res, err := config.ResolveAPIKey(stdinKey, g.Profile, os.Getenv, store)
 	if err != nil {
 		return nil, err
+	}
+	if !config.ValidKeyFormat(res.APIKey) {
+		return nil, apierr.Usagef("la API key resuelta no tiene formato válido (se espera fact_test_… o fact_live_… de 24 caracteres). Ejecuta `factuarea login`.")
 	}
 	opts := []client.Option{}
 	if base := os.Getenv(envBaseURL); base != "" {
