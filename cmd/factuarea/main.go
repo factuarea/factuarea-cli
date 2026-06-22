@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -9,8 +10,12 @@ import (
 )
 
 func main() {
-	if err := cmd.NewRootCmd().Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-		os.Exit(exit.ForError(err)) // AlreadyReported lo maneja Task 8
+	root := cmd.NewRootCmd()
+	if err := root.Execute(); err != nil {
+		var silent *cmd.AlreadyReported
+		if !errors.As(err, &silent) {
+			fmt.Fprintln(os.Stderr, err.Error())
+		}
+		os.Exit(exit.ForError(err))
 	}
 }
