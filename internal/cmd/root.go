@@ -55,6 +55,7 @@ func NewRootCmd() *cobra.Command {
 		newListenCmd(),
 		newTriggerCmd(),
 		newCommandsCmd(),
+		newDocsCmd(),
 	)
 	registerGeneratedCommands(root)
 	return root
