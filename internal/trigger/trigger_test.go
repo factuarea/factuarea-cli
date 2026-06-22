@@ -56,6 +56,8 @@ func TestRunInvoicePaidOrchestration(t *testing.T) {
 			_, _ = w.Write([]byte(`{"data":[{"id":"tax_1"}]}`))
 		case r.Method == http.MethodPost && r.URL.Path == "/v1/invoices":
 			_, _ = w.Write([]byte(`{"data":{"id":"inv_1"}}`))
+		case r.Method == http.MethodPost && r.URL.Path == "/v1/invoices/inv_1/mark-sent":
+			_, _ = w.Write([]byte(`{"data":{"id":"inv_1","status":"sent"}}`))
 		case r.Method == http.MethodPost && r.URL.Path == "/v1/invoices/inv_1/mark-paid":
 			_, _ = w.Write([]byte(`{"data":{"id":"inv_1","status":"paid"}}`))
 		default:
@@ -73,12 +75,16 @@ func TestRunInvoicePaidOrchestration(t *testing.T) {
 	if createIdx < 0 {
 		t.Fatalf("falta POST /v1/invoices; calls=%v", calls)
 	}
+	sentIdx := indexOf(calls, "POST /v1/invoices/inv_1/mark-sent")
+	if sentIdx < 0 {
+		t.Fatalf("falta POST /v1/invoices/inv_1/mark-sent; calls=%v", calls)
+	}
 	payIdx := indexOf(calls, "POST /v1/invoices/inv_1/mark-paid")
 	if payIdx < 0 {
 		t.Fatalf("falta POST /v1/invoices/inv_1/mark-paid; calls=%v", calls)
 	}
-	if payIdx < createIdx {
-		t.Fatalf("mark-paid debe ir después de crear la factura; calls=%v", calls)
+	if !(createIdx < sentIdx && sentIdx < payIdx) {
+		t.Fatalf("orden esperado crear < mark-sent < mark-paid; calls=%v", calls)
 	}
 	for _, dep := range []string{"GET /v1/clients", "GET /v1/series", "GET /v1/taxes/active"} {
 		idx := indexOf(calls, dep)

@@ -38,13 +38,16 @@ func init() {
 		if err != nil {
 			return err
 		}
-		_, err = c.Do(ctx, http.MethodPost, "/v1/invoices/"+id+"/send", nil, nil)
+		_, err = c.Do(ctx, http.MethodPost, "/v1/invoices/"+id+"/mark-sent", nil, nil)
 		return err
 	}
 
 	registry["invoice.paid"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
 		id, err := createInvoice(ctx, c, ov)
 		if err != nil {
+			return err
+		}
+		if _, err = c.Do(ctx, http.MethodPost, "/v1/invoices/"+id+"/mark-sent", nil, nil); err != nil {
 			return err
 		}
 		_, err = c.Do(ctx, http.MethodPost, "/v1/invoices/"+id+"/mark-paid", nil, nil)
@@ -83,6 +86,7 @@ func createInvoice(ctx context.Context, c *client.Client, ov map[string]string) 
 		"client_id": clientID,
 		"series_id": seriesID,
 		"issued_on": time.Now().Format("2006-01-02"),
+		"due_on":    time.Now().AddDate(0, 0, 30).Format("2006-01-02"),
 		"lines": []map[string]any{{
 			"description": "Servicio de prueba (trigger)",
 			"quantity":    1,
@@ -113,6 +117,7 @@ func createQuote(ctx context.Context, c *client.Client, ov map[string]string) (s
 		"client_id": clientID,
 		"series_id": seriesID,
 		"issued_on": time.Now().Format("2006-01-02"),
+		"due_on":    time.Now().AddDate(0, 0, 30).Format("2006-01-02"),
 		"lines": []map[string]any{{
 			"description": "Servicio de prueba (trigger)",
 			"quantity":    1,
