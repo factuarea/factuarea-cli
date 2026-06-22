@@ -1,0 +1,82 @@
+version: 2
+
+project_name: factuarea
+
+before:
+  hooks:
+    - go mod tidy
+    - go run tools/gendocs/main.go
+
+builds:
+  - id: factuarea
+    main: ./cmd/factuarea
+    binary: factuarea
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/factuarea/factuarea-cli/internal/buildinfo.Version={{.Version}}
+      - -X github.com/factuarea/factuarea-cli/internal/buildinfo.Commit={{.ShortCommit}}
+
+archives:
+  - id: default
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    files:
+      - LICENSE
+      - README.md
+      - completions/*
+      - manpages/*
+
+checksum:
+  name_template: "checksums.txt"
+
+sboms:
+  - artifacts: archive
+
+signs:
+  - cmd: cosign
+    certificate: "${artifact}.pem"
+    args:
+      - sign-blob
+      - "--yes"
+      - "--output-signature=${signature}"
+      - "--output-certificate=${certificate}"
+      - "${artifact}"
+    artifacts: checksum
+    output: true
+
+homebrew_casks:
+  - repository:
+      owner: factuarea
+      name: homebrew-tap
+    homepage: "https://factuarea.com"
+    description: "CLI oficial de Factuarea para la API pública v1"
+    license: "MIT"
+    binaries:
+      - factuarea
+    completions:
+      bash: completions/factuarea.bash
+      zsh: completions/factuarea.zsh
+      fish: completions/factuarea.fish
+    manpages:
+      - manpages/*.1
+
+release:
+  github:
+    owner: factuarea
+    name: factuarea-cli
+  draft: false
+  prerelease: auto
