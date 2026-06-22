@@ -8,11 +8,16 @@ import (
 )
 
 // RequireLive exige el flag --live para operaciones mutadoras en entorno live.
+// Fail-closed: cualquier entorno distinto de "test" (incluido "unknown") exige
+// --live, para que una key con prefijo desconocido nunca mute sin confirmación.
 func RequireLive(environment string, liveFlag bool) error {
-	if environment == "live" && !liveFlag {
+	if environment == "test" || liveFlag {
+		return nil
+	}
+	if environment == "live" {
 		return apierr.Usagef("operación en entorno LIVE: añade --live para confirmar que NO es una prueba")
 	}
-	return nil
+	return apierr.Usagef("entorno de la API desconocido (%q): revisa tu API key o añade --live para operar", environment)
 }
 
 // RequireSandbox exige entorno sandbox (key fact_test_). Lo usa `trigger`.

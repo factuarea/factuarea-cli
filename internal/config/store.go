@@ -12,7 +12,9 @@ import (
 
 const keyringService = "factuarea-cli"
 
-var errNotFound = errors.New("credencial no encontrada")
+// ErrNotFound se devuelve cuando no hay credencial guardada para el profile.
+// Exportado para que los consumidores distingan "no logueado" con errors.Is.
+var ErrNotFound = errors.New("credencial no encontrada")
 
 // keyringStore guarda cada key en el keyring del SO bajo el servicio
 // "factuarea-cli" y la cuenta = nombre del profile.
@@ -21,7 +23,7 @@ type keyringStore struct{}
 func (keyringStore) GetKey(profile string) (string, error) {
 	k, err := keyring.Get(keyringService, profile)
 	if errors.Is(err, keyring.ErrNotFound) {
-		return "", errNotFound
+		return "", ErrNotFound
 	}
 	return k, err
 }
@@ -119,7 +121,7 @@ func (s *fileStore) GetKey(profile string) (string, error) {
 	}
 	e, ok := doc.Profiles[profile]
 	if !ok || e.APIKey == "" {
-		return "", errNotFound
+		return "", ErrNotFound
 	}
 	return e.APIKey, nil
 }

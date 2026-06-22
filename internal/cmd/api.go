@@ -16,7 +16,7 @@ func newAPICmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "api <get|post|put|delete> <path>",
 		Short: "Llamada genérica a la API v1 (escape hatch)",
-		Args:  cobra.ExactArgs(2),
+		Args:  UsageArgs(cobra.ExactArgs(2)),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			g := globalsFrom(cmd)
 			method := strings.ToUpper(args[0])

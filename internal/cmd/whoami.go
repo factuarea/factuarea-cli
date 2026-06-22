@@ -25,7 +25,8 @@ func newWhoamiCmd() *cobra.Command {
 				return &AlreadyReported{Err: err}
 			}
 			// Banner de entorno a stderr (humano); el body de account a stdout.
-			if cc.format == output.Human {
+			// --quiet lo silencia (es informativo, no un aviso de seguridad).
+			if cc.format == output.Human && !g.Quiet {
 				fmt.Fprintf(cmd.ErrOrStderr(), "[%s] perfil %q (key %s)\n",
 					upper(cc.res.Environment), cc.res.Profile, config.RedactKey(cc.res.APIKey))
 			}

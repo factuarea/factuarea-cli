@@ -47,7 +47,11 @@ func newLoginCmd() *cobra.Command {
 				return err
 			}
 			env := config.Environment(key)
-			fmt.Fprintf(cmd.ErrOrStderr(), "✓ Sesión guardada (perfil %q, entorno %s).\n", profile, strings.ToUpper(env))
+			// La línea de éxito es informativa: --quiet la silencia. Los avisos de
+			// seguridad (key LIVE, fallback de keyring) se muestran SIEMPRE.
+			if !g.Quiet {
+				fmt.Fprintf(cmd.ErrOrStderr(), "✓ Sesión guardada (perfil %q, entorno %s).\n", profile, strings.ToUpper(env))
+			}
 			if env == "live" {
 				fmt.Fprintln(cmd.ErrOrStderr(), "⚠ ATENCIÓN: esta es una key LIVE. Las operaciones mutadoras afectarán datos reales y AEAT.")
 			}

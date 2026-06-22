@@ -35,6 +35,7 @@ func NewRootCmd() *cobra.Command {
 	pf := root.PersistentFlags()
 	pf.BoolVar(&g.JSON, "json", false, "salida JSON cruda (para scripts/agentes)")
 	pf.BoolVar(&g.Plain, "plain", false, "salida en texto plano sin formato")
+	// --no-color: efectivo en Plan 2 (render Human con color); aceptado ya por compatibilidad.
 	pf.BoolVar(&g.NoColor, "no-color", false, "desactiva el color")
 	pf.BoolVar(&g.NoInput, "no-input", false, "no preguntar nada de forma interactiva")
 	pf.StringVar(&g.Profile, "profile", "", "perfil de configuración a usar")

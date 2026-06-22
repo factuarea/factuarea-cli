@@ -1,6 +1,9 @@
 package safety
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestRequireLive(t *testing.T) {
 	if err := RequireLive("live", false); err == nil {
@@ -48,5 +51,26 @@ func TestConfirmInteractivePrompt(t *testing.T) {
 	prompt := func(string) (string, error) { return "inv_1", nil }
 	if err := Confirm("inv_1", "", true, false, prompt); err != nil {
 		t.Fatalf("interactive matching prompt must pass: %v", err)
+	}
+}
+
+func TestConfirmInteractivePromptError(t *testing.T) {
+	boom := errors.New("error de lectura del prompt")
+	prompt := func(string) (string, error) { return "", boom }
+	// El error del prompt se propaga tal cual (no se traga ni se devuelve nil).
+	err := Confirm("inv_1", "", true, false, prompt)
+	if err == nil {
+		t.Fatal("interactive prompt error must propagate")
+	}
+	if !errors.Is(err, boom) {
+		t.Fatalf("expected the prompt error to propagate, got %v", err)
+	}
+}
+
+func TestConfirmInteractivePromptMismatch(t *testing.T) {
+	prompt := func(string) (string, error) { return "inv_2", nil }
+	// El id tecleado no coincide con el resourceID: cancelación.
+	if err := Confirm("inv_1", "", true, false, prompt); err == nil {
+		t.Fatal("interactive prompt with mismatched id must fail (cancelación)")
 	}
 }
