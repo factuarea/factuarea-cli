@@ -148,6 +148,8 @@ for (const { platform, arch } of MVP) {
     version,
     description: `Binario de Factuarea CLI para ${platform}-${arch}`,
     license: "MIT",
+    homepage: "https://github.com/factuarea/factuarea-cli",
+    repository: { type: "git", url: "git+https://github.com/factuarea/factuarea-cli.git" },
     os: [platform],
     cpu: [arch],
     files: ["factuarea*"],

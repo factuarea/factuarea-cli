@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "description": "CLI oficial de Factuarea para la API pública v1",
   "license": "MIT",
+  "homepage": "https://github.com/factuarea/factuarea-cli",
+  "repository": { "type": "git", "url": "git+https://github.com/factuarea/factuarea-cli.git" },
   "bin": { "factuarea": "bin/factuarea.js" },
   "files": ["bin/factuarea.js"],
   "optionalDependencies": {
