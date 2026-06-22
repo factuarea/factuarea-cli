@@ -2,7 +2,7 @@
 
 CLI oficial de [Factuarea](https://factuarea.com) para manejar la **API pública v1** desde la terminal. Diseñado *agent-first* (salida JSON estable, exit codes semánticos, descubrimiento en una llamada) e inspirado en el CLI de Stripe.
 
-> **Estado:** en desarrollo. Foundation + generación de comandos completos; devloop (`listen`/`trigger`) y distribución (Homebrew/npm) en camino.
+> **Estado:** en desarrollo. Foundation, generación de comandos y devloop (`listen`/`trigger`/`docs`) completos; distribución (Homebrew/npm) en camino.
 
 ## Instalación
 
@@ -42,7 +42,7 @@ factuarea invoices list --json
 factuarea clients list --paginate --json
 
 # Obtener uno
-factuarea invoices get <uuid> --json
+factuarea invoices show <uuid> --json
 
 # Crear (cuerpo JSON por -d o --data-file)
 factuarea invoices create -d '{"client_id":"…","series_id":"…","lines":[…]}'
@@ -63,6 +63,27 @@ factuarea api post /v1/invoices -d '{…}'
 ```
 
 **Operaciones en producción** (mutaciones con una key `fact_live_`) requieren el flag explícito `--live` como red de seguridad.
+
+## Devloop (webhooks)
+
+Prueba tus webhooks en local sin desplegar ni ngrok, al estilo del CLI de Stripe:
+
+```bash
+# 1) Reenvía los eventos de tu cuenta a tu endpoint local (imprime un secret de firma efímero)
+factuarea listen --forward-to http://localhost:3000/webhooks
+
+# 2) En otra terminal, produce eventos reales en sandbox
+factuarea trigger invoice.paid
+factuarea trigger --list            # eventos soportados
+```
+
+`listen` sondea el feed de eventos, reconstruye el cuerpo del webhook y lo firma con HMAC (`Factuarea-Signature`) usando un secret efímero `whsec_…` que imprime al arrancar — configúralo en tu verificador y tu código de verificación corre sin cambios. Por seguridad solo reenvía a `localhost` salvo `--allow-remote-forward`. `trigger` solo opera en **sandbox** (key `fact_test_`).
+
+Referencia rápida de la API, en local:
+
+```bash
+factuarea docs search invoice          # busca en la referencia embebida (no sale de tu máquina)
+```
 
 ### Para agentes / scripting
 
