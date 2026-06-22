@@ -1,0 +1,94 @@
+# Release: dispara con un tag `v*` (p.ej. v1.2.3).
+#
+# Secrets requeridos:
+#   - GITHUB_TOKEN       Automático (lo inyecta GitHub Actions). Cubre release + assets de ESTE repo.
+#   - HOMEBREW_TAP_TOKEN PAT (classic o fine-grained) con `contents:write` en factuarea/homebrew-tap.
+#                        Necesario porque el GITHUB_TOKEN no puede empujar al tap (otro repo).
+#                        Referenciado en .goreleaser.yaml (homebrew_casks[].repository.token).
+#   - NPM_TOKEN          Automation token de npm con permiso de publish en el scope @factuarea.
+#                        Usado como NODE_AUTH_TOKEN por `npm publish`.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # crear el release y subir assets
+  id-token: write # OIDC para cosign keyless (firma sin claves)
+  packages: write
+
+jobs:
+  goreleaser:
+    name: goreleaser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # changelog y tags completos
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@v0
+
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+
+      - name: Upload dist for npm-publish
+        # build-packages.mjs lee dist/artifacts.json + los binarios; los pasamos al
+        # job de npm vía artifact en lugar de re-buildear.
+        uses: actions/upload-artifact@v4
+        with:
+          name: goreleaser-dist
+          path: dist/
+          retention-days: 1
+
+  npm-publish:
+    name: npm publish
+    needs: goreleaser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Download dist from goreleaser
+        uses: actions/download-artifact@v4
+        with:
+          name: goreleaser-dist
+          path: dist
+
+      - name: Build npm packages
+        # Quita el prefijo `v` del tag (v1.2.3 -> 1.2.3) y genera npm/dist-packages/*
+        # + reescribe npm/package.json a esa versión.
+        run: node npm/scripts/build-packages.mjs "${GITHUB_REF_NAME#v}"
+
+      - name: Publish platform packages
+        # Primero los paquetes por plataforma (optionalDependencies del principal),
+        # luego el paquete principal @factuarea/cli.
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          for pkg in npm/dist-packages/*/; do
+            echo "publishing $pkg"
+            npm publish "$pkg" --access public
+          done
+          echo "publishing main package npm/"
+          npm publish ./npm --access public
