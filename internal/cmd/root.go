@@ -26,6 +26,11 @@ func NewRootCmd() *cobra.Command {
 		Short:         "CLI oficial de Factuarea — maneja la API pública v1 desde la terminal",
 		SilenceUsage:  true, // los errores se imprimen una vez, sin volcar el usage entero
 		SilenceErrors: true, // el control de exit code lo lleva main.go
+		// RunE (mostrar ayuda) + Args NoArgs (vía UsageError → exit 2): `factuarea
+		// bogus` falla con "unknown command" y exit 2; `factuarea` solo muestra
+		// ayuda (exit 0). El RunE hace el root runnable para que Cobra valide Args.
+		Args: UsageArgs(cobra.NoArgs),
+		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
 	// Los errores de PARSEO de flags (flag desconocido, etc.) son uso incorrecto:
 	// envuélvelos como UsageError para que salgan con exit code 2 (Usage).

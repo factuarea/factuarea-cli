@@ -24,7 +24,17 @@ func registerGeneratedCommands(root *cobra.Command) {
 			key += seg
 			g, ok := groups[key]
 			if !ok {
-				g = &cobra.Command{Use: seg, Short: "Comandos de " + seg}
+				// RunE (mostrar ayuda) hace el grupo "runnable" para que Cobra
+				// VALIDE Args; sin RunE, Cobra ignora Args y muestra ayuda con
+				// exit 0. Con Args NoArgs (envuelto en UsageError → exit 2), un
+				// subcomando inexistente (p.ej. `invoices get`) falla con "unknown
+				// command"; el grupo solo (`invoices`, 0 args) muestra su ayuda.
+				g = &cobra.Command{
+					Use:   seg,
+					Short: "Comandos de " + seg,
+					Args:  UsageArgs(cobra.NoArgs),
+					RunE:  func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
+				}
 				parent.AddCommand(g)
 				groups[key] = g
 			}
