@@ -6,15 +6,36 @@ CLI oficial de [Factuarea](https://factuarea.com) para manejar la **API pública
 
 ## Instalación
 
-Por ahora, desde el código (requiere Go 1.23+):
+> Los métodos empaquetados se activan con la primera release publicada (`git tag vX.Y.Z`).
+
+**Homebrew** (macOS/Linux):
 
 ```bash
-git clone https://github.com/factuarea/factuarea-cli
-cd factuarea-cli
-make build        # genera el binario ./factuarea
+brew install --cask factuarea/tap/factuarea
 ```
 
-Próximamente: `brew install factuarea`, `npm i -g @factuarea/cli`, e instalador `curl | sh`.
+**npm** (cualquier plataforma con Node 20+):
+
+```bash
+npm i -g @factuarea/cli      # o: npx @factuarea/cli <comando>
+```
+
+**Instalador** (`curl | sh`, instala en `~/.local/bin`):
+
+```bash
+curl -fsSL https://github.com/factuarea/factuarea-cli/releases/latest/download/install.sh | sh
+```
+
+**Binarios** firmados (cosign) y `checksums.txt` en [Releases](https://github.com/factuarea/factuarea-cli/releases).
+
+**Desde el código** (Go 1.26+):
+
+```bash
+git clone https://github.com/factuarea/factuarea-cli && cd factuarea-cli
+make build        # genera ./factuarea
+```
+
+> La notarización (macOS) y la firma Authenticode (Windows) llegan en una fase posterior; mientras tanto, en macOS usa `brew`/`npm`, o `xattr -d com.apple.quarantine ./factuarea` para un binario suelto.
 
 ## Autenticación
 
