@@ -12,12 +12,8 @@ import (
 
 const keyringService = "factuarea-cli"
 
-// ErrNotFound se devuelve cuando no hay credencial guardada para el profile.
-// Exportado para que los consumidores distingan "no logueado" con errors.Is.
 var ErrNotFound = errors.New("credencial no encontrada")
 
-// keyringStore guarda cada key en el keyring del SO bajo el servicio
-// "factuarea-cli" y la cuenta = nombre del profile.
 type keyringStore struct{}
 
 func (keyringStore) GetKey(profile string) (string, error) {
@@ -38,7 +34,6 @@ func (keyringStore) DeleteKey(profile string) error {
 	return err
 }
 
-// fileStore es el fallback: TOML en ~/.config/factuarea/config.toml, chmod 600.
 type fileStore struct {
 	path string
 	mu   sync.Mutex
@@ -77,7 +72,6 @@ func (s *fileStore) save(doc fileDoc) error {
 	if err := os.MkdirAll(dir, 0o700); err != nil {
 		return err
 	}
-	// Defensa: si el dir ya existía con permisos laxos, forzar 700 (contiene la key).
 	if err := os.Chmod(dir, 0o700); err != nil {
 		return err
 	}
@@ -85,7 +79,6 @@ func (s *fileStore) save(doc fileDoc) error {
 	if err != nil {
 		return err
 	}
-	// Temp ÚNICO (O_EXCL: no reutiliza ni sigue symlink), mismo dir → Rename atómico.
 	f, err := os.CreateTemp(dir, ".config-*.toml.tmp")
 	if err != nil {
 		return err
@@ -148,10 +141,7 @@ func (s *fileStore) DeleteKey(profile string) error {
 	return s.save(doc)
 }
 
-// NewStore prueba el keyring del SO; si no está disponible, cae al archivo y
-// devuelve usingFallback=true para que el comando avise (nunca degrada en silencio).
 func NewStore() (Store, bool) {
-	// Probe del keyring: set+get+delete de un valor centinela.
 	const probe = "__factuarea_probe__"
 	if err := keyring.Set(keyringService, probe, "1"); err == nil {
 		_ = keyring.Delete(keyringService, probe)

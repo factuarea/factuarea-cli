@@ -39,7 +39,6 @@ func TestGeneratedMutatingInheritsLiveGuard(t *testing.T) {
 	var out bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&out)
-	// invoices create (POST) en live sin --live debe fallar ANTES de red.
 	root.SetArgs([]string{"invoices", "create", "-d", "{}"})
 	if err := root.Execute(); err == nil || !strings.Contains(err.Error(), "LIVE") {
 		t.Fatalf("esperaba guard LIVE, got %v", err)

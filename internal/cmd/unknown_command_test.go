@@ -7,8 +7,6 @@ import (
 	"github.com/factuarea/factuarea-cli/internal/exit"
 )
 
-// execArgs ejecuta el CLI con args contra un root nuevo, capturando la salida,
-// y devuelve el error de Execute (para inspeccionar el exit code derivado).
 func execArgs(t *testing.T, args ...string) error {
 	t.Helper()
 	root := NewRootCmd()
@@ -19,9 +17,6 @@ func execArgs(t *testing.T, args ...string) error {
 	return root.Execute()
 }
 
-// Un subcomando inexistente bajo un grupo generado (p.ej. `invoices get`, cuando
-// la acción real es `show`) NO debe imprimir ayuda y salir con exit 0 (un agente
-// lo interpretaría como éxito). Debe fallar como uso incorrecto (exit 2).
 func TestUnknownSubcommandIsUsageError(t *testing.T) {
 	err := execArgs(t, "invoices", "get", "x")
 	if err == nil {
@@ -32,7 +27,6 @@ func TestUnknownSubcommandIsUsageError(t *testing.T) {
 	}
 }
 
-// Un comando top-level inexistente también es uso incorrecto (exit 2), no exit 1.
 func TestUnknownTopLevelIsUsageError(t *testing.T) {
 	err := execArgs(t, "bogus")
 	if err == nil || exit.ForError(err) != exit.Usage {
@@ -40,7 +34,6 @@ func TestUnknownTopLevelIsUsageError(t *testing.T) {
 	}
 }
 
-// Un grupo invocado sin acción muestra su ayuda sin error (exit 0).
 func TestGroupAloneShowsHelpNoError(t *testing.T) {
 	if err := execArgs(t, "invoices"); err != nil {
 		t.Fatalf("grupo solo debe mostrar ayuda sin error; got %v", err)

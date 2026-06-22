@@ -21,7 +21,6 @@ func TestFileStoreRoundTrip(t *testing.T) {
 	if err != nil || got != "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa" {
 		t.Fatalf("roundtrip failed: %q %v", got, err)
 	}
-	// Segundo profile no pisa al primero.
 	if err := st.SetKey("acme-live", "fact_live_bbbbbbbbbbbbbbbbbbbbbbbb"); err != nil {
 		t.Fatal(err)
 	}
@@ -45,7 +44,6 @@ func TestFileStoreFilePermissions(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// El fichero final debe quedar en 0600 (la key live no es legible por grupo/otros).
 	info, err := os.Stat(path)
 	if err != nil {
 		t.Fatal(err)
@@ -54,7 +52,6 @@ func TestFileStoreFilePermissions(t *testing.T) {
 		t.Fatalf("expected file mode 0600, got %o", perm)
 	}
 
-	// Tras un SetKey exitoso no debe quedar ningún temporal *.tmp huérfano.
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		t.Fatal(err)

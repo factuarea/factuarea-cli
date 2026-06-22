@@ -13,13 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// buildGeneratedCommand convierte un genOp en un *cobra.Command que reusa el
-// runtime del Plan 1. Args posicionales = path params; flags = query params;
-// -d/--data + --data-file para el body json; --file-<campo> para multipart;
-// -o/--output para respuestas binarias; --paginate para listados cursor.
 func buildGeneratedCommand(op genOp) *cobra.Command {
-	// Vars LOCALES a este comando (una instancia por comando, capturadas por la
-	// closure de RunE). No compartirlas entre comandos.
 	var data, dataFile, outputPath string
 	var paginate bool
 	fileFlags := map[string]*string{}
@@ -49,7 +43,6 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// Guard --live ANTES de cualquier acceso a red.
 			if op.isMutating() {
 				if err := safety.RequireLive(cc.res.Environment, g.Live); err != nil {
 					return err
@@ -63,7 +56,6 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				}
 			}
 
-			// Listado paginado con --paginate → NDJSON por stdout.
 			if op.isPaginated() && paginate {
 				return runPaginated(cmd, cc, path, q)
 			}
@@ -81,7 +73,6 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				output.PrintError(cmd.ErrOrStderr(), err, cc.format)
 				return &AlreadyReported{Err: err}
 			}
-			// Respuesta binaria → fichero (-o) o stdout no-TTY.
 			if op.BinaryContentType != "" {
 				return writeBinary(cmd, resp.Body, outputPath)
 			}
@@ -100,7 +91,6 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		c.Flags().StringVar(&dataFile, "data-file", "", "ruta a un fichero con el cuerpo JSON")
 	}
 	if op.Body != nil && op.Body.Kind == "multipart" {
-		// --data lleva los campos de texto del multipart como objeto JSON plano.
 		c.Flags().StringVarP(&data, "data", "d", "", "campos de texto del multipart como objeto JSON plano")
 		for _, ff := range op.Body.FileFields {
 			v := c.Flags().String("file-"+ff, "", "ruta al fichero para el campo "+ff)
@@ -116,9 +106,6 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	return c
 }
 
-// writeBinary vuelca una respuesta binaria: a fichero con -o, a stdout si está
-// redirigido, o error pidiendo -o si stdout es un TTY (nunca volcar binario a
-// un terminal).
 func writeBinary(cmd *cobra.Command, body []byte, out string) error {
 	if out != "" {
 		return os.WriteFile(out, body, 0o644)
@@ -130,8 +117,6 @@ func writeBinary(cmd *cobra.Command, body []byte, out string) error {
 	return err
 }
 
-// runPaginated recorre todas las páginas del listado cursor y emite NDJSON: un
-// objeto JSON por línea por stdout.
 func runPaginated(cmd *cobra.Command, cc *cliContext, path string, query url.Values) error {
 	w := cmd.OutOrStdout()
 	enc := json.NewEncoder(w)

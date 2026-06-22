@@ -8,20 +8,18 @@ import (
 
 const (
 	OK         = 0
-	CLIBug     = 1 // bug inesperado del propio CLI (no errores de API)
-	Usage      = 2 // flags/args inválidos o guard local (--live/--confirm/trigger en live)
+	CLIBug     = 1
+	Usage      = 2
 	Auth       = 3
-	Perm       = 4 // 403 o scope insuficiente local
+	Perm       = 4
 	Validation = 5
 	NotFound   = 6
 	RateLimit  = 7
 	Conflict   = 8
-	Server     = 9  // api_error / service_unavailable_error / 503 kill-switch / 5xx sin body
-	Network    = 10 // red/timeout/DNS/TLS, transitorio
+	Server     = 9
+	Network    = 10
 )
 
-// ForError deriva el exit code. Si hay sobre de error del backend, se deriva de
-// error.type; un fallo de transporte → Network; cualquier otro → CLIBug.
 func ForError(err error) int {
 	if err == nil {
 		return OK

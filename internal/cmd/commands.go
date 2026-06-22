@@ -7,14 +7,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// flagInfo describe un flag (query param) de un comando en el manifiesto.
 type flagInfo struct {
 	Name string `json:"name"`
 	Type string `json:"type"`
 }
 
-// manifestEntry es la descripción machine-readable de un comando generado, para
-// que un agente descubra toda la superficie del CLI en una sola llamada.
 type manifestEntry struct {
 	Command    string     `json:"command"`
 	Summary    string     `json:"summary"`
@@ -27,9 +24,6 @@ type manifestEntry struct {
 	Example    string     `json:"example,omitempty"`
 }
 
-// newCommandsCmd vuelca el manifiesto JSON de TODOS los comandos generados,
-// construido desde generatedOps() (no desde el árbol Cobra), para discovery de
-// agentes. Siempre emite JSON (el --json global es un no-op aquí).
 func newCommandsCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "commands",
@@ -68,8 +62,6 @@ func newCommandsCmd() *cobra.Command {
 	}
 }
 
-// commandPath reconstruye "factuarea <grupos...> <accion>" para un genOp,
-// espejando el árbol que registerGeneratedCommands cuelga del root.
 func commandPath(op genOp) string {
 	parts := append([]string{"factuarea"}, op.Groups...)
 	parts = append(parts, op.Action)

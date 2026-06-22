@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// GlobalFlags contiene los flags persistentes compartidos por todos los comandos.
 type GlobalFlags struct {
 	JSON    bool
 	Plain   bool
@@ -24,23 +23,17 @@ func NewRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:           "factuarea",
 		Short:         "CLI oficial de Factuarea — maneja la API pública v1 desde la terminal",
-		SilenceUsage:  true, // los errores se imprimen una vez, sin volcar el usage entero
-		SilenceErrors: true, // el control de exit code lo lleva main.go
-		// RunE (mostrar ayuda) + Args NoArgs (vía UsageError → exit 2): `factuarea
-		// bogus` falla con "unknown command" y exit 2; `factuarea` solo muestra
-		// ayuda (exit 0). El RunE hace el root runnable para que Cobra valide Args.
-		Args: UsageArgs(cobra.NoArgs),
-		RunE: func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
+		SilenceUsage:  true,
+		SilenceErrors: true,
+		Args:          UsageArgs(cobra.NoArgs),
+		RunE:          func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
-	// Los errores de PARSEO de flags (flag desconocido, etc.) son uso incorrecto:
-	// envuélvelos como UsageError para que salgan con exit code 2 (Usage).
 	root.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
 		return &apierr.UsageError{Err: err}
 	})
 	pf := root.PersistentFlags()
 	pf.BoolVar(&g.JSON, "json", false, "salida JSON cruda (para scripts/agentes)")
 	pf.BoolVar(&g.Plain, "plain", false, "salida en texto plano sin formato")
-	// --no-color: efectivo en Plan 2 (render Human con color); aceptado ya por compatibilidad.
 	pf.BoolVar(&g.NoColor, "no-color", false, "desactiva el color")
 	pf.BoolVar(&g.NoInput, "no-input", false, "no preguntar nada de forma interactiva")
 	pf.StringVar(&g.Profile, "profile", "", "perfil de configuración a usar")

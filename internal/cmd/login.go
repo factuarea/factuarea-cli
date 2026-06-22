@@ -33,7 +33,6 @@ func newLoginCmd() *cobra.Command {
 			if profile == "" {
 				profile = "default"
 			}
-			// Validar contra el backend antes de guardar.
 			opts := []client.Option{}
 			if base := os.Getenv(envBaseURL); base != "" {
 				opts = append(opts, client.WithBaseURL(base))
@@ -47,8 +46,6 @@ func newLoginCmd() *cobra.Command {
 				return err
 			}
 			env := config.Environment(key)
-			// La línea de éxito es informativa: --quiet la silencia. Los avisos de
-			// seguridad (key LIVE, fallback de keyring) se muestran SIEMPRE.
 			if !g.Quiet {
 				fmt.Fprintf(cmd.ErrOrStderr(), "✓ Sesión guardada (perfil %q, entorno %s).\n", profile, strings.ToUpper(env))
 			}
@@ -66,7 +63,6 @@ func newLoginCmd() *cobra.Command {
 	return cmd
 }
 
-// readKey: stdin si fromStdin/no-TTY, si no prompt oculto. Nunca acepta valor literal.
 func readKey(cmd *cobra.Command, fromStdin, noInput bool) (string, error) {
 	if fromStdin || noInput {
 		b, err := io.ReadAll(cmd.InOrStdin())
@@ -79,7 +75,6 @@ func readKey(cmd *cobra.Command, fromStdin, noInput bool) (string, error) {
 	b, err := term.ReadPassword(int(os.Stdin.Fd()))
 	fmt.Fprintln(cmd.ErrOrStderr())
 	if err != nil {
-		// Sin TTY real: caer a stdin.
 		b2, err2 := io.ReadAll(cmd.InOrStdin())
 		if err2 != nil {
 			return "", err

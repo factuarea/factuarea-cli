@@ -41,9 +41,6 @@ func TestPaginateFollowsCursor(t *testing.T) {
 	}
 }
 
-// TestPaginateDegradesToSinglePage cubre los catálogos enum como
-// /v1/taxes/active que devuelven {data:[...]} sin has_more/next_cursor:
-// debe emitir una sola página y terminar, no bucle-infinito.
 func TestPaginateDegradesToSinglePage(t *testing.T) {
 	page := 0
 	c, _ := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
@@ -71,8 +68,6 @@ func TestPaginateDegradesToSinglePage(t *testing.T) {
 	}
 }
 
-// TestPaginatePropagatesEachError verifica que un error de la callback corta la
-// iteración y se propaga sin pedir más páginas.
 func TestPaginatePropagatesEachError(t *testing.T) {
 	page := 0
 	c, _ := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
@@ -92,7 +87,6 @@ func TestPaginatePropagatesEachError(t *testing.T) {
 	}
 }
 
-// TestPaginatePropagatesDoError verifica que un error HTTP de Do se propaga.
 func TestPaginatePropagatesDoError(t *testing.T) {
 	c, _ := newTestClient(t, func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

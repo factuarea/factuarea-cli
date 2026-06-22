@@ -17,7 +17,6 @@ func Environment(apiKey string) string {
 
 func ValidKeyFormat(apiKey string) bool { return keyRe.MatchString(apiKey) }
 
-// RedactKey deja visible el prefijo de entorno y los últimos 4 caracteres.
 func RedactKey(apiKey string) string {
 	if len(apiKey) < 14 {
 		return "…"

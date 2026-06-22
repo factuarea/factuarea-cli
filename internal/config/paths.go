@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 )
 
-// ConfigDir devuelve ~/.config/factuarea (respeta XDG_CONFIG_HOME).
 func ConfigDir() (string, error) {
 	base, err := os.UserConfigDir()
 	if err != nil {

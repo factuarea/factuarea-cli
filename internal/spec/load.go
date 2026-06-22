@@ -12,14 +12,6 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-// Load parsea el spec embebido y devuelve las operaciones del CLI CONFORMES
-// (las que resuelven vía Resolve), la lista de operationIds NO conformes
-// (sin namespacear: el llamador debe logearlos — nunca silenciar), y un error
-// solo si el parseo del spec falla. Un operationId no conforme NO aborta:
-// se omite del árbol generado y se reporta para que el backend lo corrija.
-//
-// Las operaciones salen ordenadas determinísticamente (por path, luego método)
-// y nonConforming sale ordenado alfabéticamente, para que la salida sea estable.
 func Load() (ops []Operation, nonConforming []string, err error) {
 	doc, err := libopenapi.NewDocument(Raw)
 	if err != nil {
@@ -59,7 +51,6 @@ func Load() (ops []Operation, nonConforming []string, err error) {
 	return ops, nonConforming, nil
 }
 
-// methodsOf devuelve los métodos HTTP definidos en un PathItem, en orden estable.
 func methodsOf(item *v3.PathItem) map[string]*v3.Operation {
 	m := map[string]*v3.Operation{}
 	if item.Get != nil {
@@ -115,8 +106,6 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 	return o
 }
 
-// buildBody detecta json (con example serializado a JSON) o multipart (con los
-// nombres de los campos binarios del schema, resolviendo $ref/allOf).
 func buildBody(op *v3.Operation) *Body {
 	if op.RequestBody == nil || op.RequestBody.Content == nil {
 		return nil
@@ -139,8 +128,6 @@ func buildBody(op *v3.Operation) *Body {
 	return nil
 }
 
-// binaryFields recoge los nombres de las propiedades con format:binary de un
-// schema, descendiendo por allOf para soportar composición.
 func binaryFields(sc *base.Schema) []string {
 	if sc == nil {
 		return nil
@@ -166,21 +153,6 @@ func binaryFields(sc *base.Schema) []string {
 	return fields
 }
 
-// buildBinaryResponse detecta una respuesta 200 que es una descarga
-// (binaria/no-JSON). Regla: 200 no-JSON = descarga. NO se exige format:binary,
-// porque hay descargas con schema {type:"string"} (p.ej. FacturaE
-// application/xml) que de otro modo se tratarían como JSON y corromperían el
-// fichero. Cubre application/pdf, application/zip, application/xml,
-// application/octet-stream y text/*.
-//
-//   - Si el content 200 tiene algún media-type JSON (application/json o que
-//     contenga "json", p.ej. application/problem+json) → NO es descarga (nil).
-//   - Si no hay ningún content JSON pero sí algún content no-JSON → es descarga:
-//     se elige el primer media-type no-JSON en orden determinista.
-//   - Sin content 200 → nil.
-//
-// El revisor confirmó que ninguna respuesta 200 mezcla json + no-json, así que
-// "hay json → no descarga; si no hay json y hay otro → descarga" es seguro.
 func buildBinaryResponse(op *v3.Operation) *BinaryResponse {
 	if op.Responses == nil {
 		return nil
@@ -193,7 +165,7 @@ func buildBinaryResponse(op *v3.Operation) *BinaryResponse {
 	for ct := resp.Content.First(); ct != nil; ct = ct.Next() {
 		mediaType := ct.Key()
 		if strings.Contains(mediaType, "json") {
-			return nil // hay content JSON: no es descarga
+			return nil
 		}
 		if firstNonJSON == "" {
 			firstNonJSON = mediaType
@@ -205,9 +177,6 @@ func buildBinaryResponse(op *v3.Operation) *BinaryResponse {
 	return &BinaryResponse{ContentType: firstNonJSON}
 }
 
-// exampleJSON serializa el nodo YAML del example a un string JSON. El example del
-// spec embebido (JSON) se modela como *yaml.Node, así que hay que decodificarlo a
-// un valor Go antes de marshalear a JSON. Devuelve "" si no hay example o falla.
 func exampleJSON(node *yaml.Node) string {
 	if node == nil {
 		return ""

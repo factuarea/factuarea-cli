@@ -2,7 +2,6 @@ package config
 
 import "errors"
 
-// Store persiste credenciales por profile (keyring con fallback a archivo).
 type Store interface {
 	GetKey(profile string) (string, error)
 	SetKey(profile, key string) error
@@ -11,9 +10,9 @@ type Store interface {
 
 type Resolution struct {
 	APIKey      string
-	Source      string // "stdin" | "env" | "profile"
+	Source      string
 	Profile     string
-	Environment string // "test" | "live" | "unknown"
+	Environment string
 }
 
 const (
@@ -21,9 +20,6 @@ const (
 	EnvProfile = "FACTUAREA_PROFILE"
 )
 
-// ResolveAPIKey aplica la precedencia: stdin/flag > env > profile.
-// `profile` vacío usa "default" (o FACTUAREA_PROFILE si está). La fuente de
-// verdad del entorno es SIEMPRE el prefijo de la key resuelta.
 func ResolveAPIKey(stdinKey, profile string, getenv func(string) string, store Store) (Resolution, error) {
 	if profile == "" {
 		profile = getenv(EnvProfile)
