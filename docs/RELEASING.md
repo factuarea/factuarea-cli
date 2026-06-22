@@ -45,9 +45,11 @@ goreleaser release --snapshot --clean --skip=sign,sbom   # cosign/syft solo en C
 
 ```bash
 make generate        # baja el openapi vivo y regenera resources_gen.go
-# o, contra develop local:
+# o, contra el backend local (canónico mientras el spec público esté roto):
 make generate-dev
 ```
+
+> **Aviso (estado actual del spec público):** `GET https://api.factuarea.com/v1/openapi.json` devuelve un spec vacío y `https://api.factuarea.com/openapi.json` sirve un spec stale e incompleto (le faltan operaciones que sí funcionan, p.ej. `payouts`/`payment_methods`). Hasta que el backend restaure un endpoint de spec completo, **NO uses `make generate` contra prod** (perdería comandos): usa `make generate-dev` (`scramble:export` del backend). El drift-guard de CI se salta solo el endpoint vacío y se reactivará cuando el backend lo arregle.
 
 ## Fase 2 (pendiente)
 
