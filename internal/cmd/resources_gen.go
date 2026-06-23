@@ -1198,6 +1198,8 @@ func generatedOps() []genOp {
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
+
+			BinaryContentType: "application/octet-stream",
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.mark_paid", Method: "POST", Path: "/purchase_invoices/{purchase_invoice}/mark_paid",
@@ -1215,6 +1217,8 @@ func generatedOps() []genOp {
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
+
+			BinaryContentType: "application/pdf",
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.list_payments", Method: "GET", Path: "/purchase_invoices/{purchase_invoice}/payments",

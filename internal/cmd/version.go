@@ -14,6 +14,7 @@ func newVersionCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "version",
 		Short: "Muestra la versión del CLI",
+		Args:  UsageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			g := globalsFrom(cmd)
 			specHash := spec.Hash()[:12]

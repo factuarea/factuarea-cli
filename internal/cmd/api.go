@@ -50,11 +50,15 @@ func newAPICmd() *cobra.Command {
 			}
 			var body []byte
 			if data != "" {
-				body = []byte(data)
+				validated, verr := validateRawJSONBody([]byte(data), false)
+				if verr != nil {
+					return verr
+				}
+				body = validated
 			}
 			resp, err := cc.client.Do(context.Background(), method, path, body, nil)
 			if err != nil {
-				output.PrintError(cmd.ErrOrStderr(), err, cc.format)
+				output.PrintError(cmd.ErrOrStderr(), err, cc.errorFormat)
 				return &AlreadyReported{Err: err}
 			}
 			if g.Verbose && resp.RequestID != "" {

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
-	"os"
 	"strings"
 
 	"github.com/factuarea/factuarea-cli/internal/apierr"
@@ -17,6 +16,9 @@ import (
 func validateRawJSONBody(body []byte, requireObject bool) ([]byte, error) {
 	trimmed := bytes.TrimSpace(body)
 	if len(trimmed) == 0 {
+		if requireObject {
+			return nil, apierr.Usagef("--data debe ser un objeto JSON (no un array ni un valor escalar)")
+		}
 		return body, nil
 	}
 	dec := json.NewDecoder(bytes.NewReader(trimmed))
@@ -43,11 +45,15 @@ func bytesTrim(b []byte) []byte {
 	return bytes.TrimSpace(b)
 }
 
-func writeDeleteConfirmation(cmd *cobra.Command, op genOp, args []string, format output.Format) error {
-	id := ""
+func opResourceID(op genOp, args []string) string {
 	if len(op.PathParams) > 0 && len(args) >= len(op.PathParams) {
-		id = args[len(op.PathParams)-1]
+		return args[len(op.PathParams)-1]
 	}
+	return ""
+}
+
+func writeDeleteConfirmation(cmd *cobra.Command, op genOp, args []string, format output.Format) error {
+	id := opResourceID(op, args)
 	if format == output.JSON {
 		payload := map[string]any{"deleted": true}
 		if id != "" {
@@ -59,6 +65,23 @@ func writeDeleteConfirmation(cmd *cobra.Command, op genOp, args []string, format
 		fmt.Fprintf(cmd.OutOrStdout(), "✓ Eliminado (%s).\n", id)
 	} else {
 		fmt.Fprintln(cmd.OutOrStdout(), "✓ Eliminado.")
+	}
+	return nil
+}
+
+func writeMutationConfirmation(cmd *cobra.Command, op genOp, args []string, format output.Format) error {
+	id := opResourceID(op, args)
+	if format == output.JSON {
+		payload := map[string]any{"ok": true}
+		if id != "" {
+			payload["id"] = id
+		}
+		return output.PrintJSON(cmd.OutOrStdout(), payload)
+	}
+	if id != "" {
+		fmt.Fprintf(cmd.OutOrStdout(), "✓ Operación completada (%s).\n", id)
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout(), "✓ Operación completada.")
 	}
 	return nil
 }
@@ -116,7 +139,7 @@ func (op genOp) buildBody(data, dataFile string, files map[string]*string) ([]by
 	}
 	if op.Body.Kind == "json" {
 		if dataFile != "" {
-			b, err := os.ReadFile(dataFile)
+			b, err := readInputFile(dataFile)
 			return b, nil, err
 		}
 		if data != "" {

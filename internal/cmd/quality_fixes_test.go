@@ -192,21 +192,28 @@ func TestCobraArgErrorTranslated(t *testing.T) {
 	}
 }
 
-func TestNonJSONErrorBodySurfaced(t *testing.T) {
+func TestNonJSONErrorBodyNormalized(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/v1/account" {
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"data":{"api_key":{"scopes":["*"]}}}`))
 			return
 		}
-		w.Header().Set("Content-Type", "text/plain")
+		w.Header().Set("Server", "Apache/2.4.67 (Debian)")
+		w.Header().Set("Content-Type", "text/html")
 		w.WriteHeader(400)
-		_, _ = w.Write([]byte("Bad Request: malformed input"))
+		_, _ = w.Write([]byte("<html><body>Bad Request: malformed input</body></html>"))
 	}))
 	t.Cleanup(srv.Close)
 	_, err := runCmd(t, srv.URL, "clients", "show", "cli_1")
-	if err == nil || !strings.Contains(err.Error(), "malformed input") {
-		t.Fatalf("el body crudo del error no-JSON debe surfacearse, got %v", err)
+	if err == nil {
+		t.Fatal("una respuesta de error no-JSON debe producir error")
+	}
+	if !strings.Contains(err.Error(), "respuesta no-JSON") {
+		t.Fatalf("el error no-JSON debe normalizarse, got %v", err)
+	}
+	if strings.Contains(err.Error(), "malformed input") || strings.Contains(err.Error(), "Apache") || strings.Contains(err.Error(), "html") {
+		t.Fatalf("el cuerpo/HTML crudo NO debe volcarse (disclosure), got %v", err)
 	}
 }
 

@@ -15,10 +15,11 @@ import (
 )
 
 type cliContext struct {
-	res    config.Resolution
-	client *client.Client
-	format output.Format
-	g      *GlobalFlags
+	res         config.Resolution
+	client      *client.Client
+	format      output.Format
+	errorFormat output.Format
+	g           *GlobalFlags
 
 	scopesOnce sync.Once
 	scopesVal  []string
@@ -82,7 +83,7 @@ func newCLIContext(g *GlobalFlags, stdinKey string) (*cliContext, error) {
 		return nil, err
 	}
 	if !config.ValidKeyFormat(res.APIKey) {
-		return nil, apierr.Usagef("la API key resuelta no tiene formato válido (se espera fact_test_… o fact_live_… de 24 caracteres). Ejecuta `factuarea login`.")
+		return nil, apierr.Usagef("la API key resuelta no tiene formato válido (se espera fact_test_… o fact_live_… seguido de 24 caracteres). Ejecuta `factuarea login`.")
 	}
 	opts, err := baseURLClientOptions(g.AllowInsecureTransport)
 	if err != nil {
@@ -90,10 +91,11 @@ func newCLIContext(g *GlobalFlags, stdinKey string) (*cliContext, error) {
 	}
 	f := output.ResolveFormat(g.JSON, output.IsTTY(os.Stdout))
 	return &cliContext{
-		res:    res,
-		client: client.New(res.APIKey, opts...),
-		format: f,
-		g:      g,
+		res:         res,
+		client:      client.New(res.APIKey, opts...),
+		format:      f,
+		errorFormat: output.ResolveErrorFormat(g.JSON, os.Stderr),
+		g:           g,
 	}, nil
 }
 

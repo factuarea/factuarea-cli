@@ -20,6 +20,7 @@ func newLoginCmd() *cobra.Command {
 		Use:   "login",
 		Short: "Guarda tu API key (fact_test_… o fact_live_…)",
 		Long:  "Lee la API key por prompt oculto, por stdin (--api-key -) o por la env FACTUAREA_API_KEY.\nNUNCA la pases como valor literal de flag.",
+		Args:  rejectLoginPositional,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			g := globalsFrom(cmd)
 			if cmd.Flags().Changed("api-key") && apiKeySource != "-" {
@@ -32,7 +33,7 @@ func newLoginCmd() *cobra.Command {
 			}
 			key = strings.TrimSpace(key)
 			if !config.ValidKeyFormat(key) {
-				return fmt.Errorf("formato de key inválido (se espera fact_test_… o fact_live_… con 24 caracteres)")
+				return apierr.Usagef("formato de key inválido (se espera fact_test_… o fact_live_… seguido de 24 caracteres)")
 			}
 			profile := g.Profile
 			if profile == "" {
@@ -58,7 +59,11 @@ func newLoginCmd() *cobra.Command {
 				fmt.Fprintln(cmd.ErrOrStderr(), "⚠ ATENCIÓN: esta es una key LIVE. Las operaciones mutadoras afectarán datos reales y AEAT.")
 			}
 			if fallback {
-				fmt.Fprintln(cmd.ErrOrStderr(), "⚠ El keyring del sistema no está disponible; la key se guardó en ~/.config/factuarea/config.toml (permisos 600).")
+				location := "el fichero de configuración local"
+				if p, ok := store.(config.PathProvider); ok {
+					location = p.Path()
+				}
+				fmt.Fprintf(cmd.ErrOrStderr(), "⚠ El keyring del sistema no está disponible; la key se guardó en %s (permisos 600).\n", location)
 			}
 			return nil
 		},
@@ -66,6 +71,13 @@ func newLoginCmd() *cobra.Command {
 	cmd.Flags().StringVar(&apiKeySource, "api-key", "", "lee la key por stdin cuando se pasa `-` (no acepta el valor literal)")
 	cmd.Flags().Lookup("api-key").NoOptDefVal = "-"
 	return cmd
+}
+
+func rejectLoginPositional(_ *cobra.Command, args []string) error {
+	if len(args) > 0 {
+		return apierr.Usagef("login no acepta la API key como argumento posicional (quedaría en el historial del shell); usa el prompt oculto, --api-key - (stdin) o la env %s", config.EnvAPIKey)
+	}
+	return nil
 }
 
 func readKey(cmd *cobra.Command, fromStdin, noInput bool) (string, error) {

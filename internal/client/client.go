@@ -176,7 +176,7 @@ func MultipartBody(fields, files map[string]string) (body []byte, contentType st
 func writeFormFile(mw *multipart.Writer, field, path string) error {
 	f, err := os.Open(path)
 	if err != nil {
-		return err
+		return apierr.ReadFileUsagef(path, err)
 	}
 	defer f.Close()
 	w, err := mw.CreateFormFile(field, filepath.Base(path))

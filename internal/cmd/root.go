@@ -21,12 +21,13 @@ type GlobalFlags struct {
 func NewRootCmd() *cobra.Command {
 	g := &GlobalFlags{}
 	root := &cobra.Command{
-		Use:           "factuarea",
-		Short:         "CLI oficial de Factuarea — maneja la API pública v1 desde la terminal",
-		SilenceUsage:  true,
-		SilenceErrors: true,
-		Args:          UsageArgs(cobra.NoArgs),
-		RunE:          func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
+		Use:                        "factuarea",
+		Short:                      "CLI oficial de Factuarea — maneja la API pública v1 desde la terminal",
+		SilenceUsage:               true,
+		SilenceErrors:              true,
+		SuggestionsMinimumDistance: 2,
+		Args:                       groupArgs,
+		RunE:                       func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 	}
 	root.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
 		return apierr.Usagef("%s", translateCobraError(err.Error()))

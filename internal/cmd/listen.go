@@ -58,6 +58,9 @@ func newListenCmd() *cobra.Command {
 
 			watermark, err := latestEventID(ctx, cc)
 			if err != nil {
+				if ctx.Err() != nil {
+					return nil
+				}
 				return err
 			}
 			fmt.Fprintf(cmd.ErrOrStderr(), "Escuchando eventos nuevos (Ctrl-C para parar)\n")
@@ -241,6 +244,16 @@ func forwardEvent(ctx context.Context, fwd *http.Client, forwardTo, secret, even
 	resp, err := fwd.Do(req)
 	latency := time.Since(start)
 	if err != nil {
+		if asJSON {
+			_ = output.PrintJSON(cmd.OutOrStdout(), map[string]any{
+				"event_type":  eventType,
+				"event_id":    eventID,
+				"delivery_id": deliveryID,
+				"status":      0,
+				"latency_ms":  latency.Milliseconds(),
+				"error":       err.Error(),
+			})
+		}
 		return err
 	}
 	_ = resp.Body.Close()

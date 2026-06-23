@@ -13,6 +13,7 @@ func newWhoamiCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "whoami",
 		Short: "Muestra la cuenta autenticada y el entorno (test/live)",
+		Args:  UsageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			g := globalsFrom(cmd)
 			cc, err := newCLIContext(g, "")
@@ -21,7 +22,7 @@ func newWhoamiCmd() *cobra.Command {
 			}
 			resp, err := cc.client.Do(context.Background(), "GET", "/v1/account", nil, nil)
 			if err != nil {
-				output.PrintError(cmd.ErrOrStderr(), err, cc.format)
+				output.PrintError(cmd.ErrOrStderr(), err, cc.errorFormat)
 				return &AlreadyReported{Err: err}
 			}
 			if cc.format == output.Human && !g.Quiet {

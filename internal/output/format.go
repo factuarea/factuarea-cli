@@ -21,6 +21,16 @@ func ResolveFormat(jsonFlag, isTTY bool) Format {
 	return JSON
 }
 
+func ResolveErrorFormat(jsonFlag bool, stderr *os.File) Format {
+	if jsonFlag {
+		return JSON
+	}
+	if IsTTY(stderr) {
+		return Human
+	}
+	return JSON
+}
+
 func IsTTY(f *os.File) bool {
 	fi, err := f.Stat()
 	if err != nil {

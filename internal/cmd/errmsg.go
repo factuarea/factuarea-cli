@@ -1,9 +1,12 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/factuarea/factuarea-cli/internal/apierr"
 )
 
 var (
@@ -14,6 +17,7 @@ var (
 	reUnknownFlag   = regexp.MustCompile(`unknown flag: (.*)`)
 	reUnknownShort  = regexp.MustCompile(`unknown shorthand flag: (.*)`)
 	reNeedsArg      = regexp.MustCompile(`flag needs an argument: (.*)`)
+	reUnknownCmd    = regexp.MustCompile(`(?s)^unknown command "([^"]*)" for "([^"]*)"(.*)$`)
 )
 
 func translateCobraError(msg string) string {
@@ -22,6 +26,10 @@ func translateCobraError(msg string) string {
 		return "faltan argumentos posicionales para este comando"
 	case strings.Contains(msg, "accepts 0 arg(s)"):
 		return "este comando no acepta argumentos posicionales"
+	}
+	if m := reUnknownCmd.FindStringSubmatch(msg); m != nil {
+		out := fmt.Sprintf("comando desconocido %q para %q", m[1], m[2])
+		return out + translateSuggestions(m[3])
 	}
 	if m := reAcceptsArgs.FindStringSubmatch(msg); m != nil {
 		return fmt.Sprintf("este comando acepta %s argumento(s), recibió %s", m[1], m[2])
@@ -47,6 +55,42 @@ func translateCobraError(msg string) string {
 	return msg
 }
 
+func FinalizeError(err error) error {
+	if err == nil {
+		return nil
+	}
+	var usage *apierr.UsageError
+	if errors.As(err, &usage) {
+		return err
+	}
+	var api *apierr.APIError
+	if errors.As(err, &api) {
+		return err
+	}
+	var transport *apierr.TransportError
+	if errors.As(err, &transport) {
+		return err
+	}
+	var perm *apierr.PermissionError
+	if errors.As(err, &perm) {
+		return err
+	}
+	if reUnknownCmd.MatchString(err.Error()) {
+		return apierr.Usagef("%s", translateCobraError(err.Error()))
+	}
+	return err
+}
+
+func translateSuggestions(suffix string) string {
+	if suffix == "" {
+		return ""
+	}
+	suffix = strings.Replace(suffix, "Did you mean this?", "¿Quisiste decir?", 1)
+	suffix = strings.Replace(suffix, "Run '", "Ejecuta '", 1)
+	suffix = strings.Replace(suffix, "' for usage.", "' para ver el uso.", 1)
+	return suffix
+}
+
 func translateParseError(detail string) string {
 	switch {
 	case strings.Contains(detail, "ParseInt"), strings.Contains(detail, "ParseFloat"):
@@ -55,6 +99,8 @@ func translateParseError(detail string) string {
 		return "se esperaba true o false"
 	case strings.Contains(detail, "ParseDuration"), strings.Contains(detail, "time:"):
 		return "se esperaba una duración (ej. 2s, 500ms)"
+	case strings.Contains(detail, "must be formatted as key=value"):
+		return "debe tener el formato clave=valor"
 	}
 	return detail
 }

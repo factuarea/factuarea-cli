@@ -3,7 +3,6 @@ package cmd
 import (
 	"encoding/json"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 
@@ -162,7 +161,11 @@ func contains(values []string, target string) bool {
 func validateRequiredQueryFlags(cmd *cobra.Command, op genOp) error {
 	var missing []string
 	for _, p := range op.QueryParams {
-		if p.Required && !cmd.Flags().Changed(p.Name) {
+		if !p.Required {
+			continue
+		}
+		v, _ := cmd.Flags().GetString(p.Name)
+		if !cmd.Flags().Changed(p.Name) || strings.TrimSpace(v) == "" {
 			missing = append(missing, "--"+p.Name)
 		}
 	}
@@ -172,18 +175,18 @@ func validateRequiredQueryFlags(cmd *cobra.Command, op genOp) error {
 	return nil
 }
 
-func requiredBodyFlags(op genOp) []string {
-	if !op.typedBody() || op.isUpdate() {
+func requiredBodyFlags(op genOp) []fieldFlag {
+	if !op.typedBody() {
 		return nil
 	}
-	var out []string
+	var out []fieldFlag
 	for _, ff := range collectFieldFlags(op.Body.Fields, nil) {
-		if ff.kind != "scalar" {
+		if ff.kind != "scalar" && ff.kind != "scalar_array" {
 			continue
 		}
 		f := findField(op.Body.Fields, ff.jsonPath)
 		if f != nil && f.Required {
-			out = append(out, ff.flagName)
+			out = append(out, ff)
 		}
 	}
 	return out
@@ -215,15 +218,30 @@ func singlePositionalField(op genOp) (fieldFlag, bool) {
 
 func validateRequiredBodyFlags(cmd *cobra.Command, op genOp) error {
 	var missing []string
-	for _, name := range requiredBodyFlags(op) {
-		if !cmd.Flags().Changed(name) {
-			missing = append(missing, "--"+name)
+	for _, ff := range requiredBodyFlags(op) {
+		if !cmd.Flags().Changed(ff.flagName) || flagIsEmpty(cmd, ff) {
+			missing = append(missing, "--"+ff.flagName)
 		}
 	}
 	if len(missing) > 0 {
 		return apierr.Usagef("faltan campos requeridos: %s (o usa -d/--data-file con el cuerpo completo)", strings.Join(missing, ", "))
 	}
 	return nil
+}
+
+func flagIsEmpty(cmd *cobra.Command, ff fieldFlag) bool {
+	switch ff.kind {
+	case "scalar_array":
+		v, err := cmd.Flags().GetStringSlice(ff.flagName)
+		return err == nil && len(v) == 0
+	case "scalar":
+		if ff.jsonType == "integer" || ff.jsonType == "number" || ff.jsonType == "boolean" {
+			return false
+		}
+		v, err := cmd.Flags().GetString(ff.flagName)
+		return err == nil && strings.TrimSpace(v) == ""
+	}
+	return false
 }
 
 func findField(fields []genBodyField, path []string) *genBodyField {
@@ -359,9 +377,9 @@ func setPath(root map[string]any, path []string, val any) {
 func readDataArg(data string, stdin io.Reader) ([]byte, error) {
 	switch {
 	case data == "-":
-		return io.ReadAll(stdin)
+		return readInputStream(stdin, "el cuerpo desde stdin")
 	case strings.HasPrefix(data, "@"):
-		return os.ReadFile(strings.TrimPrefix(data, "@"))
+		return readInputFile(strings.TrimPrefix(data, "@"))
 	default:
 		return []byte(data), nil
 	}
@@ -482,7 +500,7 @@ func compileTypedBody(cmd *cobra.Command, op genOp, data, dataFile string) ([]by
 	}
 	if rawData {
 		if dataFile != "" {
-			return os.ReadFile(dataFile)
+			return readInputFile(dataFile)
 		}
 		return readDataArg(data, cmd.InOrStdin())
 	}

@@ -128,7 +128,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					fmt.Fprintf(cmd.ErrOrStderr(), "aviso: no pude verificar scopes (%v); continúo\n", serr)
 				} else if !safety.HasScope(scopes, op.RequiredScope) {
 					perr := apierr.Permf("la API key no tiene el scope %q requerido por esta operación", op.RequiredScope)
-					output.PrintError(cmd.ErrOrStderr(), perr, cc.format)
+					output.PrintError(cmd.ErrOrStderr(), perr, cc.errorFormat)
 					return &AlreadyReported{Err: perr}
 				}
 			}
@@ -188,7 +188,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			}
 			resp, err := cc.client.Do(context.Background(), op.Method, full, body, headers)
 			if err != nil {
-				output.PrintError(cmd.ErrOrStderr(), err, cc.format)
+				output.PrintError(cmd.ErrOrStderr(), err, cc.errorFormat)
 				return &AlreadyReported{Err: err}
 			}
 			if op.BinaryContentType != "" {
@@ -197,8 +197,11 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			if g.Verbose && resp.RequestID != "" {
 				fmt.Fprintf(cmd.ErrOrStderr(), "request_id: %s\n", resp.RequestID)
 			}
-			if op.Method == "DELETE" && len(bytesTrim(resp.Body)) == 0 {
-				return writeDeleteConfirmation(cmd, op, args, cc.format)
+			if op.isMutating() && len(bytesTrim(resp.Body)) == 0 {
+				if op.Method == "DELETE" {
+					return writeDeleteConfirmation(cmd, op, args, cc.format)
+				}
+				return writeMutationConfirmation(cmd, op, args, cc.format)
 			}
 			return output.PrintBody(cmd.OutOrStdout(), resp.Body, cc.format)
 		},
@@ -248,7 +251,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 
 func writeBinary(cmd *cobra.Command, body []byte, out string) error {
 	if out != "" {
-		return os.WriteFile(out, body, 0o644)
+		return writeOutputFile(out, body)
 	}
 	if output.IsTTY(os.Stdout) {
 		return fmt.Errorf("la respuesta es binaria; usa -o <fichero> para guardarla")
@@ -264,7 +267,7 @@ func runPaginated(cmd *cobra.Command, cc *cliContext, path string, query url.Val
 		return enc.Encode(item)
 	})
 	if err != nil {
-		output.PrintError(cmd.ErrOrStderr(), err, cc.format)
+		output.PrintError(cmd.ErrOrStderr(), err, cc.errorFormat)
 		return &AlreadyReported{Err: err}
 	}
 	return nil

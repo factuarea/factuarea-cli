@@ -13,6 +13,7 @@ func newLogoutCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "logout",
 		Short: "Borra las credenciales del perfil activo",
+		Args:  UsageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			g := globalsFrom(cmd)
 			profile := g.Profile

@@ -48,6 +48,12 @@ type profileEntry struct {
 
 func NewFileStore(path string) Store { return &fileStore{path: path} }
 
+func (s *fileStore) Path() string { return s.path }
+
+type PathProvider interface {
+	Path() string
+}
+
 func (s *fileStore) load() (fileDoc, error) {
 	var doc fileDoc
 	b, err := os.ReadFile(s.path)

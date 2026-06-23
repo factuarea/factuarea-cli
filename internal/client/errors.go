@@ -51,17 +51,7 @@ func parseError(resp *Response) error {
 }
 
 func nonJSONMessage(resp *Response) string {
-	base := "Error " + httpStatus(resp.StatusCode)
-	snippet := strings.TrimSpace(string(resp.Body))
-	if snippet == "" {
-		return base
-	}
-	const max = 500
-	if len(snippet) > max {
-		snippet = snippet[:max] + "…"
-	}
-	snippet = strings.Join(strings.Fields(snippet), " ")
-	return base + ": " + snippet
+	return "el servidor devolvió " + httpStatus(resp.StatusCode) + " (respuesta no-JSON)"
 }
 
 func synthesizeType(status int) string {

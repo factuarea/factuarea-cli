@@ -111,9 +111,11 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 }
 
 var binaryDownloadFallbacks = map[string]string{
-	"public-api.v1.quotes.pdf":           "application/pdf",
-	"public-api.v1.proformas.pdf":        "application/pdf",
-	"public-api.v1.tax_reports.download": "application/pdf",
+	"public-api.v1.quotes.pdf":                        "application/pdf",
+	"public-api.v1.proformas.pdf":                     "application/pdf",
+	"public-api.v1.tax_reports.download":              "application/pdf",
+	"public-api.v1.purchase_invoices.file":            "application/octet-stream",
+	"public-api.v1.purchase_invoices.payment_receipt": "application/pdf",
 }
 
 func applyOverrides(o *Operation) {

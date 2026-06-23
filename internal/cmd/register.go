@@ -17,10 +17,11 @@ func registerGeneratedCommands(root *cobra.Command) {
 			g, ok := groups[key]
 			if !ok {
 				g = &cobra.Command{
-					Use:   seg,
-					Short: "Comandos de " + seg,
-					Args:  UsageArgs(cobra.NoArgs),
-					RunE:  func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
+					Use:                        seg,
+					Short:                      "Comandos de " + seg,
+					Args:                       groupArgs,
+					SuggestionsMinimumDistance: 2,
+					RunE:                       func(cmd *cobra.Command, _ []string) error { return cmd.Help() },
 				}
 				parent.AddCommand(g)
 				groups[key] = g
