@@ -26,6 +26,13 @@ func (op genOp) isPaginated() bool {
 	return false
 }
 
+func (op genOp) confirmResourceID(args []string) string {
+	if len(op.PathParams) > 0 && len(args) >= len(op.PathParams) {
+		return args[len(op.PathParams)-1]
+	}
+	return op.Action
+}
+
 func (op genOp) buildPath(args []string) string {
 	path := op.Path
 	for i, p := range op.PathParams {

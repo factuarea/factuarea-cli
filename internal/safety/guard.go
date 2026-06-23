@@ -24,6 +24,18 @@ func RequireSandbox(environment string) error {
 	return nil
 }
 
+func HasScope(scopes []string, required string) bool {
+	if required == "" {
+		return true
+	}
+	for _, s := range scopes {
+		if s == "*" || s == required {
+			return true
+		}
+	}
+	return false
+}
+
 func Confirm(resourceID, confirmFlag string, isTTY, noInput bool, prompt func(string) (string, error)) error {
 	if confirmFlag != "" {
 		if confirmFlag == resourceID {

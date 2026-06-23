@@ -13,15 +13,17 @@ type flagInfo struct {
 }
 
 type manifestEntry struct {
-	Command    string     `json:"command"`
-	Summary    string     `json:"summary"`
-	Args       []string   `json:"args"`
-	Flags      []flagInfo `json:"flags"`
-	Mutating   bool       `json:"mutating"`
-	Deprecated bool       `json:"deprecated"`
-	Binary     bool       `json:"binary"`
-	Paginated  bool       `json:"paginated"`
-	Example    string     `json:"example,omitempty"`
+	Command       string     `json:"command"`
+	Summary       string     `json:"summary"`
+	Args          []string   `json:"args"`
+	Flags         []flagInfo `json:"flags"`
+	Mutating      bool       `json:"mutating"`
+	Deprecated    bool       `json:"deprecated"`
+	Binary        bool       `json:"binary"`
+	Paginated     bool       `json:"paginated"`
+	Irreversible  bool       `json:"irreversible"`
+	RequiredScope string     `json:"required_scope,omitempty"`
+	Example       string     `json:"example,omitempty"`
 }
 
 func newCommandsCmd() *cobra.Command {
@@ -34,14 +36,16 @@ func newCommandsCmd() *cobra.Command {
 			manifest := make([]manifestEntry, 0, len(ops))
 			for _, op := range ops {
 				e := manifestEntry{
-					Command:    commandPath(op),
-					Summary:    op.Summary,
-					Args:       []string{},
-					Flags:      []flagInfo{},
-					Mutating:   op.isMutating(),
-					Deprecated: op.Deprecated,
-					Binary:     op.BinaryContentType != "",
-					Paginated:  op.isPaginated(),
+					Command:       commandPath(op),
+					Summary:       op.Summary,
+					Args:          []string{},
+					Flags:         []flagInfo{},
+					Mutating:      op.isMutating(),
+					Deprecated:    op.Deprecated,
+					Binary:        op.BinaryContentType != "",
+					Paginated:     op.isPaginated(),
+					Irreversible:  op.Irreversible,
+					RequiredScope: op.RequiredScope,
 				}
 				for _, p := range op.PathParams {
 					e.Args = append(e.Args, p.Name)

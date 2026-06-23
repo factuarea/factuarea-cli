@@ -12,6 +12,8 @@ type genBody struct {
 type genOp struct {
 	OperationID, Method, Path, Action, Summary string
 	Deprecated                                 bool
+	Irreversible                               bool
+	RequiredScope                              string
 	Groups                                     []string
 	PathParams, QueryParams                    []genParam
 	Body                                       *genBody
@@ -23,6 +25,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.account.show", Method: "GET", Path: "/account",
 			Action: "show", Summary: "Retrieve account details", Deprecated: false,
+			Irreversible: false, RequiredScope: "account:read",
 			Groups:      []string{"account"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -30,6 +33,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.account.verify_census", Method: "POST", Path: "/account/census-verification",
 			Action: "verify-census", Summary: "Verify account against the AEAT census", Deprecated: false,
+			Irreversible: false, RequiredScope: "account:read",
 			Groups:      []string{"account"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -37,6 +41,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.list", Method: "GET", Path: "/clients",
 			Action: "list", Summary: "List all clients", Deprecated: false,
+			Irreversible: false, RequiredScope: "clients:read",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "tax_id", In: "query", Type: "string", Description: "Fiscal tax number (NIF/CIF/NIE) of the client. Exact match on `tax_id`.", Required: false}, {Name: "tax_id[in]", In: "query", Type: "string", Description: "Fiscal tax number (NIF/CIF/NIE) of the client. Comma-separated list. Any of the values matches.", Required: false}, {Name: "email", In: "query", Type: "string", Description: "Client email. Exact match on `email`.", Required: false}, {Name: "name", In: "query", Type: "string", Description: "Trade name of the client. Exact match on `name`.", Required: false}, {Name: "is_active", In: "query", Type: "boolean", Description: "Filter by active / inactive clients. Exact match on `is_active`.", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Greater than or equal to the given value.", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Less than or equal to the given value.", Required: false}, {Name: "created[gt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly greater than the given value.", Required: false}, {Name: "created[lt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly less than the given value.", Required: false}},
@@ -44,6 +49,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.create", Method: "POST", Path: "/clients",
 			Action: "create", Summary: "Create a client", Deprecated: false,
+			Irreversible: false, RequiredScope: "clients:write",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -52,6 +58,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.bulk_delete", Method: "POST", Path: "/clients/bulk-delete",
 			Action: "bulk-delete", Summary: "Delete multiple clients in bulk", Deprecated: false,
+			Irreversible: true, RequiredScope: "clients:delete",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -60,6 +67,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.verify_census", Method: "POST", Path: "/clients/census-verification",
 			Action: "verify-census", Summary: "Verify a client against the AEAT census", Deprecated: false,
+			Irreversible: false, RequiredScope: "clients:read",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -68,6 +76,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.find_by_external_id", Method: "POST", Path: "/clients/find-by-external-id",
 			Action: "find-by-external-id", Summary: "Find a client by external ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "clients:read",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -76,6 +85,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.find_by_tax_id", Method: "POST", Path: "/clients/find-by-tax-id",
 			Action: "find-by-tax-id", Summary: "Find a client by tax ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "clients:read",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -84,6 +94,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.search", Method: "GET", Path: "/clients/search",
 			Action: "search", Summary: "Search clients", Deprecated: false,
+			Irreversible: false, RequiredScope: "clients:read",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "q", In: "query", Type: "string", Description: "", Required: true}},
@@ -91,6 +102,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.stats", Method: "GET", Path: "/clients/stats",
 			Action: "stats", Summary: "Get client stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "clients:read",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -98,6 +110,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.delete", Method: "DELETE", Path: "/clients/{client}",
 			Action: "delete", Summary: "Delete a client", Deprecated: false,
+			Irreversible: true, RequiredScope: "clients:delete",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{{Name: "client", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -105,6 +118,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.show", Method: "GET", Path: "/clients/{client}",
 			Action: "show", Summary: "Retrieve a client", Deprecated: false,
+			Irreversible: false, RequiredScope: "clients:read",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{{Name: "client", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -112,6 +126,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.update", Method: "PUT", Path: "/clients/{client}",
 			Action: "update", Summary: "Update a client", Deprecated: false,
+			Irreversible: false, RequiredScope: "clients:write",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{{Name: "client", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -120,6 +135,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.clients.activities", Method: "GET", Path: "/clients/{client}/activities",
 			Action: "activities", Summary: "List client activity timeline", Deprecated: false,
+			Irreversible: false, RequiredScope: "clients:read",
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{{Name: "client", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -127,6 +143,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.stripe_autoinvoicing.accounts.list", Method: "GET", Path: "/connected-accounts",
 			Action: "list", Summary: "List connected Stripe accounts", Deprecated: false,
+			Irreversible: false, RequiredScope: "stripe_autoinvoicing:read",
 			Groups:      []string{"stripe-autoinvoicing", "accounts"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -134,6 +151,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.stripe_autoinvoicing.accounts.disconnect", Method: "DELETE", Path: "/connected-accounts/{account}",
 			Action: "disconnect", Summary: "Disconnect a connected Stripe account", Deprecated: false,
+			Irreversible: true, RequiredScope: "stripe_autoinvoicing:write",
 			Groups:      []string{"stripe-autoinvoicing", "accounts"},
 			PathParams:  []genParam{{Name: "account", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -141,6 +159,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.stripe_autoinvoicing.accounts.show", Method: "GET", Path: "/connected-accounts/{account}",
 			Action: "show", Summary: "Retrieve a connected Stripe account", Deprecated: false,
+			Irreversible: false, RequiredScope: "stripe_autoinvoicing:read",
 			Groups:      []string{"stripe-autoinvoicing", "accounts"},
 			PathParams:  []genParam{{Name: "account", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -148,6 +167,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.stripe_autoinvoicing.accounts.update", Method: "PUT", Path: "/connected-accounts/{account}",
 			Action: "update", Summary: "Update a connected Stripe account", Deprecated: false,
+			Irreversible: false, RequiredScope: "stripe_autoinvoicing:write",
 			Groups:      []string{"stripe-autoinvoicing", "accounts"},
 			PathParams:  []genParam{{Name: "account", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -156,6 +176,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.list", Method: "GET", Path: "/delivery_notes",
 			Action: "list", Summary: "List all delivery notes", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:read",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "status", In: "query", Type: "string", Description: "Public delivery note status: `draft`, `sent`, `signed`, `invoiced`, `cancelled` (the same values returned by the resource `status` field). `sent` and `signed` filter by the internal delivered state (with/without signature); use the `signed` filter as well to distinguish them precisely. Exact match on `status`.", Required: false}, {Name: "status[in]", In: "query", Type: "string", Description: "Public delivery note status: `draft`, `sent`, `signed`, `invoiced`, `cancelled` (the same values returned by the resource `status` field). `sent` and `signed` filter by the internal delivered state (with/without signature); use the `signed` filter as well to distinguish them precisely. Comma-separated list. Any of the values matches.", Required: false}, {Name: "client_id", In: "query", Type: "string", Description: "Client ID (UUID v7). Exact match on `client_id`.", Required: false}, {Name: "client_id[in]", In: "query", Type: "string", Description: "Client ID (UUID v7). Comma-separated list. Any of the values matches.", Required: false}, {Name: "series_id", In: "query", Type: "string", Description: "Series ID (UUID v7). Exact match on `series_id`.", Required: false}, {Name: "series_id[in]", In: "query", Type: "string", Description: "Series ID (UUID v7). Comma-separated list. Any of the values matches.", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Greater than or equal to the given value.", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Less than or equal to the given value.", Required: false}, {Name: "created[gt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly greater than the given value.", Required: false}, {Name: "created[lt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly less than the given value.", Required: false}, {Name: "delivery_date[gte]", In: "query", Type: "string", Description: "Delivery date. Greater than or equal to the given value.", Required: false}, {Name: "delivery_date[lte]", In: "query", Type: "string", Description: "Delivery date. Less than or equal to the given value.", Required: false}, {Name: "delivery_date[gt]", In: "query", Type: "string", Description: "Delivery date. Strictly greater than the given value.", Required: false}, {Name: "delivery_date[lt]", In: "query", Type: "string", Description: "Delivery date. Strictly less than the given value.", Required: false}, {Name: "signed", In: "query", Type: "boolean", Description: "Filter by signed delivery notes (`true`) or with no recorded signature (`false`). Exact match on `signed`.", Required: false}, {Name: "vehicle_plate", In: "query", Type: "string", Description: "License plate of the delivery vehicle (exact match). Exact match on `vehicle_plate`.", Required: false}, {Name: "carrier_company", In: "query", Type: "string", Description: "Transport / courier company (exact match). Exact match on `carrier_company`.", Required: false}, {Name: "tags", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches delivery notes carrying ANY of the tags). Exact match on `tags`.", Required: false}, {Name: "tags[in]", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches delivery notes carrying ANY of the tags). Comma-separated list. Any of the values matches.", Required: false}, {Name: "sort", In: "query", Type: "string", Description: "Sort order. Use a field for ascending or a `-` prefix for descending (e.g. `-created`). Allowed fields: `created`, `number`, `delivery_date`. Combined with the cursor, ordering stays deterministic (a stable secondary sort by the cursor id, Stripe-style). When omitted, results follow the default cursor order (`created` descending).", Required: false}},
@@ -163,6 +184,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.create", Method: "POST", Path: "/delivery_notes",
 			Action: "create", Summary: "Create a delivery note", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:write",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -171,6 +193,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.bulk_delete", Method: "POST", Path: "/delivery_notes/bulk-delete",
 			Action: "bulk-delete", Summary: "Bulk delete delivery notes", Deprecated: false,
+			Irreversible: true, RequiredScope: "delivery_notes:delete",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -179,6 +202,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.find_by_external_id", Method: "POST", Path: "/delivery_notes/find-by-external-id",
 			Action: "find-by-external-id", Summary: "Find a delivery note by external ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:read",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -187,6 +211,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.signature_audits.forget", Method: "POST", Path: "/delivery_notes/signature-audits/{auditId}/forget",
 			Action: "forget", Summary: "Forget delivery note signature PII", Deprecated: false,
+			Irreversible: true, RequiredScope: "delivery_notes:gdpr_forget",
 			Groups:      []string{"delivery-notes", "signature-audits"},
 			PathParams:  []genParam{{Name: "auditId", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -194,6 +219,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.stats", Method: "GET", Path: "/delivery_notes/stats",
 			Action: "stats", Summary: "Retrieve delivery note stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:read",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -201,6 +227,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.statuses", Method: "GET", Path: "/delivery_notes/statuses",
 			Action: "statuses", Summary: "List delivery note statuses", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:read",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -208,6 +235,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.delete", Method: "DELETE", Path: "/delivery_notes/{delivery_note}",
 			Action: "delete", Summary: "Delete a delivery note", Deprecated: false,
+			Irreversible: true, RequiredScope: "delivery_notes:delete",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -215,6 +243,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.show", Method: "GET", Path: "/delivery_notes/{delivery_note}",
 			Action: "show", Summary: "Retrieve a delivery note", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:read",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -222,6 +251,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.update", Method: "PUT", Path: "/delivery_notes/{delivery_note}",
 			Action: "update", Summary: "Update a delivery note", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:write",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -230,6 +260,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.cancel", Method: "POST", Path: "/delivery_notes/{delivery_note}/cancel",
 			Action: "cancel", Summary: "Cancel a delivery note", Deprecated: false,
+			Irreversible: true, RequiredScope: "delivery_notes:transition",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -237,6 +268,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.convert", Method: "POST", Path: "/delivery_notes/{delivery_note}/convert",
 			Action: "convert", Summary: "Convert delivery note to invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "delivery_notes:transition",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -245,6 +277,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.duplicate", Method: "POST", Path: "/delivery_notes/{delivery_note}/duplicate",
 			Action: "duplicate", Summary: "Duplicate a delivery note", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:write",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -252,6 +285,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.mark_delivered", Method: "POST", Path: "/delivery_notes/{delivery_note}/mark-delivered",
 			Action: "mark-delivered", Summary: "Mark delivery note as delivered", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:transition",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -260,6 +294,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.pdf", Method: "GET", Path: "/delivery_notes/{delivery_note}/pdf",
 			Action: "pdf", Summary: "Download delivery note PDF", Deprecated: false,
+			Irreversible: false, RequiredScope: "pdfs:read",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "download", In: "query", Type: "string", Description: "Cuando es truthy (`1`/`true`), fuerza `Content-Disposition: attachment` (descarga de fichero) en lugar de `inline`.", Required: false}},
@@ -269,6 +304,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.public_link.get", Method: "GET", Path: "/delivery_notes/{delivery_note}/public-link",
 			Action: "get", Summary: "Retrieve a delivery note public link", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:read",
 			Groups:      []string{"delivery-notes", "public-link"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -276,6 +312,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.public_link.update", Method: "PUT", Path: "/delivery_notes/{delivery_note}/public-link",
 			Action: "update", Summary: "Update a delivery note public link", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:write",
 			Groups:      []string{"delivery-notes", "public-link"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -284,6 +321,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.send", Method: "POST", Path: "/delivery_notes/{delivery_note}/send",
 			Action: "send", Summary: "Send a delivery note", Deprecated: false,
+			Irreversible: false, RequiredScope: "delivery_notes:write",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -292,6 +330,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.delivery_notes.sign", Method: "POST", Path: "/delivery_notes/{delivery_note}/sign",
 			Action: "sign", Summary: "Sign a delivery note", Deprecated: false,
+			Irreversible: true, RequiredScope: "delivery_notes:transition",
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -300,6 +339,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.event_catalog.list", Method: "GET", Path: "/event-catalog",
 			Action: "list", Summary: "List event types", Deprecated: false,
+			Irreversible: false, RequiredScope: "events:read",
 			Groups:      []string{"event-catalog"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -307,6 +347,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.events.list", Method: "GET", Path: "/events",
 			Action: "list", Summary: "List all events", Deprecated: false,
+			Irreversible: false, RequiredScope: "events:read",
 			Groups:      []string{"events"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "type", In: "query", Type: "string", Description: "Event type (e.g. invoice.created). Exact match on `type`.", Required: false}, {Name: "type[in]", In: "query", Type: "string", Description: "Event type (e.g. invoice.created). Comma-separated list. Any of the values matches.", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Greater than or equal to the given value.", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Less than or equal to the given value.", Required: false}, {Name: "created[gt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly greater than the given value.", Required: false}, {Name: "created[lt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly less than the given value.", Required: false}},
@@ -314,6 +355,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.events.show", Method: "GET", Path: "/events/{event}",
 			Action: "show", Summary: "Retrieve an event", Deprecated: false,
+			Irreversible: false, RequiredScope: "events:read",
 			Groups:      []string{"events"},
 			PathParams:  []genParam{{Name: "event", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -321,6 +363,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.face_submissions.show", Method: "GET", Path: "/face-submissions/{faceSubmission}",
 			Action: "show", Summary: "Retrieve a FACe submission", Deprecated: false,
+			Irreversible: false, RequiredScope: "facturae:read",
 			Groups:      []string{"face-submissions"},
 			PathParams:  []genParam{{Name: "faceSubmission", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -328,6 +371,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.face_submissions.cancel", Method: "POST", Path: "/face-submissions/{faceSubmission}/cancel",
 			Action: "cancel", Summary: "Request FACe submission cancellation", Deprecated: false,
+			Irreversible: true, RequiredScope: "facturae:write",
 			Groups:      []string{"face-submissions"},
 			PathParams:  []genParam{{Name: "faceSubmission", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -336,6 +380,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.list", Method: "GET", Path: "/invoices",
 			Action: "list", Summary: "List all invoices", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "original_invoice_id", In: "query", Type: "string", Description: "", Required: false}, {Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "status", In: "query", Type: "string", Description: "Invoice status. Exact match on `status`.", Required: false}, {Name: "status[in]", In: "query", Type: "string", Description: "Invoice status. Comma-separated list. Any of the values matches.", Required: false}, {Name: "client_id", In: "query", Type: "string", Description: "Client ID (UUID v7). Exact match on `client_id`.", Required: false}, {Name: "client_id[in]", In: "query", Type: "string", Description: "Client ID (UUID v7). Comma-separated list. Any of the values matches.", Required: false}, {Name: "series_id", In: "query", Type: "string", Description: "Series ID (UUID v7). Exact match on `series_id`.", Required: false}, {Name: "series_id[in]", In: "query", Type: "string", Description: "Series ID (UUID v7). Comma-separated list. Any of the values matches.", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Greater than or equal to the given value.", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Less than or equal to the given value.", Required: false}, {Name: "created[gt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly greater than the given value.", Required: false}, {Name: "created[lt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly less than the given value.", Required: false}, {Name: "due_on[gte]", In: "query", Type: "string", Description: "Due date. Greater than or equal to the given value.", Required: false}, {Name: "due_on[lte]", In: "query", Type: "string", Description: "Due date. Less than or equal to the given value.", Required: false}, {Name: "due_on[gt]", In: "query", Type: "string", Description: "Due date. Strictly greater than the given value.", Required: false}, {Name: "due_on[lt]", In: "query", Type: "string", Description: "Due date. Strictly less than the given value.", Required: false}, {Name: "total[gte]", In: "query", Type: "number", Description: "Total amount. Greater than or equal to the given value.", Required: false}, {Name: "total[lte]", In: "query", Type: "number", Description: "Total amount. Less than or equal to the given value.", Required: false}, {Name: "total[gt]", In: "query", Type: "number", Description: "Total amount. Strictly greater than the given value.", Required: false}, {Name: "total[lt]", In: "query", Type: "number", Description: "Total amount. Strictly less than the given value.", Required: false}, {Name: "currency", In: "query", Type: "string", Description: "ISO 4217 currency code (e.g. EUR). Exact match on `currency`.", Required: false}, {Name: "currency[in]", In: "query", Type: "string", Description: "ISO 4217 currency code (e.g. EUR). Comma-separated list. Any of the values matches.", Required: false}, {Name: "number", In: "query", Type: "string", Description: "Invoice number. Exact match on `number`.", Required: false}, {Name: "tags", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches invoices carrying ANY of the tags). Exact match on `tags`.", Required: false}, {Name: "tags[in]", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches invoices carrying ANY of the tags). Comma-separated list. Any of the values matches.", Required: false}, {Name: "sort", In: "query", Type: "string", Description: "Sort order. Use a field for ascending or a `-` prefix for descending (e.g. `-created`). Allowed fields: `created`, `total`, `number`. Combined with the cursor, ordering stays deterministic (a stable secondary sort by the cursor id, Stripe-style). When omitted, results follow the default cursor order (`created` descending).", Required: false}},
@@ -343,6 +388,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.create", Method: "POST", Path: "/invoices",
 			Action: "create", Summary: "Create an invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -351,6 +397,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.bulk_delete", Method: "POST", Path: "/invoices/bulk-delete",
 			Action: "bulk-delete", Summary: "Bulk delete invoices", Deprecated: false,
+			Irreversible: true, RequiredScope: "invoices:delete",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -359,6 +406,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.find_by_external_id", Method: "POST", Path: "/invoices/find-by-external-id",
 			Action: "find-by-external-id", Summary: "Find an invoice by external ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -367,6 +415,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.find_by_number", Method: "POST", Path: "/invoices/find-by-number",
 			Action: "find-by-number", Summary: "Find an invoice by number", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -375,6 +424,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.quarterly.available", Method: "GET", Path: "/invoices/quarterly/available-quarters",
 			Action: "available", Summary: "List quarters with invoices", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices", "quarterly"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -382,6 +432,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.quarterly.download_zip", Method: "POST", Path: "/invoices/quarterly/download-zip",
 			Action: "download-zip", Summary: "Generate quarterly ZIP archive", Deprecated: false,
+			Irreversible: false, RequiredScope: "pdfs:read",
 			Groups:            []string{"invoices", "quarterly"},
 			PathParams:        []genParam{},
 			QueryParams:       []genParam{},
@@ -391,6 +442,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.quarterly.send_email", Method: "POST", Path: "/invoices/quarterly/send-email",
 			Action: "send-email", Summary: "Email quarterly ZIP to accountant", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:send",
 			Groups:      []string{"invoices", "quarterly"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -399,6 +451,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.simplified_eligibility", Method: "POST", Path: "/invoices/simplified-eligibility",
 			Action: "simplified-eligibility", Summary: "Check simplified invoice eligibility", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -407,6 +460,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.stats", Method: "GET", Path: "/invoices/stats",
 			Action: "stats", Summary: "Get invoice statistics", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "date_from", In: "query", Type: "string", Description: "", Required: false}, {Name: "date_to", In: "query", Type: "string", Description: "", Required: false}},
@@ -414,6 +468,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.statuses", Method: "GET", Path: "/invoices/statuses",
 			Action: "statuses", Summary: "List invoice statuses", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -421,6 +476,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.substitute_simplified", Method: "POST", Path: "/invoices/substitute-simplified",
 			Action: "substitute-simplified", Summary: "Substitute simplified invoices with full invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "invoices:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -429,6 +485,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.delete", Method: "DELETE", Path: "/invoices/{invoice}",
 			Action: "delete", Summary: "Delete an invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "invoices:delete",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -436,6 +493,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.show", Method: "GET", Path: "/invoices/{invoice}",
 			Action: "show", Summary: "Retrieve an invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -443,6 +501,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.update", Method: "PUT", Path: "/invoices/{invoice}",
 			Action: "update", Summary: "Update an invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -451,6 +510,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.activities", Method: "GET", Path: "/invoices/{invoice}/activities",
 			Action: "activities", Summary: "List invoice activity", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -458,6 +518,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.annul", Method: "POST", Path: "/invoices/{invoice}/annul",
 			Action: "annul", Summary: "Annul an invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "invoices:void",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -466,6 +527,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.assign_real_number", Method: "POST", Path: "/invoices/{invoice}/assign-real-number",
 			Action: "assign-real-number", Summary: "Assign a real invoice number", Deprecated: false,
+			Irreversible: true, RequiredScope: "invoices:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -473,6 +535,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.can_annul", Method: "GET", Path: "/invoices/{invoice}/can-annul",
 			Action: "can-annul", Summary: "Check annulment eligibility", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -480,6 +543,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.corrective", Method: "POST", Path: "/invoices/{invoice}/corrective",
 			Action: "corrective", Summary: "Generate corrective invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "invoices:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -488,6 +552,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.correctives", Method: "GET", Path: "/invoices/{invoice}/correctives",
 			Action: "correctives", Summary: "List corrective invoices", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -495,6 +560,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.duplicate", Method: "POST", Path: "/invoices/{invoice}/duplicate",
 			Action: "duplicate", Summary: "Duplicate an invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -502,6 +568,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.face_submissions.list", Method: "GET", Path: "/invoices/{invoice}/face-submissions",
 			Action: "list", Summary: "List invoice FACe submissions", Deprecated: false,
+			Irreversible: false, RequiredScope: "facturae:read",
 			Groups:      []string{"invoices", "face-submissions"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -509,6 +576,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.face_submissions.submit", Method: "POST", Path: "/invoices/{invoice}/face-submissions",
 			Action: "submit", Summary: "Submit invoice to FACe", Deprecated: false,
+			Irreversible: true, RequiredScope: "facturae:write",
 			Groups:      []string{"invoices", "face-submissions"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -516,6 +584,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.facturae", Method: "GET", Path: "/invoices/{invoice}/facturae",
 			Action: "facturae", Summary: "Download FacturaE XML", Deprecated: false,
+			Irreversible: false, RequiredScope: "facturae:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -525,6 +594,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.mark_paid", Method: "POST", Path: "/invoices/{invoice}/mark-paid",
 			Action: "mark-paid", Summary: "Mark invoice as paid", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -533,6 +603,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.mark_sent", Method: "POST", Path: "/invoices/{invoice}/mark-sent",
 			Action: "mark-sent", Summary: "Mark an invoice as sent", Deprecated: false,
+			Irreversible: true, RequiredScope: "invoices:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -540,6 +611,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.payment_receipt", Method: "GET", Path: "/invoices/{invoice}/payment-receipt",
 			Action: "payment-receipt", Summary: "Download payment receipt PDF", Deprecated: false,
+			Irreversible: false, RequiredScope: "pdfs:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -549,6 +621,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.payments_list", Method: "GET", Path: "/invoices/{invoice}/payments",
 			Action: "payments-list", Summary: "List invoice payments", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -556,6 +629,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.payments_create", Method: "POST", Path: "/invoices/{invoice}/payments",
 			Action: "payments-create", Summary: "Register a payment", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -564,6 +638,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.pdf", Method: "GET", Path: "/invoices/{invoice}/pdf",
 			Action: "pdf", Summary: "Download invoice PDF", Deprecated: false,
+			Irreversible: false, RequiredScope: "pdfs:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "download", In: "query", Type: "string", Description: "", Required: false}},
@@ -573,6 +648,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.pdf_link", Method: "GET", Path: "/invoices/{invoice}/pdf-link",
 			Action: "pdf-link", Summary: "Generate temporary PDF link", Deprecated: false,
+			Irreversible: false, RequiredScope: "pdfs:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -580,6 +656,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.public_link_get", Method: "GET", Path: "/invoices/{invoice}/public-link",
 			Action: "public-link-get", Summary: "Retrieve invoice public link", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -587,6 +664,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.public_link_update", Method: "PUT", Path: "/invoices/{invoice}/public-link",
 			Action: "public-link-update", Summary: "Update invoice public link", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -595,6 +673,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.reminder_preview", Method: "POST", Path: "/invoices/{invoice}/reminder-preview",
 			Action: "reminder-preview", Summary: "Preview a payment reminder email", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -603,6 +682,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.send", Method: "POST", Path: "/invoices/{invoice}/send",
 			Action: "send", Summary: "Send invoice by email", Deprecated: false,
+			Irreversible: true, RequiredScope: "invoices:send",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -611,6 +691,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.send_reminder", Method: "POST", Path: "/invoices/{invoice}/send-reminder",
 			Action: "send-reminder", Summary: "Send a payment reminder", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:send",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -619,6 +700,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.verifactu_get", Method: "GET", Path: "/invoices/{invoice}/verifactu",
 			Action: "verifactu-get", Summary: "Retrieve invoice VeriFactu record", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -626,6 +708,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.verifactu_create", Method: "POST", Path: "/invoices/{invoice}/verifactu",
 			Action: "verifactu-create", Summary: "Force-create VeriFactu record for invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "verifactu:write",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -633,14 +716,24 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.invoices.void", Method: "POST", Path: "/invoices/{invoice}/void",
 			Action: "void", Summary: "Void an invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "invoices:void",
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
 			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"Anulada via API v1: factura emitida por error.\"}", FileFields: []string{}},
 		},
 		{
+			OperationID: "public-api.v1.payment_methods.list", Method: "GET", Path: "/payment-methods",
+			Action: "list", Summary: "List payment methods", Deprecated: false,
+			Irreversible: false, RequiredScope: "invoices:read",
+			Groups:      []string{"payment-methods"},
+			PathParams:  []genParam{},
+			QueryParams: []genParam{},
+		},
+		{
 			OperationID: "public-api.v1.payouts.list", Method: "GET", Path: "/payouts",
 			Action: "list", Summary: "List Stripe payouts", Deprecated: false,
+			Irreversible: false, RequiredScope: "payouts:read",
 			Groups:      []string{"payouts"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "status", In: "query", Type: "string", Description: "Reconciliation status (ingested, reconciled). Exact match on `status`.", Required: false}, {Name: "status[in]", In: "query", Type: "string", Description: "Reconciliation status (ingested, reconciled). Comma-separated list. Any of the values matches.", Required: false}, {Name: "arrival_date[gte]", In: "query", Type: "string", Description: "Expected arrival date of the payout (YYYY-MM-DD). Greater than or equal to the given value.", Required: false}, {Name: "arrival_date[lte]", In: "query", Type: "string", Description: "Expected arrival date of the payout (YYYY-MM-DD). Less than or equal to the given value.", Required: false}, {Name: "arrival_date[gt]", In: "query", Type: "string", Description: "Expected arrival date of the payout (YYYY-MM-DD). Strictly greater than the given value.", Required: false}, {Name: "arrival_date[lt]", In: "query", Type: "string", Description: "Expected arrival date of the payout (YYYY-MM-DD). Strictly less than the given value.", Required: false}},
@@ -648,6 +741,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.payouts.show", Method: "GET", Path: "/payouts/{payout}",
 			Action: "show", Summary: "Retrieve a Stripe payout", Deprecated: false,
+			Irreversible: false, RequiredScope: "payouts:read",
 			Groups:      []string{"payouts"},
 			PathParams:  []genParam{{Name: "payout", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -655,6 +749,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.list", Method: "GET", Path: "/products",
 			Action: "list", Summary: "List all products", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "sku", In: "query", Type: "string", Description: "Product SKU. Exact match on `sku`.", Required: false}, {Name: "sku[in]", In: "query", Type: "string", Description: "Product SKU. Comma-separated list. Any of the values matches.", Required: false}, {Name: "name", In: "query", Type: "string", Description: "Product name. Exact match on `name`.", Required: false}, {Name: "is_active", In: "query", Type: "boolean", Description: "Filter by active / inactive products. Exact match on `is_active`.", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Greater than or equal to the given value.", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Less than or equal to the given value.", Required: false}, {Name: "created[gt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly greater than the given value.", Required: false}, {Name: "created[lt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly less than the given value.", Required: false}, {Name: "price[gte]", In: "query", Type: "number", Description: "Unit price. Greater than or equal to the given value.", Required: false}, {Name: "price[lte]", In: "query", Type: "number", Description: "Unit price. Less than or equal to the given value.", Required: false}, {Name: "price[gt]", In: "query", Type: "number", Description: "Unit price. Strictly greater than the given value.", Required: false}, {Name: "price[lt]", In: "query", Type: "number", Description: "Unit price. Strictly less than the given value.", Required: false}, {Name: "in_stock", In: "query", Type: "boolean", Description: "Filter by products with available stock (`true` → stock > 0) or out of stock (`false` → stock = 0). Exact match on `in_stock`.", Required: false}, {Name: "low_stock", In: "query", Type: "boolean", Description: "Filter by products with low stock (`true` → 0 < stock ≤ configured threshold) or with ample stock (`false` → stock > threshold). Exact match on `low_stock`.", Required: false}, {Name: "tag", In: "query", Type: "string", Description: "Filter by classification tag. Supports multiple values with `tag[in]`. Exact match on `tag`.", Required: false}, {Name: "tag[in]", In: "query", Type: "string", Description: "Filter by classification tag. Supports multiple values with `tag[in]`. Comma-separated list. Any of the values matches.", Required: false}},
@@ -662,6 +757,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.create", Method: "POST", Path: "/products",
 			Action: "create", Summary: "Create a product", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:write",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -670,6 +766,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.bulk_delete", Method: "POST", Path: "/products/bulk-delete",
 			Action: "bulk-delete", Summary: "Delete multiple products in bulk", Deprecated: false,
+			Irreversible: true, RequiredScope: "products:delete",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -678,6 +775,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.bulk_update_stock", Method: "POST", Path: "/products/bulk-update-stock",
 			Action: "bulk-update-stock", Summary: "Update stock for many products", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:write",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -686,6 +784,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.find_by_external_id", Method: "POST", Path: "/products/find-by-external-id",
 			Action: "find-by-external-id", Summary: "Find a product by external ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -694,6 +793,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.find_by_sku", Method: "POST", Path: "/products/find-by-sku",
 			Action: "find-by-sku", Summary: "Find a product by SKU", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -702,6 +802,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.low_stock_report", Method: "GET", Path: "/products/low-stock-report",
 			Action: "low-stock-report", Summary: "List products below the stock threshold", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -709,6 +810,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.search", Method: "GET", Path: "/products/search",
 			Action: "search", Summary: "Search products", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "q", In: "query", Type: "string", Description: "", Required: true}},
@@ -716,6 +818,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.stats", Method: "GET", Path: "/products/stats",
 			Action: "stats", Summary: "Get product stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -723,6 +826,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.delete", Method: "DELETE", Path: "/products/{product}",
 			Action: "delete", Summary: "Delete a product", Deprecated: false,
+			Irreversible: true, RequiredScope: "products:delete",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -730,6 +834,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.show", Method: "GET", Path: "/products/{product}",
 			Action: "show", Summary: "Retrieve a product", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -737,6 +842,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.update", Method: "PUT", Path: "/products/{product}",
 			Action: "update", Summary: "Update a product", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:write",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -745,6 +851,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.activities", Method: "GET", Path: "/products/{product}/activities",
 			Action: "activities", Summary: "List product activity timeline", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "per_page", In: "query", Type: "integer", Description: "", Required: false}, {Name: "page", In: "query", Type: "integer", Description: "", Required: false}},
@@ -752,6 +859,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.gallery.upload", Method: "POST", Path: "/products/{product}/gallery",
 			Action: "upload", Summary: "Upload a gallery image to a product", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:write",
 			Groups:      []string{"products", "gallery"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -760,6 +868,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.gallery.delete", Method: "DELETE", Path: "/products/{product}/gallery/{index}",
 			Action: "delete", Summary: "Remove a gallery image from a product", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:delete",
 			Groups:      []string{"products", "gallery"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}, {Name: "index", In: "path", Type: "integer", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -767,6 +876,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.gallery.download", Method: "GET", Path: "/products/{product}/gallery/{index}/download",
 			Action: "download", Summary: "Download a product gallery image binary", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products", "gallery"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}, {Name: "index", In: "path", Type: "integer", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -776,6 +886,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.sales_analytics", Method: "GET", Path: "/products/{product}/sales-analytics",
 			Action: "sales-analytics", Summary: "Get product sales analytics", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -783,6 +894,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.update_stock", Method: "PUT", Path: "/products/{product}/stock",
 			Action: "update-stock", Summary: "Update product stock", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:write",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -791,6 +903,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.toggle_active", Method: "POST", Path: "/products/{product}/toggle-active",
 			Action: "toggle-active", Summary: "Toggle product active state", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:write",
 			Groups:      []string{"products"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -798,6 +911,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.video.delete", Method: "DELETE", Path: "/products/{product}/video",
 			Action: "delete", Summary: "Remove the product video", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:delete",
 			Groups:      []string{"products", "video"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -805,6 +919,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.video.upload", Method: "POST", Path: "/products/{product}/video",
 			Action: "upload", Summary: "Upload a video to a product", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:write",
 			Groups:      []string{"products", "video"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -813,6 +928,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.products.video.download", Method: "GET", Path: "/products/{product}/video/download",
 			Action: "download", Summary: "Download the product video binary", Deprecated: false,
+			Irreversible: false, RequiredScope: "products:read",
 			Groups:      []string{"products", "video"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -822,6 +938,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.list", Method: "GET", Path: "/proformas",
 			Action: "list", Summary: "List all proformas", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:read",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "status", In: "query", Type: "string", Description: "Proforma status. Exact match on `status`.", Required: false}, {Name: "status[in]", In: "query", Type: "string", Description: "Proforma status. Comma-separated list. Any of the values matches.", Required: false}, {Name: "client_id", In: "query", Type: "string", Description: "Client ID (UUID v7). Exact match on `client_id`.", Required: false}, {Name: "client_id[in]", In: "query", Type: "string", Description: "Client ID (UUID v7). Comma-separated list. Any of the values matches.", Required: false}, {Name: "series_id", In: "query", Type: "string", Description: "Series ID (UUID v7). Exact match on `series_id`.", Required: false}, {Name: "series_id[in]", In: "query", Type: "string", Description: "Series ID (UUID v7). Comma-separated list. Any of the values matches.", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Greater than or equal to the given value.", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Less than or equal to the given value.", Required: false}, {Name: "created[gt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly greater than the given value.", Required: false}, {Name: "created[lt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly less than the given value.", Required: false}, {Name: "total[gte]", In: "query", Type: "number", Description: "Total amount. Greater than or equal to the given value.", Required: false}, {Name: "total[lte]", In: "query", Type: "number", Description: "Total amount. Less than or equal to the given value.", Required: false}, {Name: "total[gt]", In: "query", Type: "number", Description: "Total amount. Strictly greater than the given value.", Required: false}, {Name: "total[lt]", In: "query", Type: "number", Description: "Total amount. Strictly less than the given value.", Required: false}, {Name: "tags", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches proformas carrying ANY of the tags). Exact match on `tags`.", Required: false}, {Name: "tags[in]", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches proformas carrying ANY of the tags). Comma-separated list. Any of the values matches.", Required: false}, {Name: "sort", In: "query", Type: "string", Description: "Sort order. Use a field for ascending or a `-` prefix for descending (e.g. `-created`). Allowed fields: `created`, `total`, `number`, `valid_until`. Combined with the cursor, ordering stays deterministic (a stable secondary sort by the cursor id, Stripe-style). When omitted, results follow the default cursor order (`created` descending).", Required: false}},
@@ -829,6 +946,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.create", Method: "POST", Path: "/proformas",
 			Action: "create", Summary: "Create a proforma", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:write",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -837,6 +955,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.bulk_delete", Method: "POST", Path: "/proformas/bulk-delete",
 			Action: "bulk-delete", Summary: "Bulk delete proformas", Deprecated: false,
+			Irreversible: true, RequiredScope: "proformas:delete",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -845,6 +964,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.find_by_external_id", Method: "POST", Path: "/proformas/find-by-external-id",
 			Action: "find-by-external-id", Summary: "Find a proforma by external ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:read",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -853,6 +973,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.stats", Method: "GET", Path: "/proformas/stats",
 			Action: "stats", Summary: "Get proforma stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:read",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -860,6 +981,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.statuses", Method: "GET", Path: "/proformas/statuses",
 			Action: "statuses", Summary: "List proforma statuses", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:read",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -867,6 +989,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.delete", Method: "DELETE", Path: "/proformas/{proforma}",
 			Action: "delete", Summary: "Delete a proforma", Deprecated: false,
+			Irreversible: true, RequiredScope: "proformas:delete",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -874,6 +997,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.show", Method: "GET", Path: "/proformas/{proforma}",
 			Action: "show", Summary: "Retrieve a proforma", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:read",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -881,6 +1005,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.update", Method: "PUT", Path: "/proformas/{proforma}",
 			Action: "update", Summary: "Update a proforma", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:write",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -889,6 +1014,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.accept", Method: "POST", Path: "/proformas/{proforma}/accept",
 			Action: "accept", Summary: "Accept a proforma", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:transition",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -897,6 +1023,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.convert", Method: "POST", Path: "/proformas/{proforma}/convert",
 			Action: "convert", Summary: "Convert proforma to invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "proformas:transition",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -905,6 +1032,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.duplicate", Method: "POST", Path: "/proformas/{proforma}/duplicate",
 			Action: "duplicate", Summary: "Duplicate a proforma", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:write",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -912,6 +1040,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.pdf", Method: "GET", Path: "/proformas/{proforma}/pdf",
 			Action: "pdf", Summary: "Download proforma PDF", Deprecated: false,
+			Irreversible: false, RequiredScope: "pdfs:read",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "download", In: "query", Type: "string", Description: "", Required: false}},
@@ -919,6 +1048,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.public_link_get", Method: "GET", Path: "/proformas/{proforma}/public-link",
 			Action: "public-link-get", Summary: "Retrieve proforma public link", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:read",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -926,6 +1056,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.public_link_update", Method: "PUT", Path: "/proformas/{proforma}/public-link",
 			Action: "public-link-update", Summary: "Update proforma public link", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:write",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -934,6 +1065,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.reject", Method: "POST", Path: "/proformas/{proforma}/reject",
 			Action: "reject", Summary: "Reject a proforma", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:transition",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -942,6 +1074,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.proformas.send", Method: "POST", Path: "/proformas/{proforma}/send",
 			Action: "send", Summary: "Send proforma by email", Deprecated: false,
+			Irreversible: false, RequiredScope: "proformas:send",
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -950,6 +1083,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.list", Method: "GET", Path: "/purchase_invoices",
 			Action: "list", Summary: "List all purchase invoices", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "status", In: "query", Type: "string", Description: "Purchase invoice status. Exact match on `status`.", Required: false}, {Name: "status[in]", In: "query", Type: "string", Description: "Purchase invoice status. Comma-separated list. Any of the values matches.", Required: false}, {Name: "supplier_id", In: "query", Type: "string", Description: "Supplier ID (UUID v7). Exact match on `supplier_id`.", Required: false}, {Name: "supplier_id[in]", In: "query", Type: "string", Description: "Supplier ID (UUID v7). Comma-separated list. Any of the values matches.", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Greater than or equal to the given value.", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Less than or equal to the given value.", Required: false}, {Name: "created[gt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly greater than the given value.", Required: false}, {Name: "created[lt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly less than the given value.", Required: false}, {Name: "issued_on[gte]", In: "query", Type: "string", Description: "Issue date. Greater than or equal to the given value.", Required: false}, {Name: "issued_on[lte]", In: "query", Type: "string", Description: "Issue date. Less than or equal to the given value.", Required: false}, {Name: "issued_on[gt]", In: "query", Type: "string", Description: "Issue date. Strictly greater than the given value.", Required: false}, {Name: "issued_on[lt]", In: "query", Type: "string", Description: "Issue date. Strictly less than the given value.", Required: false}, {Name: "total[gte]", In: "query", Type: "number", Description: "Total amount. Greater than or equal to the given value.", Required: false}, {Name: "total[lte]", In: "query", Type: "number", Description: "Total amount. Less than or equal to the given value.", Required: false}, {Name: "total[gt]", In: "query", Type: "number", Description: "Total amount. Strictly greater than the given value.", Required: false}, {Name: "total[lt]", In: "query", Type: "number", Description: "Total amount. Strictly less than the given value.", Required: false}, {Name: "currency", In: "query", Type: "string", Description: "ISO 4217 currency code. Exact match on `currency`.", Required: false}, {Name: "currency[in]", In: "query", Type: "string", Description: "ISO 4217 currency code. Comma-separated list. Any of the values matches.", Required: false}, {Name: "external_invoice_number", In: "query", Type: "string", Description: "Invoice number issued by the supplier. Exact match on `external_invoice_number`.", Required: false}, {Name: "tags", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches purchase invoices carrying ANY of the tags). Exact match on `tags`.", Required: false}, {Name: "tags[in]", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches purchase invoices carrying ANY of the tags). Comma-separated list. Any of the values matches.", Required: false}, {Name: "sort", In: "query", Type: "string", Description: "Sort order. Use a field for ascending or a `-` prefix for descending (e.g. `-created`). Allowed fields: `created`, `total`, `issued_on`, `due_on`. Combined with the cursor, ordering stays deterministic (a stable secondary sort by the cursor id, Stripe-style). When omitted, results follow the default cursor order (`created` descending).", Required: false}},
@@ -957,6 +1091,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.create", Method: "POST", Path: "/purchase_invoices",
 			Action: "create", Summary: "Create a purchase invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:write",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -965,6 +1100,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.bulk_delete", Method: "POST", Path: "/purchase_invoices/bulk-delete",
 			Action: "bulk-delete", Summary: "Bulk delete purchase invoices", Deprecated: false,
+			Irreversible: true, RequiredScope: "purchase_invoices:delete",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -973,6 +1109,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.find_by_external_id", Method: "POST", Path: "/purchase_invoices/find-by-external-id",
 			Action: "find-by-external-id", Summary: "Find a purchase invoice by external ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -981,6 +1118,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.overdue", Method: "GET", Path: "/purchase_invoices/overdue",
 			Action: "overdue", Summary: "List overdue purchase invoices", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "per_page", In: "query", Type: "string", Description: "", Required: false}, {Name: "limit", In: "query", Type: "string", Description: "Default `'25'` (string) por consistencia OpenAPI: Scramble infiere\n schema.type=string para `request->input()` y el default debe ser\n string (Spectral rechaza `default: 25` int con `type: string`).", Required: false}, {Name: "cursor", In: "query", Type: "string", Description: "", Required: false}},
@@ -988,6 +1126,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.pending", Method: "GET", Path: "/purchase_invoices/pending",
 			Action: "pending", Summary: "List pending purchase invoices", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "per_page", In: "query", Type: "string", Description: "", Required: false}, {Name: "limit", In: "query", Type: "string", Description: "Default `'25'` (string) por consistencia OpenAPI/Spectral.", Required: false}, {Name: "cursor", In: "query", Type: "string", Description: "", Required: false}},
@@ -995,6 +1134,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.stats", Method: "GET", Path: "/purchase_invoices/stats",
 			Action: "stats", Summary: "Get purchase invoice stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1002,6 +1142,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.delete", Method: "DELETE", Path: "/purchase_invoices/{purchase_invoice}",
 			Action: "delete", Summary: "Delete a purchase invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "purchase_invoices:delete",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1009,6 +1150,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.show", Method: "GET", Path: "/purchase_invoices/{purchase_invoice}",
 			Action: "show", Summary: "Retrieve a purchase invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1016,6 +1158,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.update", Method: "PUT", Path: "/purchase_invoices/{purchase_invoice}",
 			Action: "update", Summary: "Update a purchase invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:write",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1024,6 +1167,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.attach_file", Method: "POST", Path: "/purchase_invoices/{purchase_invoice}/attach-file",
 			Action: "attach-file", Summary: "Attach a file to a purchase invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:write",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1032,6 +1176,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.delete_file", Method: "DELETE", Path: "/purchase_invoices/{purchase_invoice}/file",
 			Action: "delete-file", Summary: "Remove a purchase invoice file", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:write",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1039,6 +1184,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.file", Method: "GET", Path: "/purchase_invoices/{purchase_invoice}/file",
 			Action: "file", Summary: "Download the original purchase invoice file", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1046,6 +1192,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.mark_paid", Method: "POST", Path: "/purchase_invoices/{purchase_invoice}/mark_paid",
 			Action: "mark-paid", Summary: "Mark purchase invoice as paid", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:transition",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1054,6 +1201,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.payment_receipt", Method: "GET", Path: "/purchase_invoices/{purchase_invoice}/payment-receipt",
 			Action: "payment-receipt", Summary: "Download a purchase invoice payment receipt", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1061,6 +1209,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.list_payments", Method: "GET", Path: "/purchase_invoices/{purchase_invoice}/payments",
 			Action: "list-payments", Summary: "List purchase invoice payments", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1068,6 +1217,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.purchase_invoices.register_payment", Method: "POST", Path: "/purchase_invoices/{purchase_invoice}/payments",
 			Action: "register-payment", Summary: "Register a purchase invoice payment", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:transition",
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1076,6 +1226,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.list", Method: "GET", Path: "/quotes",
 			Action: "list", Summary: "List all quotes", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:read",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "status", In: "query", Type: "string", Description: "Quote status. Exact match on `status`.", Required: false}, {Name: "status[in]", In: "query", Type: "string", Description: "Quote status. Comma-separated list. Any of the values matches.", Required: false}, {Name: "client_id", In: "query", Type: "string", Description: "Client ID (UUID v7). Exact match on `client_id`.", Required: false}, {Name: "client_id[in]", In: "query", Type: "string", Description: "Client ID (UUID v7). Comma-separated list. Any of the values matches.", Required: false}, {Name: "series_id", In: "query", Type: "string", Description: "Series ID (UUID v7). Exact match on `series_id`.", Required: false}, {Name: "series_id[in]", In: "query", Type: "string", Description: "Series ID (UUID v7). Comma-separated list. Any of the values matches.", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Greater than or equal to the given value.", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Less than or equal to the given value.", Required: false}, {Name: "created[gt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly greater than the given value.", Required: false}, {Name: "created[lt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly less than the given value.", Required: false}, {Name: "valid_until[gte]", In: "query", Type: "string", Description: "Validity date. Greater than or equal to the given value.", Required: false}, {Name: "valid_until[lte]", In: "query", Type: "string", Description: "Validity date. Less than or equal to the given value.", Required: false}, {Name: "valid_until[gt]", In: "query", Type: "string", Description: "Validity date. Strictly greater than the given value.", Required: false}, {Name: "valid_until[lt]", In: "query", Type: "string", Description: "Validity date. Strictly less than the given value.", Required: false}, {Name: "total[gte]", In: "query", Type: "number", Description: "Total amount. Greater than or equal to the given value.", Required: false}, {Name: "total[lte]", In: "query", Type: "number", Description: "Total amount. Less than or equal to the given value.", Required: false}, {Name: "total[gt]", In: "query", Type: "number", Description: "Total amount. Strictly greater than the given value.", Required: false}, {Name: "total[lt]", In: "query", Type: "number", Description: "Total amount. Strictly less than the given value.", Required: false}, {Name: "tags", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches quotes carrying ANY of the tags). Exact match on `tags`.", Required: false}, {Name: "tags[in]", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches quotes carrying ANY of the tags). Comma-separated list. Any of the values matches.", Required: false}, {Name: "sort", In: "query", Type: "string", Description: "Sort order. Use a field for ascending or a `-` prefix for descending (e.g. `-created`). Allowed fields: `created`, `total`, `number`, `valid_until`. Combined with the cursor, ordering stays deterministic (a stable secondary sort by the cursor id, Stripe-style). When omitted, results follow the default cursor order (`created` descending).", Required: false}},
@@ -1083,6 +1234,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.create", Method: "POST", Path: "/quotes",
 			Action: "create", Summary: "Create a quote", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:write",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1091,6 +1243,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.bulk_delete", Method: "POST", Path: "/quotes/bulk-delete",
 			Action: "bulk-delete", Summary: "Bulk delete quotes", Deprecated: false,
+			Irreversible: true, RequiredScope: "quotes:delete",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1099,6 +1252,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.find_by_external_id", Method: "POST", Path: "/quotes/find-by-external-id",
 			Action: "find-by-external-id", Summary: "Find a quote by external ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:read",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1107,6 +1261,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.stats", Method: "GET", Path: "/quotes/stats",
 			Action: "stats", Summary: "Get quote stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:read",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1114,6 +1269,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.statuses", Method: "GET", Path: "/quotes/statuses",
 			Action: "statuses", Summary: "List quote statuses", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:read",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1121,6 +1277,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.delete", Method: "DELETE", Path: "/quotes/{quote}",
 			Action: "delete", Summary: "Delete a quote", Deprecated: false,
+			Irreversible: true, RequiredScope: "quotes:delete",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1128,6 +1285,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.show", Method: "GET", Path: "/quotes/{quote}",
 			Action: "show", Summary: "Retrieve a quote", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:read",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1135,6 +1293,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.update", Method: "PUT", Path: "/quotes/{quote}",
 			Action: "update", Summary: "Update a quote", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:write",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1143,6 +1302,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.accept", Method: "POST", Path: "/quotes/{quote}/accept",
 			Action: "accept", Summary: "Accept a quote", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:transition",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1151,6 +1311,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.convert", Method: "POST", Path: "/quotes/{quote}/convert",
 			Action: "convert", Summary: "Convert quote to invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "quotes:transition",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1159,6 +1320,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.duplicate", Method: "POST", Path: "/quotes/{quote}/duplicate",
 			Action: "duplicate", Summary: "Duplicate a quote", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:write",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1166,6 +1328,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.pdf", Method: "GET", Path: "/quotes/{quote}/pdf",
 			Action: "pdf", Summary: "Download quote PDF", Deprecated: false,
+			Irreversible: false, RequiredScope: "pdfs:read",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "download", In: "query", Type: "string", Description: "", Required: false}},
@@ -1173,6 +1336,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.public_link_get", Method: "GET", Path: "/quotes/{quote}/public-link",
 			Action: "public-link-get", Summary: "Retrieve quote public link", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:read",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1180,6 +1344,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.public_link_update", Method: "PUT", Path: "/quotes/{quote}/public-link",
 			Action: "public-link-update", Summary: "Update quote public link", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:write",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1188,6 +1353,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.reject", Method: "POST", Path: "/quotes/{quote}/reject",
 			Action: "reject", Summary: "Reject a quote", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:transition",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1196,6 +1362,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.quotes.send", Method: "POST", Path: "/quotes/{quote}/send",
 			Action: "send", Summary: "Send quote by email", Deprecated: false,
+			Irreversible: false, RequiredScope: "quotes:send",
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1204,6 +1371,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.list", Method: "GET", Path: "/recurring_invoices",
 			Action: "list", Summary: "List all recurring invoices", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:read",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "status", In: "query", Type: "string", Description: "Recurring plan status. Exact match on `status`.", Required: false}, {Name: "status[in]", In: "query", Type: "string", Description: "Recurring plan status. Comma-separated list. Any of the values matches.", Required: false}, {Name: "client_id", In: "query", Type: "string", Description: "Client ID (UUID v7). Exact match on `client_id`.", Required: false}, {Name: "client_id[in]", In: "query", Type: "string", Description: "Client ID (UUID v7). Comma-separated list. Any of the values matches.", Required: false}, {Name: "frequency", In: "query", Type: "string", Description: "Issuance frequency (e.g. monthly, yearly). Exact match on `frequency`.", Required: false}, {Name: "frequency[in]", In: "query", Type: "string", Description: "Issuance frequency (e.g. monthly, yearly). Comma-separated list. Any of the values matches.", Required: false}, {Name: "next_run_at[gte]", In: "query", Type: "string", Description: "Next run date. Greater than or equal to the given value.", Required: false}, {Name: "next_run_at[lte]", In: "query", Type: "string", Description: "Next run date. Less than or equal to the given value.", Required: false}, {Name: "next_run_at[gt]", In: "query", Type: "string", Description: "Next run date. Strictly greater than the given value.", Required: false}, {Name: "next_run_at[lt]", In: "query", Type: "string", Description: "Next run date. Strictly less than the given value.", Required: false}, {Name: "tags", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches recurring invoices carrying ANY of the tags). Exact match on `tags`.", Required: false}, {Name: "tags[in]", In: "query", Type: "string", Description: "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics — matches recurring invoices carrying ANY of the tags). Comma-separated list. Any of the values matches.", Required: false}, {Name: "sort", In: "query", Type: "string", Description: "Sort order. Use a field for ascending or a `-` prefix for descending (e.g. `-created`). Allowed fields: `created`, `next_run_at`. Combined with the cursor, ordering stays deterministic (a stable secondary sort by the cursor id, Stripe-style). When omitted, results follow the default cursor order (`created` descending).", Required: false}},
@@ -1211,6 +1379,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.create", Method: "POST", Path: "/recurring_invoices",
 			Action: "create", Summary: "Create a recurring invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:write",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1219,6 +1388,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.bulk-delete", Method: "POST", Path: "/recurring_invoices/bulk-delete",
 			Action: "bulk-delete", Summary: "Bulk delete recurring invoices", Deprecated: false,
+			Irreversible: true, RequiredScope: "recurring_invoices:delete",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1227,6 +1397,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.find_by_external_id", Method: "POST", Path: "/recurring_invoices/find-by-external-id",
 			Action: "find-by-external-id", Summary: "Find a recurring invoice by external ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:read",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1235,6 +1406,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.stats", Method: "GET", Path: "/recurring_invoices/stats",
 			Action: "stats", Summary: "Retrieve recurring invoice stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:read",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1242,6 +1414,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.delete", Method: "DELETE", Path: "/recurring_invoices/{recurring_invoice}",
 			Action: "delete", Summary: "Delete a recurring invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "recurring_invoices:delete",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1249,6 +1422,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.show", Method: "GET", Path: "/recurring_invoices/{recurring_invoice}",
 			Action: "show", Summary: "Retrieve a recurring invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:read",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1256,6 +1430,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.update", Method: "PUT", Path: "/recurring_invoices/{recurring_invoice}",
 			Action: "update", Summary: "Update a recurring invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:write",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1264,6 +1439,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.activate", Method: "POST", Path: "/recurring_invoices/{recurring_invoice}/activate",
 			Action: "activate", Summary: "Activate recurring invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:transition",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1271,6 +1447,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.activities", Method: "GET", Path: "/recurring_invoices/{recurring_invoice}/activities",
 			Action: "activities", Summary: "List recurring invoice activity", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:read",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1278,6 +1455,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.cancel", Method: "POST", Path: "/recurring_invoices/{recurring_invoice}/cancel",
 			Action: "cancel", Summary: "Cancel recurring invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "recurring_invoices:transition",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1285,6 +1463,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.generate", Method: "POST", Path: "/recurring_invoices/{recurring_invoice}/generate",
 			Action: "generate", Summary: "Generate an invoice from a recurring template", Deprecated: false,
+			Irreversible: true, RequiredScope: "recurring_invoices:write",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1292,6 +1471,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.logs", Method: "GET", Path: "/recurring_invoices/{recurring_invoice}/logs",
 			Action: "logs", Summary: "List recurring invoice execution logs", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:read",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "per_page", In: "query", Type: "string", Description: "", Required: false}, {Name: "limit", In: "query", Type: "string", Description: "Default `'25'` (string) por consistencia OpenAPI/Spectral.", Required: false}, {Name: "cursor", In: "query", Type: "string", Description: "", Required: false}},
@@ -1299,6 +1479,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.pause", Method: "POST", Path: "/recurring_invoices/{recurring_invoice}/pause",
 			Action: "pause", Summary: "Pause recurring invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:transition",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1306,6 +1487,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.preview", Method: "GET", Path: "/recurring_invoices/{recurring_invoice}/preview",
 			Action: "preview", Summary: "Preview upcoming recurring invoice dates", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:read",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "count", In: "query", Type: "string", Description: "", Required: false}},
@@ -1313,6 +1495,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.recurring_invoices.resume", Method: "POST", Path: "/recurring_invoices/{recurring_invoice}/resume",
 			Action: "resume", Summary: "Resume recurring invoice", Deprecated: false,
+			Irreversible: false, RequiredScope: "recurring_invoices:transition",
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1320,6 +1503,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.list", Method: "GET", Path: "/series",
 			Action: "list", Summary: "List all series", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:read",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "document_type", In: "query", Type: "string", Description: "Document type (invoice, quote, etc.). Exact match on `document_type`.", Required: false}, {Name: "document_type[in]", In: "query", Type: "string", Description: "Document type (invoice, quote, etc.). Comma-separated list. Any of the values matches.", Required: false}},
@@ -1327,6 +1511,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.create", Method: "POST", Path: "/series",
 			Action: "create", Summary: "Create a series", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:write",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1335,6 +1520,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.active", Method: "GET", Path: "/series/active",
 			Action: "active", Summary: "List active series by document type", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:read",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1342,6 +1528,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.default", Method: "GET", Path: "/series/default",
 			Action: "default", Summary: "Get the default series for a document type", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:read",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1349,6 +1536,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.find_by_code", Method: "POST", Path: "/series/find-by-code",
 			Action: "find-by-code", Summary: "Find a series by code", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:read",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1357,6 +1545,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.stats", Method: "GET", Path: "/series/stats",
 			Action: "stats", Summary: "Get series stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:read",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1364,6 +1553,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.show", Method: "GET", Path: "/series/{series}",
 			Action: "show", Summary: "Retrieve a series", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:read",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{{Name: "series", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1371,6 +1561,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.activities", Method: "GET", Path: "/series/{series}/activities",
 			Action: "activities", Summary: "List series activity timeline", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:read",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{{Name: "series", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1378,6 +1569,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.archive", Method: "POST", Path: "/series/{series}/archive",
 			Action: "archive", Summary: "Archive a series", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:write",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{{Name: "series", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1385,6 +1577,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.set_default", Method: "POST", Path: "/series/{series}/default",
 			Action: "set-default", Summary: "Mark a series as default for its type", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:write",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{{Name: "series", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1392,6 +1585,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.series.unarchive", Method: "POST", Path: "/series/{series}/unarchive",
 			Action: "unarchive", Summary: "Unarchive a series", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:write",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{{Name: "series", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1399,6 +1593,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.stripe_autoinvoicing.config.show", Method: "GET", Path: "/stripe-autoinvoicing/config",
 			Action: "show", Summary: "Retrieve Stripe autoinvoicing config", Deprecated: false,
+			Irreversible: false, RequiredScope: "stripe_autoinvoicing:read",
 			Groups:      []string{"stripe-autoinvoicing", "config"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1406,6 +1601,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.stripe_autoinvoicing.config.update", Method: "PUT", Path: "/stripe-autoinvoicing/config",
 			Action: "update", Summary: "Update Stripe autoinvoicing config", Deprecated: false,
+			Irreversible: false, RequiredScope: "stripe_autoinvoicing:write",
 			Groups:      []string{"stripe-autoinvoicing", "config"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1414,6 +1610,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.stripe_autoinvoicing.correctives.list", Method: "GET", Path: "/stripe-autoinvoicing/correctives",
 			Action: "list", Summary: "List Stripe autoinvoiced correctives", Deprecated: false,
+			Irreversible: false, RequiredScope: "stripe_autoinvoicing:read",
 			Groups:      []string{"stripe-autoinvoicing", "correctives"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1421,6 +1618,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.stripe_autoinvoicing.payments.list", Method: "GET", Path: "/stripe-autoinvoicing/payments",
 			Action: "list", Summary: "List Stripe autoinvoiced charges", Deprecated: false,
+			Irreversible: false, RequiredScope: "stripe_autoinvoicing:read",
 			Groups:      []string{"stripe-autoinvoicing", "payments"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "origin", In: "query", Type: "string", Description: "", Required: false}},
@@ -1428,6 +1626,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.list", Method: "GET", Path: "/suppliers",
 			Action: "list", Summary: "List all suppliers", Deprecated: false,
+			Irreversible: false, RequiredScope: "suppliers:read",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "tax_id", In: "query", Type: "string", Description: "Fiscal tax number (NIF/CIF/NIE) of the supplier. Exact match on `tax_id`.", Required: false}, {Name: "tax_id[in]", In: "query", Type: "string", Description: "Fiscal tax number (NIF/CIF/NIE) of the supplier. Comma-separated list. Any of the values matches.", Required: false}, {Name: "vat_id", In: "query", Type: "string", Description: "Intra-community VAT number. Exact match on `vat_id`.", Required: false}, {Name: "name", In: "query", Type: "string", Description: "Trade name of the supplier. Exact match on `name`.", Required: false}, {Name: "is_active", In: "query", Type: "boolean", Description: "Filter by active / inactive suppliers. Exact match on `is_active`.", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Greater than or equal to the given value.", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Less than or equal to the given value.", Required: false}, {Name: "created[gt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly greater than the given value.", Required: false}, {Name: "created[lt]", In: "query", Type: "string", Description: "Creation date (ISO 8601). Strictly less than the given value.", Required: false}},
@@ -1435,6 +1634,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.create", Method: "POST", Path: "/suppliers",
 			Action: "create", Summary: "Create a supplier", Deprecated: false,
+			Irreversible: false, RequiredScope: "suppliers:write",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1443,6 +1643,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.bulk_delete", Method: "POST", Path: "/suppliers/bulk-delete",
 			Action: "bulk-delete", Summary: "Delete multiple suppliers in bulk", Deprecated: false,
+			Irreversible: true, RequiredScope: "suppliers:delete",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1451,6 +1652,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.find_by_external_id", Method: "POST", Path: "/suppliers/find-by-external-id",
 			Action: "find-by-external-id", Summary: "Find a supplier by external ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "suppliers:read",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1459,6 +1661,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.find_by_tax_id", Method: "POST", Path: "/suppliers/find-by-tax-id",
 			Action: "find-by-tax-id", Summary: "Find a supplier by tax ID", Deprecated: false,
+			Irreversible: false, RequiredScope: "suppliers:read",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1467,6 +1670,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.search", Method: "GET", Path: "/suppliers/search",
 			Action: "search", Summary: "Search suppliers", Deprecated: false,
+			Irreversible: false, RequiredScope: "suppliers:read",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "q", In: "query", Type: "string", Description: "", Required: true}},
@@ -1474,6 +1678,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.stats", Method: "GET", Path: "/suppliers/stats",
 			Action: "stats", Summary: "Get supplier stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "suppliers:read",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1481,6 +1686,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.delete", Method: "DELETE", Path: "/suppliers/{supplier}",
 			Action: "delete", Summary: "Delete a supplier", Deprecated: false,
+			Irreversible: true, RequiredScope: "suppliers:delete",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{{Name: "supplier", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1488,6 +1694,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.show", Method: "GET", Path: "/suppliers/{supplier}",
 			Action: "show", Summary: "Retrieve a supplier", Deprecated: false,
+			Irreversible: false, RequiredScope: "suppliers:read",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{{Name: "supplier", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1495,6 +1702,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.update", Method: "PUT", Path: "/suppliers/{supplier}",
 			Action: "update", Summary: "Update a supplier", Deprecated: false,
+			Irreversible: false, RequiredScope: "suppliers:write",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{{Name: "supplier", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1503,6 +1711,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.activities", Method: "GET", Path: "/suppliers/{supplier}/activities",
 			Action: "activities", Summary: "List supplier activity timeline", Deprecated: false,
+			Irreversible: false, RequiredScope: "suppliers:read",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{{Name: "supplier", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1510,6 +1719,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.suppliers.toggle_active", Method: "POST", Path: "/suppliers/{supplier}/toggle-active",
 			Action: "toggle-active", Summary: "Toggle supplier active state", Deprecated: false,
+			Irreversible: false, RequiredScope: "suppliers:write",
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{{Name: "supplier", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1517,6 +1727,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.tax_reports.generate_130", Method: "POST", Path: "/tax_reports/130",
 			Action: "generate-130", Summary: "Generate Modelo 130", Deprecated: false,
+			Irreversible: false, RequiredScope: "tax_reports:write",
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1525,6 +1736,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.tax_reports.generate_303", Method: "POST", Path: "/tax_reports/303",
 			Action: "generate-303", Summary: "Generate Modelo 303", Deprecated: false,
+			Irreversible: false, RequiredScope: "tax_reports:write",
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1533,6 +1745,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.tax_reports.generate_347", Method: "POST", Path: "/tax_reports/347",
 			Action: "generate-347", Summary: "Generate Modelo 347", Deprecated: false,
+			Irreversible: false, RequiredScope: "tax_reports:write",
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1541,6 +1754,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.tax_reports.find_by_period", Method: "POST", Path: "/tax_reports/find-by-period",
 			Action: "find-by-period", Summary: "Find a tax report by period", Deprecated: false,
+			Irreversible: false, RequiredScope: "tax_reports:read",
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1549,6 +1763,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.tax_reports.history", Method: "GET", Path: "/tax_reports/history",
 			Action: "history", Summary: "List tax report history", Deprecated: false,
+			Irreversible: false, RequiredScope: "tax_reports:read",
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1556,6 +1771,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.tax_reports.preview", Method: "POST", Path: "/tax_reports/preview",
 			Action: "preview", Summary: "Preview a tax report", Deprecated: false,
+			Irreversible: false, RequiredScope: "tax_reports:read",
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1564,6 +1780,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.tax_reports.stats", Method: "GET", Path: "/tax_reports/stats",
 			Action: "stats", Summary: "Retrieve tax report stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "tax_reports:read",
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1571,6 +1788,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.tax_reports.activities", Method: "GET", Path: "/tax_reports/{tax_report}/activities",
 			Action: "activities", Summary: "List tax report activities", Deprecated: false,
+			Irreversible: false, RequiredScope: "tax_reports:read",
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{{Name: "tax_report", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1578,6 +1796,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.tax_reports.download", Method: "GET", Path: "/tax_reports/{tax_report}/download",
 			Action: "download", Summary: "Download tax report file", Deprecated: false,
+			Irreversible: false, RequiredScope: "tax_reports:read",
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{{Name: "tax_report", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1585,6 +1804,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.list", Method: "GET", Path: "/taxes",
 			Action: "list", Summary: "List all taxes", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "type", In: "query", Type: "string", Description: "Tax type: `vat`, `retention`, `surcharge`, `other`. Exact match on `type`.", Required: false}, {Name: "type[in]", In: "query", Type: "string", Description: "Tax type: `vat`, `retention`, `surcharge`, `other`. Comma-separated list. Any of the values matches.", Required: false}, {Name: "is_active", In: "query", Type: "boolean", Description: "Filter active / inactive taxes. Exact match on `is_active`.", Required: false}, {Name: "is_default", In: "query", Type: "boolean", Description: "Filter taxes marked as global default (legacy flag). Exact match on `is_default`.", Required: false}, {Name: "applies_to", In: "query", Type: "string", Description: "Scope: `sales`, `purchases`, `both`. Exact match on `applies_to`.", Required: false}, {Name: "applies_to[in]", In: "query", Type: "string", Description: "Scope: `sales`, `purchases`, `both`. Comma-separated list. Any of the values matches.", Required: false}, {Name: "country", In: "query", Type: "string", Description: "ISO 3166-1 alpha-2 country code. Exact match on `country`.", Required: false}, {Name: "code", In: "query", Type: "string", Description: "Short tax code (exact match). Exact match on `code`.", Required: false}, {Name: "search", In: "query", Type: "string", Description: "Escaped LIKE search over `name` and `code` (limit 80 chars). Exact match on `search`.", Required: false}, {Name: "external_reference", In: "query", Type: "string", Description: "Exact AEAT key: S1..S3, E1..E6, N1..N2. Exact match on `external_reference`.", Required: false}, {Name: "external_reference[in]", In: "query", Type: "string", Description: "Exact AEAT key: S1..S3, E1..E6, N1..N2. Comma-separated list. Any of the values matches.", Required: false}, {Name: "is_system", In: "query", Type: "boolean", Description: "Filter system taxes (global catalog) vs custom. Exact match on `is_system`.", Required: false}},
@@ -1592,6 +1812,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.create", Method: "POST", Path: "/taxes",
 			Action: "create", Summary: "Create a tax", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:write",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1600,6 +1821,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.active", Method: "GET", Path: "/taxes/active",
 			Action: "active", Summary: "List active taxes", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1607,6 +1829,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.by_type", Method: "GET", Path: "/taxes/by-type",
 			Action: "by-type", Summary: "List taxes filtered by type", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "type", In: "query", Type: "string", Description: "", Required: false}},
@@ -1614,6 +1837,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.calculate", Method: "POST", Path: "/taxes/calculate",
 			Action: "calculate", Summary: "Calculate a tax over a base amount", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1622,6 +1846,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.calculate_totals", Method: "POST", Path: "/taxes/calculate-totals",
 			Action: "calculate-totals", Summary: "Calculate totals for a set of lines", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1630,6 +1855,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.defaults", Method: "GET", Path: "/taxes/defaults/{docType}",
 			Action: "defaults", Summary: "Get default taxes for a document type", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{{Name: "docType", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1637,6 +1863,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.for_purchases", Method: "GET", Path: "/taxes/for-purchases",
 			Action: "for-purchases", Summary: "List taxes applicable to purchases", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1644,6 +1871,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.for_sales", Method: "GET", Path: "/taxes/for-sales",
 			Action: "for-sales", Summary: "List taxes applicable to sales", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1651,6 +1879,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.stats", Method: "GET", Path: "/taxes/stats",
 			Action: "stats", Summary: "Get tax stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1658,6 +1887,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.delete", Method: "DELETE", Path: "/taxes/{tax}",
 			Action: "delete", Summary: "Delete a tax", Deprecated: false,
+			Irreversible: true, RequiredScope: "taxes:delete",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{{Name: "tax", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1665,6 +1895,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.show", Method: "GET", Path: "/taxes/{tax}",
 			Action: "show", Summary: "Retrieve a tax", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{{Name: "tax", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1672,6 +1903,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.update", Method: "PUT", Path: "/taxes/{tax}",
 			Action: "update", Summary: "Update a tax", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:write",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{{Name: "tax", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1680,6 +1912,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.is_in_use", Method: "GET", Path: "/taxes/{tax}/is-in-use",
 			Action: "is-in-use", Summary: "Check whether a tax is in use", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{{Name: "tax", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1687,6 +1920,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.set_default", Method: "POST", Path: "/taxes/{tax}/set-default",
 			Action: "set-default", Summary: "Mark a tax as the default for its type", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:write",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{{Name: "tax", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1694,6 +1928,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.set_default_for_document", Method: "PUT", Path: "/taxes/{tax}/set-default/{docType}",
 			Action: "set-default-for-document", Summary: "Set tax default for a document type", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:write",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{{Name: "tax", In: "path", Type: "string", Description: "", Required: true}, {Name: "docType", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1701,6 +1936,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.taxes.toggle", Method: "POST", Path: "/taxes/{tax}/toggle",
 			Action: "toggle", Summary: "Toggle tax active state", Deprecated: false,
+			Irreversible: false, RequiredScope: "taxes:write",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{{Name: "tax", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1708,6 +1944,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.aeat_access.list", Method: "GET", Path: "/verifactu/aeat-access/records",
 			Action: "list", Summary: "List AEAT access records", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "aeat-access"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1715,6 +1952,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.aeat_access.show", Method: "GET", Path: "/verifactu/aeat-access/records/{record}",
 			Action: "show", Summary: "Retrieve an AEAT access record", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "aeat-access"},
 			PathParams:  []genParam{{Name: "record", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1722,6 +1960,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.certificates.list", Method: "GET", Path: "/verifactu/certificates",
 			Action: "list", Summary: "List company certificates", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "certificates"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1729,6 +1968,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.certificates.upload", Method: "POST", Path: "/verifactu/certificates",
 			Action: "upload", Summary: "Upload a company certificate", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:write",
 			Groups:      []string{"verifactu", "certificates"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1737,6 +1977,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.certificates.active", Method: "GET", Path: "/verifactu/certificates/active",
 			Action: "active", Summary: "Retrieve the active certificate", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "certificates"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1744,6 +1985,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.certificates.revoke", Method: "DELETE", Path: "/verifactu/certificates/{certificate}",
 			Action: "revoke", Summary: "Revoke a company certificate", Deprecated: false,
+			Irreversible: true, RequiredScope: "verifactu:write",
 			Groups:      []string{"verifactu", "certificates"},
 			PathParams:  []genParam{{Name: "certificate", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "reason", In: "query", Type: "string", Description: "", Required: false}},
@@ -1751,6 +1993,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.certificates.activate", Method: "POST", Path: "/verifactu/certificates/{certificate}/activate",
 			Action: "activate", Summary: "Activate a company certificate", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:write",
 			Groups:      []string{"verifactu", "certificates"},
 			PathParams:  []genParam{{Name: "certificate", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1758,6 +2001,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.chain.validate", Method: "GET", Path: "/verifactu/chain/validate",
 			Action: "validate", Summary: "Validate the VeriFactu hash chain", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "chain"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1765,6 +2009,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.config", Method: "GET", Path: "/verifactu/config",
 			Action: "config", Summary: "Retrieve VeriFactu config", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1772,6 +2017,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.declaracion.current", Method: "GET", Path: "/verifactu/declaracion-responsable",
 			Action: "current", Summary: "Retrieve the current declaración responsable", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "declaracion"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1779,6 +2025,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.declaracion.history", Method: "GET", Path: "/verifactu/declaracion-responsable/history",
 			Action: "history", Summary: "List declaración responsable history", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "declaracion"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1786,6 +2033,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.events.list", Method: "GET", Path: "/verifactu/events",
 			Action: "list", Summary: "List VeriFactu events", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "events"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1793,6 +2041,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.events.summary", Method: "GET", Path: "/verifactu/events/summary",
 			Action: "summary", Summary: "Get VeriFactu event summary", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "events"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1800,6 +2049,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.events.show", Method: "GET", Path: "/verifactu/events/{event}",
 			Action: "show", Summary: "Retrieve a VeriFactu event", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "events"},
 			PathParams:  []genParam{{Name: "event", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1807,6 +2057,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.events.retry", Method: "POST", Path: "/verifactu/events/{event}/retry",
 			Action: "retry", Summary: "Retry a VeriFactu event", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:write",
 			Groups:      []string{"verifactu", "events"},
 			PathParams:  []genParam{{Name: "event", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1814,6 +2065,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.records.list", Method: "GET", Path: "/verifactu/records",
 			Action: "list", Summary: "List VeriFactu records", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1821,6 +2073,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.records.find_by_csv", Method: "POST", Path: "/verifactu/records/find-by-csv",
 			Action: "find-by-csv", Summary: "Find a VeriFactu record by AEAT CSV", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1829,6 +2082,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.records.find_by_huella", Method: "POST", Path: "/verifactu/records/find-by-huella",
 			Action: "find-by-huella", Summary: "Find a VeriFactu record by hash", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1837,6 +2091,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.records.find_by_invoice_number", Method: "POST", Path: "/verifactu/records/find-by-invoice-number",
 			Action: "find-by-invoice-number", Summary: "Find a VeriFactu record by invoice number", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1845,6 +2100,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.records.show", Method: "GET", Path: "/verifactu/records/{record}",
 			Action: "show", Summary: "Retrieve a VeriFactu record", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{{Name: "record", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1852,6 +2108,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.records.activities", Method: "GET", Path: "/verifactu/records/{record}/activities",
 			Action: "activities", Summary: "List VeriFactu record activity timeline", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{{Name: "record", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1859,6 +2116,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.records.retry", Method: "POST", Path: "/verifactu/records/{record}/retry",
 			Action: "retry", Summary: "Retry VeriFactu transmission", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:write",
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{{Name: "record", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1866,6 +2124,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.records.subsanar", Method: "POST", Path: "/verifactu/records/{record}/subsanar",
 			Action: "subsanar", Summary: "Subsanar a rejected VeriFactu record", Deprecated: false,
+			Irreversible: true, RequiredScope: "verifactu:write",
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{{Name: "record", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1873,6 +2132,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.settings.update", Method: "PUT", Path: "/verifactu/settings",
 			Action: "update", Summary: "Update VeriFactu settings", Deprecated: false,
+			Irreversible: true, RequiredScope: "verifactu:write",
 			Groups:      []string{"verifactu", "settings"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1881,6 +2141,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.verifactu.stats", Method: "GET", Path: "/verifactu/stats",
 			Action: "stats", Summary: "Get VeriFactu stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
 			Groups:      []string{"verifactu"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1888,6 +2149,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.webhook_endpoints.list", Method: "GET", Path: "/webhook_endpoints",
 			Action: "list", Summary: "List all webhook endpoints", Deprecated: false,
+			Irreversible: false, RequiredScope: "webhooks:read",
 			Groups:      []string{"webhook-endpoints"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}},
@@ -1895,6 +2157,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.webhook_endpoints.create", Method: "POST", Path: "/webhook_endpoints",
 			Action: "create", Summary: "Create a webhook endpoint", Deprecated: false,
+			Irreversible: false, RequiredScope: "webhooks:write",
 			Groups:      []string{"webhook-endpoints"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
@@ -1903,6 +2166,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.webhook_endpoints.delete", Method: "DELETE", Path: "/webhook_endpoints/{webhook_endpoint}",
 			Action: "delete", Summary: "Delete a webhook endpoint", Deprecated: false,
+			Irreversible: true, RequiredScope: "webhooks:delete",
 			Groups:      []string{"webhook-endpoints"},
 			PathParams:  []genParam{{Name: "webhook_endpoint", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1910,6 +2174,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.webhook_endpoints.show", Method: "GET", Path: "/webhook_endpoints/{webhook_endpoint}",
 			Action: "show", Summary: "Retrieve a webhook endpoint", Deprecated: false,
+			Irreversible: false, RequiredScope: "webhooks:read",
 			Groups:      []string{"webhook-endpoints"},
 			PathParams:  []genParam{{Name: "webhook_endpoint", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1917,6 +2182,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.webhook_endpoints.update", Method: "PUT", Path: "/webhook_endpoints/{webhook_endpoint}",
 			Action: "update", Summary: "Update a webhook endpoint", Deprecated: false,
+			Irreversible: false, RequiredScope: "webhooks:write",
 			Groups:      []string{"webhook-endpoints"},
 			PathParams:  []genParam{{Name: "webhook_endpoint", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1925,6 +2191,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.webhook_endpoints.deliveries.list", Method: "GET", Path: "/webhook_endpoints/{webhook_endpoint}/deliveries",
 			Action: "list", Summary: "List webhook deliveries", Deprecated: false,
+			Irreversible: false, RequiredScope: "webhooks:read",
 			Groups:      []string{"webhook-endpoints", "deliveries"},
 			PathParams:  []genParam{{Name: "webhook_endpoint", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25.", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Cursor for forward pagination. Use the `uuid` of the last object on the previous page.", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "Cursor for backward pagination. Use the `uuid` of the first object on the current page.", Required: false}, {Name: "status", In: "query", Type: "string", Description: "Delivery status (pending, succeeded, failed). Exact match on `status`.", Required: false}, {Name: "status[in]", In: "query", Type: "string", Description: "Delivery status (pending, succeeded, failed). Comma-separated list. Any of the values matches.", Required: false}, {Name: "event", In: "query", Type: "string", Description: "Type of the delivered event. Exact match on `event`.", Required: false}, {Name: "event[in]", In: "query", Type: "string", Description: "Type of the delivered event. Comma-separated list. Any of the values matches.", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "Delivery creation date (ISO 8601). Greater than or equal to the given value.", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "Delivery creation date (ISO 8601). Less than or equal to the given value.", Required: false}, {Name: "created[gt]", In: "query", Type: "string", Description: "Delivery creation date (ISO 8601). Strictly greater than the given value.", Required: false}, {Name: "created[lt]", In: "query", Type: "string", Description: "Delivery creation date (ISO 8601). Strictly less than the given value.", Required: false}},
@@ -1932,6 +2199,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.webhook_endpoints.deliveries.show", Method: "GET", Path: "/webhook_endpoints/{webhook_endpoint}/deliveries/{delivery}",
 			Action: "show", Summary: "Retrieve webhook delivery", Deprecated: false,
+			Irreversible: false, RequiredScope: "webhooks:read",
 			Groups:      []string{"webhook-endpoints", "deliveries"},
 			PathParams:  []genParam{{Name: "webhook_endpoint", In: "path", Type: "string", Description: "", Required: true}, {Name: "delivery", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1939,6 +2207,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.webhook_endpoints.deliveries.replay", Method: "POST", Path: "/webhook_endpoints/{webhook_endpoint}/deliveries/{delivery}/replay",
 			Action: "replay", Summary: "Replay webhook delivery", Deprecated: false,
+			Irreversible: false, RequiredScope: "webhooks:write",
 			Groups:      []string{"webhook-endpoints", "deliveries"},
 			PathParams:  []genParam{{Name: "webhook_endpoint", In: "path", Type: "string", Description: "", Required: true}, {Name: "delivery", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1946,6 +2215,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.webhook_endpoints.ping", Method: "POST", Path: "/webhook_endpoints/{webhook_endpoint}/ping",
 			Action: "ping", Summary: "Ping webhook endpoint", Deprecated: false,
+			Irreversible: false, RequiredScope: "webhooks:write",
 			Groups:      []string{"webhook-endpoints"},
 			PathParams:  []genParam{{Name: "webhook_endpoint", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
@@ -1953,6 +2223,7 @@ func generatedOps() []genOp {
 		{
 			OperationID: "public-api.v1.webhook_endpoints.rotate_secret", Method: "POST", Path: "/webhook_endpoints/{webhook_endpoint}/rotate_secret",
 			Action: "rotate-secret", Summary: "Rotate webhook secret", Deprecated: false,
+			Irreversible: true, RequiredScope: "webhooks:write",
 			Groups:      []string{"webhook-endpoints"},
 			PathParams:  []genParam{{Name: "webhook_endpoint", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},

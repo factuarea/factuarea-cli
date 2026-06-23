@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/factuarea/factuarea-cli/internal/apierr"
 	"github.com/factuarea/factuarea-cli/internal/output"
 	"github.com/factuarea/factuarea-cli/internal/safety"
 	"github.com/spf13/cobra"
@@ -16,6 +18,8 @@ import (
 func buildGeneratedCommand(op genOp) *cobra.Command {
 	var data, dataFile, outputPath string
 	var paginate bool
+	var confirmFlag string
+	var skipScopeCheck bool
 	fileFlags := map[string]*string{}
 
 	use := op.Action
@@ -45,6 +49,26 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			}
 			if op.isMutating() {
 				if err := safety.RequireLive(cc.res.Environment, g.Live); err != nil {
+					return err
+				}
+			}
+			if op.RequiredScope != "" && !skipScopeCheck {
+				scopes, serr := cc.scopes(context.Background())
+				if serr != nil {
+					fmt.Fprintf(cmd.ErrOrStderr(), "aviso: no pude verificar scopes (%v); continúo\n", serr)
+				} else if !safety.HasScope(scopes, op.RequiredScope) {
+					perr := apierr.Permf("la API key no tiene el scope %q requerido por esta operación", op.RequiredScope)
+					output.PrintError(cmd.ErrOrStderr(), perr, cc.format)
+					return &AlreadyReported{Err: perr}
+				}
+			}
+			if op.Irreversible {
+				resourceID := op.confirmResourceID(args)
+				if err := safety.Confirm(resourceID, confirmFlag, output.IsTTY(os.Stdin), g.NoInput, func(p string) (string, error) {
+					fmt.Fprint(cmd.ErrOrStderr(), p)
+					line, rerr := bufio.NewReader(cmd.InOrStdin()).ReadString('\n')
+					return strings.TrimSpace(line), rerr
+				}); err != nil {
 					return err
 				}
 			}
@@ -102,6 +126,12 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	}
 	if op.isPaginated() {
 		c.Flags().BoolVar(&paginate, "paginate", false, "recorre todas las páginas (cursor)")
+	}
+	if op.Irreversible {
+		c.Flags().StringVar(&confirmFlag, "confirm", "", "confirma la operación irreversible pasando el id del recurso")
+	}
+	if op.RequiredScope != "" {
+		c.Flags().BoolVar(&skipScopeCheck, "skip-scope-check", false, "no verificar scopes localmente antes de la llamada")
 	}
 	return c
 }

@@ -26,6 +26,29 @@ func TestRequireSandbox(t *testing.T) {
 	}
 }
 
+func TestHasScope(t *testing.T) {
+	cases := []struct {
+		name     string
+		scopes   []string
+		required string
+		want     bool
+	}{
+		{"empty required passes", nil, "", true},
+		{"missing scope blocks", nil, "invoices:read", false},
+		{"wildcard covers any", []string{"*"}, "invoices:read", true},
+		{"exact match passes", []string{"invoices:read"}, "invoices:read", true},
+		{"different scope blocks", []string{"clients:read"}, "invoices:read", false},
+		{"present among many", []string{"clients:read", "invoices:read"}, "invoices:read", true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := HasScope(c.scopes, c.required); got != c.want {
+				t.Fatalf("HasScope(%v, %q) = %v, want %v", c.scopes, c.required, got, c.want)
+			}
+		})
+	}
+}
+
 func TestConfirmNeverBlocksInNoInput(t *testing.T) {
 	called := false
 	prompt := func(string) (string, error) { called = true; return "", nil }

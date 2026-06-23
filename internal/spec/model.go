@@ -12,6 +12,8 @@ type Operation struct {
 	QueryParams    []Param
 	Body           *Body
 	BinaryResponse *BinaryResponse
+	RequiredScope  string // x-required-scope ("" si ausente)
+	Irreversible   bool   // x-irreversible (false si ausente)
 }
 
 type Param struct {
