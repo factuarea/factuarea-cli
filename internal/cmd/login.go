@@ -21,12 +21,12 @@ func newLoginCmd() *cobra.Command {
 		Short: "Guarda tu API key (fact_test_… o fact_live_…)",
 		Long:  "Lee la API key por prompt oculto, por stdin (--api-key -) o por la env FACTUAREA_API_KEY.\nNUNCA la pases como valor literal de flag.",
 		Args:  rejectLoginPositional,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			g := globalsFrom(cmd)
 			if cmd.Flags().Changed("api-key") && apiKeySource != "-" {
 				return apierr.Usagef("--api-key solo acepta '-' (lee la key por stdin); usa el prompt o define FACTUAREA_API_KEY. Nunca pases la key como valor literal")
 			}
-			fromStdin := cmd.Flags().Changed("api-key") && apiKeySource == "-"
+			fromStdin := (cmd.Flags().Changed("api-key") && apiKeySource == "-") || (len(args) == 1 && args[0] == "-")
 			key, err := readKey(cmd, fromStdin, g.NoInput)
 			if err != nil {
 				return err
@@ -74,6 +74,9 @@ func newLoginCmd() *cobra.Command {
 }
 
 func rejectLoginPositional(_ *cobra.Command, args []string) error {
+	if len(args) == 1 && args[0] == "-" {
+		return nil
+	}
 	if len(args) > 0 {
 		return apierr.Usagef("login no acepta la API key como argumento posicional (quedaría en el historial del shell); usa el prompt oculto, --api-key - (stdin) o la env %s", config.EnvAPIKey)
 	}

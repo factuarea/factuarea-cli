@@ -154,7 +154,7 @@ func (op genOp) buildBody(data, dataFile string, files map[string]*string) ([]by
 		}
 	}
 	if len(fileMap) == 0 {
-		return nil, nil, fmt.Errorf("falta --file-<campo> para el upload (%s)", strings.Join(op.Body.FileFields, ", "))
+		return nil, nil, apierr.Usagef("falta --file-<campo> para el upload (%s)", strings.Join(op.Body.FileFields, ", "))
 	}
 	fields := map[string]string{}
 	if data != "" {
