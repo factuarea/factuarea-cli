@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"context"
+	"encoding/json"
 	"os"
+	"sync"
 
 	"github.com/factuarea/factuarea-cli/internal/apierr"
 	"github.com/factuarea/factuarea-cli/internal/client"
@@ -15,6 +18,33 @@ type cliContext struct {
 	client *client.Client
 	format output.Format
 	g      *GlobalFlags
+
+	scopesOnce sync.Once
+	scopesVal  []string
+	scopesErr  error
+}
+
+func (cc *cliContext) scopes(ctx context.Context) ([]string, error) {
+	cc.scopesOnce.Do(func() {
+		resp, err := cc.client.Do(ctx, "GET", "/v1/account", nil, nil)
+		if err != nil {
+			cc.scopesErr = err
+			return
+		}
+		var payload struct {
+			Data struct {
+				APIKey struct {
+					Scopes []string `json:"scopes"`
+				} `json:"api_key"`
+			} `json:"data"`
+		}
+		if err := json.Unmarshal(resp.Body, &payload); err != nil {
+			cc.scopesErr = err
+			return
+		}
+		cc.scopesVal = payload.Data.APIKey.Scopes
+	})
+	return cc.scopesVal, cc.scopesErr
 }
 
 const envBaseURL = "FACTUAREA_BASE_URL"

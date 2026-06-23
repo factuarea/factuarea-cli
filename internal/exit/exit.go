@@ -49,6 +49,10 @@ func ForError(err error) int {
 	if errors.As(err, &transport) {
 		return Network
 	}
+	var perm *apierr.PermissionError
+	if errors.As(err, &perm) {
+		return Perm
+	}
 	var usage *apierr.UsageError
 	if errors.As(err, &usage) {
 		return Usage

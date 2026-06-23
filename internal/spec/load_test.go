@@ -3,6 +3,9 @@ package spec
 import (
 	"reflect"
 	"testing"
+
+	"github.com/pb33f/libopenapi/orderedmap"
+	"go.yaml.in/yaml/v4"
 )
 
 func TestLoadParsesRealSpec(t *testing.T) {
@@ -58,8 +61,81 @@ func TestNonConformingOperationsAreBaseline(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
-	want := []string{"public-api.v1.payment_methods"}
+	var want []string
 	if len(nonConforming) != len(want) || (len(want) > 0 && !reflect.DeepEqual(nonConforming, want)) {
 		t.Fatalf("baseline de no-conformes cambió: got %v, want %v (¿drift? decide conscientemente)", nonConforming, want)
 	}
+}
+
+func TestLoadParsesOperationMetadata(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	del := by["public-api.v1.invoices.delete"]
+	if del.RequiredScope != "invoices:delete" {
+		t.Errorf("invoices.delete RequiredScope = %q, want invoices:delete", del.RequiredScope)
+	}
+	if !del.Irreversible {
+		t.Error("invoices.delete debe ser Irreversible (x-irreversible: true)")
+	}
+
+	show := by["public-api.v1.invoices.show"]
+	if show.RequiredScope != "invoices:read" {
+		t.Errorf("invoices.show RequiredScope = %q, want invoices:read", show.RequiredScope)
+	}
+	if show.Irreversible {
+		t.Error("invoices.show NO debe ser Irreversible")
+	}
+}
+
+func TestStringExtAndBoolExt(t *testing.T) {
+	ext := orderedmap.New[string, *yaml.Node]()
+	ext.Set("x-required-scope", strNode("invoices:read"))
+	ext.Set("x-irreversible", boolNode(true))
+	ext.Set("x-irreversible-false", boolNode(false))
+	ext.Set("x-not-a-bool", strNode("nope"))
+
+	if got := stringExt(ext, "x-required-scope"); got != "invoices:read" {
+		t.Errorf("stringExt present = %q, want invoices:read", got)
+	}
+	if got := stringExt(ext, "x-missing"); got != "" {
+		t.Errorf("stringExt missing = %q, want empty", got)
+	}
+	if got := stringExt(nil, "x-required-scope"); got != "" {
+		t.Errorf("stringExt nil map = %q, want empty", got)
+	}
+
+	if !boolExt(ext, "x-irreversible") {
+		t.Error("boolExt true scalar must be true")
+	}
+	if boolExt(ext, "x-irreversible-false") {
+		t.Error("boolExt false scalar must be false")
+	}
+	if boolExt(ext, "x-missing") {
+		t.Error("boolExt missing must default false")
+	}
+	if boolExt(ext, "x-not-a-bool") {
+		t.Error("boolExt non-bool scalar must default false")
+	}
+	if boolExt(nil, "x-irreversible") {
+		t.Error("boolExt nil map must default false")
+	}
+}
+
+func strNode(value string) *yaml.Node {
+	return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!str", Value: value}
+}
+
+func boolNode(value bool) *yaml.Node {
+	v := "false"
+	if value {
+		v = "true"
+	}
+	return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!bool", Value: v}
 }

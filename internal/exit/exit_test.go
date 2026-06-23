@@ -25,6 +25,7 @@ func TestForError(t *testing.T) {
 		{"unavailable", &apierr.APIError{Type: "service_unavailable_error"}, Server},
 		{"transport", &apierr.TransportError{Err: errors.New("dial tcp: timeout")}, Network},
 		{"unknown api type", &apierr.APIError{Type: "weird"}, Server},
+		{"permission", &apierr.PermissionError{Err: errors.New("falta scope")}, Perm},
 		{"usage", &apierr.UsageError{Err: errors.New("x")}, Usage},
 		{"generic", errors.New("boom"), CLIBug},
 	}

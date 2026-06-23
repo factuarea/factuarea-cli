@@ -9,6 +9,7 @@ import (
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/orderedmap"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -103,7 +104,39 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 	}
 	o.Body = buildBody(op)
 	o.BinaryResponse = buildBinaryResponse(op)
+	o.RequiredScope = stringExt(op.Extensions, "x-required-scope")
+	o.Irreversible = boolExt(op.Extensions, "x-irreversible")
 	return o
+}
+
+func stringExt(ext *orderedmap.Map[string, *yaml.Node], key string) string {
+	if ext == nil {
+		return ""
+	}
+	node, ok := ext.Get(key)
+	if !ok || node == nil {
+		return ""
+	}
+	var s string
+	if err := node.Decode(&s); err != nil {
+		return ""
+	}
+	return s
+}
+
+func boolExt(ext *orderedmap.Map[string, *yaml.Node], key string) bool {
+	if ext == nil {
+		return false
+	}
+	node, ok := ext.Get(key)
+	if !ok || node == nil {
+		return false
+	}
+	var b bool
+	if err := node.Decode(&b); err != nil {
+		return false
+	}
+	return b
 }
 
 func buildBody(op *v3.Operation) *Body {

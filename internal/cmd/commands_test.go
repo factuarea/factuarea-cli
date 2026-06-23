@@ -22,4 +22,21 @@ func TestCommandsManifestJSON(t *testing.T) {
 	if len(manifest) < 200 {
 		t.Fatalf("esperaba >=200 comandos, got %d", len(manifest))
 	}
+
+	var del map[string]any
+	for _, e := range manifest {
+		if e["command"] == "factuarea invoices delete" {
+			del = e
+			break
+		}
+	}
+	if del == nil {
+		t.Fatal("manifest sin la entrada `factuarea invoices delete`")
+	}
+	if irr, ok := del["irreversible"].(bool); !ok || !irr {
+		t.Errorf("invoices delete debe traer irreversible=true en el manifiesto, got %v", del["irreversible"])
+	}
+	if scope, _ := del["required_scope"].(string); scope != "invoices:delete" {
+		t.Errorf("invoices delete required_scope = %q, want invoices:delete", scope)
+	}
 }
