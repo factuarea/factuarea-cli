@@ -9,12 +9,14 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
 
 	"github.com/factuarea/factuarea-cli/internal/apierr"
+	"github.com/factuarea/factuarea-cli/internal/output"
 	"github.com/factuarea/factuarea-cli/internal/webhook"
 	"github.com/spf13/cobra"
 )
@@ -29,8 +31,12 @@ func newListenCmd() *cobra.Command {
 		Args:  UsageArgs(cobra.NoArgs),
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			g := globalsFrom(cmd)
+			asJSON := output.WantsJSON(g.JSON, os.Stdout)
 			if err := validateForwardTo(forwardTo, allowRemote); err != nil {
 				return err
+			}
+			if pollInterval <= 0 {
+				return apierr.Usagef("--poll-interval debe ser > 0")
 			}
 			cc, err := newCLIContext(g, "")
 			if err != nil {
@@ -63,7 +69,7 @@ func newListenCmd() *cobra.Command {
 				case <-ctx.Done():
 					return nil
 				case <-ticker.C:
-					watermark, err = drainNewEvents(ctx, cc, fwd, watermark, filter, secret, forwardTo, printJSON, cmd)
+					watermark, err = drainNewEvents(ctx, cc, fwd, watermark, filter, secret, forwardTo, printJSON, asJSON, cmd)
 					if err != nil && ctx.Err() == nil {
 						fmt.Fprintf(cmd.ErrOrStderr(), "aviso: %v\n", err)
 					}
@@ -188,7 +194,7 @@ func latestEventID(ctx context.Context, cc *cliContext) (string, error) {
 	}
 }
 
-func drainNewEvents(ctx context.Context, cc *cliContext, fwd *http.Client, watermark string, filter map[string]bool, secret, forwardTo string, printJSON bool, cmd *cobra.Command) (string, error) {
+func drainNewEvents(ctx context.Context, cc *cliContext, fwd *http.Client, watermark string, filter map[string]bool, secret, forwardTo string, printJSON, asJSON bool, cmd *cobra.Command) (string, error) {
 	for {
 		page, err := fetchEventsPage(ctx, cc, watermark)
 		if err != nil {
@@ -204,7 +210,7 @@ func drainNewEvents(ctx context.Context, cc *cliContext, fwd *http.Client, water
 				continue
 			}
 			if filter == nil || filter[eventType] {
-				if err := forwardEvent(ctx, fwd, forwardTo, secret, eventID, eventType, body, printJSON, cmd); err != nil && ctx.Err() == nil {
+				if err := forwardEvent(ctx, fwd, forwardTo, secret, eventID, eventType, body, printJSON, asJSON, cmd); err != nil && ctx.Err() == nil {
 					fmt.Fprintf(cmd.ErrOrStderr(), "aviso: no se pudo entregar %s: %v\n", eventType, err)
 				}
 			}
@@ -218,7 +224,8 @@ func drainNewEvents(ctx context.Context, cc *cliContext, fwd *http.Client, water
 	}
 }
 
-func forwardEvent(ctx context.Context, fwd *http.Client, forwardTo, secret, eventID, eventType string, body []byte, printJSON bool, cmd *cobra.Command) error {
+func forwardEvent(ctx context.Context, fwd *http.Client, forwardTo, secret, eventID, eventType string, body []byte, printJSON, asJSON bool, cmd *cobra.Command) error {
+	deliveryID := newDeliveryID()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, forwardTo, strings.NewReader(string(body)))
 	if err != nil {
 		return err
@@ -228,7 +235,7 @@ func forwardEvent(ctx context.Context, fwd *http.Client, forwardTo, secret, even
 	req.Header.Set("Factuarea-Signature", webhook.Signature(secret, time.Now().Unix(), body))
 	req.Header.Set("Factuarea-Event-Id", eventID)
 	req.Header.Set("Factuarea-Event-Type", eventType)
-	req.Header.Set("Factuarea-Delivery-Id", newDeliveryID())
+	req.Header.Set("Factuarea-Delivery-Id", deliveryID)
 
 	start := time.Now()
 	resp, err := fwd.Do(req)
@@ -237,6 +244,15 @@ func forwardEvent(ctx context.Context, fwd *http.Client, forwardTo, secret, even
 		return err
 	}
 	_ = resp.Body.Close()
+	if asJSON {
+		return output.PrintJSON(cmd.OutOrStdout(), map[string]any{
+			"event_type":  eventType,
+			"event_id":    eventID,
+			"delivery_id": deliveryID,
+			"status":      resp.StatusCode,
+			"latency_ms":  latency.Milliseconds(),
+		})
+	}
 	fmt.Fprintf(cmd.ErrOrStderr(), "%s → %d (%dms)\n", eventType, resp.StatusCode, latency.Milliseconds())
 	if printJSON {
 		fmt.Fprintf(cmd.OutOrStdout(), "%s\n", body)

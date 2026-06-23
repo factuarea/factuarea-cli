@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/factuarea/factuarea-cli/internal/apierr"
 )
@@ -15,6 +16,16 @@ func PrintBody(w io.Writer, body []byte, f Format) error {
 		_, _ = w.Write([]byte("\n"))
 	}
 	return err
+}
+
+func PrintJSON(w io.Writer, v any) error {
+	enc := json.NewEncoder(w)
+	enc.SetEscapeHTML(false)
+	return enc.Encode(v)
+}
+
+func WantsJSON(jsonFlag bool, stdout *os.File) bool {
+	return ResolveFormat(jsonFlag, IsTTY(stdout)) == JSON
 }
 
 func PrintError(stderr io.Writer, err error, f Format) {

@@ -8,7 +8,7 @@ import (
 func UsageArgs(v cobra.PositionalArgs) cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		if err := v(cmd, args); err != nil {
-			return &apierr.UsageError{Err: err}
+			return apierr.Usagef("%s", translateCobraError(err.Error()))
 		}
 		return nil
 	}

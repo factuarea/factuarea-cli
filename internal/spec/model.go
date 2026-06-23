@@ -28,6 +28,17 @@ type Body struct {
 	Kind       string
 	Example    string
 	FileFields []string
+	Fields     []BodyField
+}
+
+type BodyField struct {
+	Name     string
+	Type     string
+	Required bool
+	Enum     []string
+	Nullable bool
+	Kind     string
+	Children []BodyField
 }
 
 type BinaryResponse struct{ ContentType string }

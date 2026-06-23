@@ -23,7 +23,7 @@ func init() {
 	registry["product.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
 		_, err := c.Do(ctx, http.MethodPost, "/v1/products", mustJSON(map[string]any{
 			"name":  orDefault(ov, "name", "Producto de prueba (trigger)"),
-			"price": 100,
+			"price": orDefault(ov, "price", "100"),
 		}), nil)
 		return err
 	}

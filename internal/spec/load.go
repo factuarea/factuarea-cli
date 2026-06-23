@@ -106,7 +106,66 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 	o.BinaryResponse = buildBinaryResponse(op)
 	o.RequiredScope = stringExt(op.Extensions, "x-required-scope")
 	o.Irreversible = boolExt(op.Extensions, "x-irreversible")
+	applyOverrides(&o)
 	return o
+}
+
+var binaryDownloadFallbacks = map[string]string{
+	"public-api.v1.quotes.pdf":           "application/pdf",
+	"public-api.v1.proformas.pdf":        "application/pdf",
+	"public-api.v1.tax_reports.download": "application/pdf",
+}
+
+func applyOverrides(o *Operation) {
+	if ct, ok := binaryDownloadFallbacks[o.OperationID]; ok && o.BinaryResponse == nil {
+		o.BinaryResponse = &BinaryResponse{ContentType: ct}
+		o.Body = nil
+	}
+	if o.OperationID == "public-api.v1.series.default" && !hasQueryParam(o, "document_type") {
+		o.QueryParams = append(o.QueryParams, Param{
+			Name:        "document_type",
+			In:          "query",
+			Required:    true,
+			Type:        "string",
+			Description: "tipo de documento (invoice, quote, proforma, delivery_note)",
+		})
+	}
+	if o.OperationID == "public-api.v1.quotes.convert" {
+		narrowFieldEnum(o.Body, "target", []string{"invoice"})
+	}
+	if o.OperationID == "public-api.v1.taxes.by_type" {
+		markQueryParamRequired(o, "type")
+	}
+}
+
+func markQueryParamRequired(o *Operation, name string) {
+	for i := range o.QueryParams {
+		if o.QueryParams[i].Name == name {
+			o.QueryParams[i].Required = true
+			return
+		}
+	}
+}
+
+func narrowFieldEnum(body *Body, field string, enum []string) {
+	if body == nil {
+		return
+	}
+	for i := range body.Fields {
+		if body.Fields[i].Name == field {
+			body.Fields[i].Enum = enum
+			return
+		}
+	}
+}
+
+func hasQueryParam(o *Operation, name string) bool {
+	for _, p := range o.QueryParams {
+		if p.Name == name {
+			return true
+		}
+	}
+	return false
 }
 
 func stringExt(ext *orderedmap.Map[string, *yaml.Node], key string) string {
@@ -148,6 +207,9 @@ func buildBody(op *v3.Operation) *Body {
 	if mt, ok := content.Get("application/json"); ok && mt != nil {
 		b := &Body{Kind: "json"}
 		b.Example = exampleJSON(mt.Example)
+		if mt.Schema != nil {
+			b.Fields = bodyFields(mt.Schema.Schema(), 0)
+		}
 		return b
 	}
 
@@ -184,6 +246,160 @@ func binaryFields(sc *base.Schema) []string {
 		fields = append(fields, binaryFields(sub.Schema())...)
 	}
 	return fields
+}
+
+func bodyFields(sc *base.Schema, depth int) []BodyField {
+	if sc == nil {
+		return nil
+	}
+	props := mergedProperties(sc)
+	if props == nil {
+		return nil
+	}
+	required := requiredSet(sc)
+	var fields []BodyField
+	for prop := props.First(); prop != nil; prop = prop.Next() {
+		ps := prop.Value()
+		if ps == nil {
+			continue
+		}
+		s := ps.Schema()
+		if s == nil {
+			continue
+		}
+		f := BodyField{Name: prop.Key(), Required: required[prop.Key()]}
+		classifyField(&f, s, depth)
+		fields = append(fields, f)
+	}
+	return fields
+}
+
+func classifyField(f *BodyField, s *base.Schema, depth int) {
+	jsonType, nullable := scalarType(s.Type)
+	if s.Nullable != nil && *s.Nullable {
+		nullable = true
+	}
+	f.Nullable = nullable
+	f.Enum = enumValues(s.Enum)
+
+	switch jsonType {
+	case "array":
+		item := arrayItemSchema(s)
+		itemType, _ := scalarType(itemSchemaType(item))
+		if itemType == "object" {
+			f.Kind = "object_array"
+		} else {
+			f.Kind = "scalar_array"
+			f.Type = itemType
+		}
+	case "object":
+		if isFreeMap(s) {
+			f.Kind = "map"
+		} else if depth < 1 {
+			f.Kind = "object"
+			f.Children = bodyFields(s, depth+1)
+		} else {
+			f.Kind = "object"
+		}
+	default:
+		f.Kind = "scalar"
+		f.Type = jsonType
+	}
+}
+
+func mergedProperties(sc *base.Schema) *orderedmap.Map[string, *base.SchemaProxy] {
+	if sc == nil {
+		return nil
+	}
+	if sc.Properties != nil && sc.Properties.Len() > 0 {
+		return sc.Properties
+	}
+	for _, sub := range sc.AllOf {
+		if sub == nil {
+			continue
+		}
+		if p := mergedProperties(sub.Schema()); p != nil {
+			return p
+		}
+	}
+	return nil
+}
+
+func requiredSet(sc *base.Schema) map[string]bool {
+	set := map[string]bool{}
+	if sc == nil {
+		return set
+	}
+	for _, r := range sc.Required {
+		set[r] = true
+	}
+	for _, sub := range sc.AllOf {
+		if sub == nil {
+			continue
+		}
+		for k := range requiredSet(sub.Schema()) {
+			set[k] = true
+		}
+	}
+	return set
+}
+
+func scalarType(types []string) (jsonType string, nullable bool) {
+	for _, t := range types {
+		if t == "null" {
+			nullable = true
+			continue
+		}
+		if jsonType == "" {
+			jsonType = t
+		}
+	}
+	return jsonType, nullable
+}
+
+func enumValues(nodes []*yaml.Node) []string {
+	if len(nodes) == 0 {
+		return nil
+	}
+	var vals []string
+	for _, n := range nodes {
+		if n == nil {
+			continue
+		}
+		var s string
+		if err := n.Decode(&s); err == nil {
+			vals = append(vals, s)
+		}
+	}
+	return vals
+}
+
+func arrayItemSchema(s *base.Schema) *base.Schema {
+	if s == nil || s.Items == nil || !s.Items.IsA() {
+		return nil
+	}
+	proxy := s.Items.A
+	if proxy == nil {
+		return nil
+	}
+	return proxy.Schema()
+}
+
+func itemSchemaType(item *base.Schema) []string {
+	if item == nil {
+		return nil
+	}
+	return item.Type
+}
+
+func isFreeMap(s *base.Schema) bool {
+	if s == nil || s.AdditionalProperties == nil {
+		return false
+	}
+	if s.AdditionalProperties.IsB() {
+		return s.AdditionalProperties.B
+	}
+	return s.AdditionalProperties.A != nil
 }
 
 func buildBinaryResponse(op *v3.Operation) *BinaryResponse {

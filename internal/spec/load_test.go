@@ -56,6 +56,45 @@ func TestLoadParsesRealSpec(t *testing.T) {
 	}
 }
 
+func TestOverridesFixBinaryDownloadsAndSeriesDefault(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	for _, id := range []string{
+		"public-api.v1.quotes.pdf",
+		"public-api.v1.proformas.pdf",
+		"public-api.v1.tax_reports.download",
+	} {
+		o := by[id]
+		if o.BinaryResponse == nil || o.BinaryResponse.ContentType != "application/pdf" {
+			t.Errorf("%s debe tener BinaryResponse application/pdf (override): %+v", id, o.BinaryResponse)
+		}
+		if o.Body != nil {
+			t.Errorf("%s no debe tener body tras el override: %+v", id, o.Body)
+		}
+	}
+
+	sd := by["public-api.v1.series.default"]
+	var found *Param
+	for i := range sd.QueryParams {
+		if sd.QueryParams[i].Name == "document_type" {
+			found = &sd.QueryParams[i]
+		}
+	}
+	if found == nil {
+		t.Fatalf("series.default debe exponer el query param document_type: %+v", sd.QueryParams)
+	}
+	if !found.Required {
+		t.Errorf("document_type debe marcarse como requerido")
+	}
+}
+
 func TestNonConformingOperationsAreBaseline(t *testing.T) {
 	_, nonConforming, err := Load()
 	if err != nil {
@@ -126,6 +165,139 @@ func TestStringExtAndBoolExt(t *testing.T) {
 	if boolExt(nil, "x-irreversible") {
 		t.Error("boolExt nil map must default false")
 	}
+}
+
+func TestBodyFieldsScalarEnumNested(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	create := by["public-api.v1.clients.create"]
+	if create.Body == nil || len(create.Body.Fields) == 0 {
+		t.Fatalf("clients.create debe tener Body.Fields: %+v", create.Body)
+	}
+	fields := indexFields(create.Body.Fields)
+
+	name := fields["name"]
+	if name == nil || name.Kind != "scalar" || name.Type != "string" || !name.Required {
+		t.Errorf("name debe ser scalar/string/required: %+v", name)
+	}
+	if name.Nullable {
+		t.Errorf("name no es nullable: %+v", name)
+	}
+
+	terms := fields["payment_terms_days"]
+	if terms == nil || terms.Kind != "scalar" || terms.Type != "integer" || !terms.Nullable {
+		t.Errorf("payment_terms_days debe ser scalar/integer/nullable: %+v", terms)
+	}
+
+	pm := fields["payment_method"]
+	if pm == nil || len(pm.Enum) == 0 {
+		t.Fatalf("payment_method debe traer enum: %+v", pm)
+	}
+	if !contains(pm.Enum, "direct_debit") {
+		t.Errorf("payment_method enum debe incluir direct_debit: %v", pm.Enum)
+	}
+
+	addr := fields["address"]
+	if addr == nil || addr.Kind != "object" {
+		t.Fatalf("address debe ser object: %+v", addr)
+	}
+	children := indexFields(addr.Children)
+	if city := children["city"]; city == nil || city.Kind != "scalar" || city.Type != "string" {
+		t.Errorf("address.city debe ser scalar/string: %+v", city)
+	}
+}
+
+func TestBodyFieldsArraysAndMap(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	client := by["public-api.v1.clients.create"]
+	cf := indexFields(client.Body.Fields)
+
+	emails := cf["billing_emails"]
+	if emails == nil || emails.Kind != "scalar_array" || emails.Type != "string" {
+		t.Errorf("billing_emails debe ser scalar_array de string: %+v", emails)
+	}
+
+	meta := cf["metadata"]
+	if meta == nil || meta.Kind != "map" {
+		t.Errorf("metadata debe ser map: %+v", meta)
+	}
+
+	banks := cf["bank_accounts"]
+	if banks == nil || banks.Kind != "object_array" {
+		t.Errorf("bank_accounts debe ser object_array: %+v", banks)
+	}
+	if len(banks.Children) != 0 {
+		t.Errorf("object_array NO debe expandir Children: %+v", banks.Children)
+	}
+
+	inv := by["public-api.v1.invoices.create"]
+	invf := indexFields(inv.Body.Fields)
+	lines := invf["lines"]
+	if lines == nil || lines.Kind != "object_array" {
+		t.Errorf("invoices lines debe ser object_array: %+v", lines)
+	}
+	if len(lines.Children) != 0 {
+		t.Errorf("lines object_array NO debe expandir Children: %+v", lines.Children)
+	}
+	if cid := invf["client_id"]; cid == nil || !cid.Required {
+		t.Errorf("client_id debe ser required: %+v", cid)
+	}
+}
+
+func TestBodyFieldsEmptyForNonTypedBody(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	show := by["public-api.v1.invoices.show"]
+	if show.Body != nil {
+		t.Errorf("invoices.show no tiene body: %+v", show.Body)
+	}
+
+	up := by["public-api.v1.verifactu.certificates.upload"]
+	if up.Body == nil || up.Body.Kind != "multipart" {
+		t.Fatalf("certificates.upload debe ser multipart: %+v", up.Body)
+	}
+	if len(up.Body.Fields) != 0 {
+		t.Errorf("multipart no debe poblar Fields: %+v", up.Body.Fields)
+	}
+}
+
+func indexFields(fields []BodyField) map[string]*BodyField {
+	m := map[string]*BodyField{}
+	for i := range fields {
+		m[fields[i].Name] = &fields[i]
+	}
+	return m
+}
+
+func contains(vals []string, want string) bool {
+	for _, v := range vals {
+		if v == want {
+			return true
+		}
+	}
+	return false
 }
 
 func strNode(value string) *yaml.Node {

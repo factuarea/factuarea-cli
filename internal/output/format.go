@@ -1,10 +1,7 @@
 package output
 
 import (
-	"errors"
 	"os"
-
-	"github.com/factuarea/factuarea-cli/internal/apierr"
 )
 
 type Format int
@@ -12,23 +9,16 @@ type Format int
 const (
 	Human Format = iota
 	JSON
-	Plain
 )
 
-func ResolveFormat(jsonFlag, plainFlag, isTTY bool) (Format, error) {
-	if jsonFlag && plainFlag {
-		return Human, &apierr.UsageError{Err: errors.New("--json y --plain son mutuamente excluyentes")}
-	}
+func ResolveFormat(jsonFlag, isTTY bool) Format {
 	if jsonFlag {
-		return JSON, nil
-	}
-	if plainFlag {
-		return Plain, nil
+		return JSON
 	}
 	if isTTY {
-		return Human, nil
+		return Human
 	}
-	return JSON, nil
+	return JSON
 }
 
 func IsTTY(f *os.File) bool {

@@ -6,10 +6,19 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/factuarea/factuarea-cli/internal/apierr"
 	"github.com/factuarea/factuarea-cli/internal/output"
 	"github.com/factuarea/factuarea-cli/internal/safety"
 	"github.com/spf13/cobra"
 )
+
+var apiMethods = map[string]bool{
+	http.MethodGet:    true,
+	http.MethodPost:   true,
+	http.MethodPut:    true,
+	http.MethodPatch:  true,
+	http.MethodDelete: true,
+}
 
 func newAPICmd() *cobra.Command {
 	var data string
@@ -20,9 +29,15 @@ func newAPICmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			g := globalsFrom(cmd)
 			method := strings.ToUpper(args[0])
+			if !apiMethods[method] {
+				return apierr.Usagef("método HTTP no válido %q; usa get, post, put, patch o delete", args[0])
+			}
 			path := args[1]
 			if !strings.HasPrefix(path, "/") {
 				path = "/" + path
+			}
+			if path != "/v1" && !strings.HasPrefix(path, "/v1/") {
+				path = "/v1" + path
 			}
 			cc, err := newCLIContext(g, "")
 			if err != nil {

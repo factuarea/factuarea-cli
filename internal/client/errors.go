@@ -45,9 +45,23 @@ func parseError(resp *Response) error {
 	return &apierr.APIError{
 		StatusCode: resp.StatusCode,
 		Type:       synthesizeType(resp.StatusCode),
-		Message:    "Error " + httpStatus(resp.StatusCode),
+		Message:    nonJSONMessage(resp),
 		RequestID:  resp.RequestID,
 	}
+}
+
+func nonJSONMessage(resp *Response) string {
+	base := "Error " + httpStatus(resp.StatusCode)
+	snippet := strings.TrimSpace(string(resp.Body))
+	if snippet == "" {
+		return base
+	}
+	const max = 500
+	if len(snippet) > max {
+		snippet = snippet[:max] + "…"
+	}
+	snippet = strings.Join(strings.Fields(snippet), " ")
+	return base + ": " + snippet
 }
 
 func synthesizeType(status int) string {

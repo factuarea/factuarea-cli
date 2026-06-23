@@ -20,4 +20,13 @@ func TestGenerateProducesCompilableTable(t *testing.T) {
 	if strings.Count(s, "OperationID:") < 200 {
 		t.Fatalf("esperaba >=200 ops, got %d", strings.Count(s, "OperationID:"))
 	}
+	if !strings.Contains(s, "Fields: []genBodyField{") {
+		t.Fatal("la tabla generada debe incluir Fields del body")
+	}
+	if !strings.Contains(s, `Kind: "scalar"`) || !strings.Contains(s, `Kind: "object_array"`) {
+		t.Fatal("la tabla generada debe clasificar campos (scalar / object_array)")
+	}
+	if !strings.Contains(s, "HasObjectArray: true") {
+		t.Fatal("la tabla generada debe marcar HasObjectArray para ops con arrays de objetos")
+	}
 }

@@ -12,18 +12,29 @@ type flagInfo struct {
 	Type string `json:"type"`
 }
 
+type manifestField struct {
+	Name     string   `json:"name"`
+	Type     string   `json:"type"`
+	Kind     string   `json:"kind"`
+	Required bool     `json:"required"`
+	Enum     []string `json:"enum,omitempty"`
+}
+
 type manifestEntry struct {
-	Command       string     `json:"command"`
-	Summary       string     `json:"summary"`
-	Args          []string   `json:"args"`
-	Flags         []flagInfo `json:"flags"`
-	Mutating      bool       `json:"mutating"`
-	Deprecated    bool       `json:"deprecated"`
-	Binary        bool       `json:"binary"`
-	Paginated     bool       `json:"paginated"`
-	Irreversible  bool       `json:"irreversible"`
-	RequiredScope string     `json:"required_scope,omitempty"`
-	Example       string     `json:"example,omitempty"`
+	Command        string          `json:"command"`
+	Summary        string          `json:"summary"`
+	Args           []string        `json:"args"`
+	Flags          []flagInfo      `json:"flags"`
+	Mutating       bool            `json:"mutating"`
+	Deprecated     bool            `json:"deprecated"`
+	Binary         bool            `json:"binary"`
+	Paginated      bool            `json:"paginated"`
+	Irreversible   bool            `json:"irreversible"`
+	RequiredScope  string          `json:"required_scope,omitempty"`
+	Example        string          `json:"example,omitempty"`
+	BodyFields     []manifestField `json:"body_fields,omitempty"`
+	BodyHasObjects bool            `json:"body_has_object_array,omitempty"`
+	FullReplace    bool            `json:"full_replace,omitempty"`
 }
 
 func newCommandsCmd() *cobra.Command {
@@ -56,6 +67,11 @@ func newCommandsCmd() *cobra.Command {
 				if op.Body != nil {
 					e.Example = op.Body.Example
 				}
+				if op.typedBody() {
+					e.BodyFields = manifestFields(op.Body.Fields, nil)
+					e.BodyHasObjects = op.Body.HasObjectArray
+					e.FullReplace = op.isUpdate()
+				}
 				manifest = append(manifest, e)
 			}
 			enc := json.NewEncoder(cmd.OutOrStdout())
@@ -64,6 +80,28 @@ func newCommandsCmd() *cobra.Command {
 			return enc.Encode(manifest)
 		},
 	}
+}
+
+func manifestFields(fields []genBodyField, parent []string) []manifestField {
+	var out []manifestField
+	for _, f := range fields {
+		path := append(append([]string{}, parent...), f.Name)
+		switch f.Kind {
+		case "scalar", "scalar_array", "map":
+			out = append(out, manifestField{
+				Name:     fieldFlagName(path),
+				Type:     fieldHelpType(f),
+				Kind:     f.Kind,
+				Required: f.Required,
+				Enum:     f.Enum,
+			})
+		case "object":
+			if len(parent) == 0 {
+				out = append(out, manifestFields(f.Children, path)...)
+			}
+		}
+	}
+	return out
 }
 
 func commandPath(op genOp) string {

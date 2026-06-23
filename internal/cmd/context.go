@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"net/url"
 	"os"
 	"sync"
 
@@ -49,6 +50,31 @@ func (cc *cliContext) scopes(ctx context.Context) ([]string, error) {
 
 const envBaseURL = "FACTUAREA_BASE_URL"
 
+func baseURLClientOptions(allowInsecure bool) ([]client.Option, error) {
+	base := os.Getenv(envBaseURL)
+	if base == "" {
+		return nil, nil
+	}
+	if err := validateBaseURLTransport(base, allowInsecure); err != nil {
+		return nil, err
+	}
+	return []client.Option{client.WithBaseURL(base)}, nil
+}
+
+func validateBaseURLTransport(base string, allowInsecure bool) error {
+	u, err := url.Parse(base)
+	if err != nil {
+		return apierr.Usagef("%s no es una URL válida: %v", envBaseURL, err)
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return apierr.Usagef("%s debe usar http:// o https:// (got %q)", envBaseURL, u.Scheme)
+	}
+	if u.Scheme == "http" && !isLoopbackHost(u.Hostname()) && !allowInsecure {
+		return apierr.Usagef("%s usa http:// hacia un host no-loopback (%s); la API key viajaría en claro. Usa https:// o pasa --allow-insecure-transport si es intencional", envBaseURL, u.Hostname())
+	}
+	return nil
+}
+
 func newCLIContext(g *GlobalFlags, stdinKey string) (*cliContext, error) {
 	store, _ := config.NewStore()
 	res, err := config.ResolveAPIKey(stdinKey, g.Profile, os.Getenv, store)
@@ -58,14 +84,11 @@ func newCLIContext(g *GlobalFlags, stdinKey string) (*cliContext, error) {
 	if !config.ValidKeyFormat(res.APIKey) {
 		return nil, apierr.Usagef("la API key resuelta no tiene formato válido (se espera fact_test_… o fact_live_… de 24 caracteres). Ejecuta `factuarea login`.")
 	}
-	opts := []client.Option{}
-	if base := os.Getenv(envBaseURL); base != "" {
-		opts = append(opts, client.WithBaseURL(base))
-	}
-	f, err := output.ResolveFormat(g.JSON, g.Plain, output.IsTTY(os.Stdout))
+	opts, err := baseURLClientOptions(g.AllowInsecureTransport)
 	if err != nil {
 		return nil, err
 	}
+	f := output.ResolveFormat(g.JSON, output.IsTTY(os.Stdout))
 	return &cliContext{
 		res:    res,
 		client: client.New(res.APIKey, opts...),

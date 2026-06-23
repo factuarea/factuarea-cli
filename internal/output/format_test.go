@@ -9,16 +9,13 @@ import (
 )
 
 func TestResolveFormat(t *testing.T) {
-	if _, err := ResolveFormat(true, true, false); err == nil {
-		t.Fatal("json+plain must error")
-	}
-	if f, _ := ResolveFormat(true, false, true); f != JSON {
+	if f := ResolveFormat(true, true); f != JSON {
 		t.Fatal("explicit --json must win over TTY")
 	}
-	if f, _ := ResolveFormat(false, false, true); f != Human {
+	if f := ResolveFormat(false, true); f != Human {
 		t.Fatal("TTY default is Human")
 	}
-	if f, _ := ResolveFormat(false, false, false); f != JSON {
+	if f := ResolveFormat(false, false); f != JSON {
 		t.Fatal("non-TTY default is JSON")
 	}
 }

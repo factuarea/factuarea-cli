@@ -1,15 +1,81 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"net/url"
 	"os"
 	"strings"
 
+	"github.com/factuarea/factuarea-cli/internal/apierr"
 	"github.com/factuarea/factuarea-cli/internal/client"
+	"github.com/factuarea/factuarea-cli/internal/output"
+	"github.com/spf13/cobra"
 )
 
+func validateRawJSONBody(body []byte, requireObject bool) ([]byte, error) {
+	trimmed := bytes.TrimSpace(body)
+	if len(trimmed) == 0 {
+		return body, nil
+	}
+	dec := json.NewDecoder(bytes.NewReader(trimmed))
+	var v any
+	if err := dec.Decode(&v); err != nil {
+		return nil, apierr.Usagef("JSON inválido en --data: %v", err)
+	}
+	if dec.More() {
+		return nil, apierr.Usagef("JSON inválido en --data: contenido extra tras el valor JSON")
+	}
+	if requireObject {
+		if _, ok := v.(map[string]any); !ok {
+			return nil, apierr.Usagef("--data debe ser un objeto JSON (no un array ni un valor escalar)")
+		}
+	}
+	canonical, err := marshalNoEscape(v, false)
+	if err != nil {
+		return nil, apierr.Usagef("JSON inválido en --data: %v", err)
+	}
+	return canonical, nil
+}
+
+func bytesTrim(b []byte) []byte {
+	return bytes.TrimSpace(b)
+}
+
+func writeDeleteConfirmation(cmd *cobra.Command, op genOp, args []string, format output.Format) error {
+	id := ""
+	if len(op.PathParams) > 0 && len(args) >= len(op.PathParams) {
+		id = args[len(op.PathParams)-1]
+	}
+	if format == output.JSON {
+		payload := map[string]any{"deleted": true}
+		if id != "" {
+			payload["id"] = id
+		}
+		return output.PrintJSON(cmd.OutOrStdout(), payload)
+	}
+	if id != "" {
+		fmt.Fprintf(cmd.OutOrStdout(), "✓ Eliminado (%s).\n", id)
+	} else {
+		fmt.Fprintln(cmd.OutOrStdout(), "✓ Eliminado.")
+	}
+	return nil
+}
+
+func validateResourceArgs(op genOp, args []string) error {
+	for i := range op.PathParams {
+		if i < len(args) && strings.TrimSpace(args[i]) == "" {
+			return apierr.Usagef("falta el id del recurso (%s)", op.PathParams[i].Name)
+		}
+	}
+	return nil
+}
+
 func (op genOp) isMutating() bool {
+	if scope := op.RequiredScope; scope != "" {
+		return !strings.HasSuffix(scope, ":read")
+	}
 	switch op.Method {
 	case "POST", "PUT", "PATCH", "DELETE":
 		return true
@@ -36,7 +102,7 @@ func (op genOp) confirmResourceID(args []string) string {
 func (op genOp) buildPath(args []string) string {
 	path := op.Path
 	for i, p := range op.PathParams {
-		path = strings.Replace(path, "{"+p.Name+"}", args[i], 1)
+		path = strings.Replace(path, "{"+p.Name+"}", url.PathEscape(args[i]), 1)
 	}
 	if !strings.HasPrefix(path, "/v1") {
 		path = "/v1" + path

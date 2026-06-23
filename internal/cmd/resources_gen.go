@@ -5,9 +5,17 @@ type genParam struct {
 	Name, In, Type, Description string
 	Required                    bool
 }
+type genBodyField struct {
+	Name, Type, Kind   string
+	Required, Nullable bool
+	Enum               []string
+	Children           []genBodyField
+}
 type genBody struct {
-	Kind, Example string
-	FileFields    []string
+	Kind, Example  string
+	FileFields     []string
+	Fields         []genBodyField
+	HasObjectArray bool
 }
 type genOp struct {
 	OperationID, Method, Path, Action, Summary string
@@ -53,7 +61,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"address\":{\"city\":\"Valencia\",\"country\":\"ES\",\"door\":\"B\",\"floor\":\"3\",\"line1\":\"Calle Mayor\",\"number\":\"42\",\"postal_code\":\"46001\",\"province\":\"Valencia\"},\"bank_accounts\":[{\"bic\":\"CAIXESBBXXX\",\"iban\":\"ES9121000418450200051332\",\"is_default\":true,\"notes\":\"Cuenta principal\"}],\"billing_emails\":[\"administracion@talleresmed.es\",\"contabilidad@talleresmed.es\"],\"commercial_name\":\"Talleres Med\",\"contact_person\":\"Lucía Fernández\",\"default_discount\":5,\"default_retention_rate\":-15,\"default_vat_rate\":21,\"email\":\"facturacion@talleresmed.es\",\"fax\":\"961112234\",\"is_surcharge_subject\":false,\"latitude\":39.4699,\"longitude\":-0.3763,\"metadata\":{\"erp_ref\":\"CLI-0042\",\"segment\":\"premium\"},\"mobile\":\"611223344\",\"name\":\"Talleres Mediterráneo S.L.\",\"notes\":\"Cliente preferente con domiciliación bancaria.\",\"payment_method\":\"direct_debit\",\"payment_terms_days\":30,\"phone\":\"961112233\",\"preferred_operation_regime\":\"general\",\"tax_id\":\"B66778899\",\"vat_id\":\"ESB66778899\",\"website\":\"https://talleresmed.es\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"address\":{\"city\":\"Valencia\",\"country\":\"ES\",\"door\":\"B\",\"floor\":\"3\",\"line1\":\"Calle Mayor\",\"number\":\"42\",\"postal_code\":\"46001\",\"province\":\"Valencia\"},\"bank_accounts\":[{\"bic\":\"CAIXESBBXXX\",\"iban\":\"ES9121000418450200051332\",\"is_default\":true,\"notes\":\"Cuenta principal\"}],\"billing_emails\":[\"administracion@talleresmed.es\",\"contabilidad@talleresmed.es\"],\"commercial_name\":\"Talleres Med\",\"contact_person\":\"Lucía Fernández\",\"default_discount\":5,\"default_retention_rate\":-15,\"default_vat_rate\":21,\"email\":\"facturacion@talleresmed.es\",\"fax\":\"961112234\",\"is_surcharge_subject\":false,\"latitude\":39.4699,\"longitude\":-0.3763,\"metadata\":{\"erp_ref\":\"CLI-0042\",\"segment\":\"premium\"},\"mobile\":\"611223344\",\"name\":\"Talleres Mediterráneo S.L.\",\"notes\":\"Cliente preferente con domiciliación bancaria.\",\"payment_method\":\"direct_debit\",\"payment_terms_days\":30,\"phone\":\"961112233\",\"preferred_operation_regime\":\"general\",\"tax_id\":\"B66778899\",\"vat_id\":\"ESB66778899\",\"website\":\"https://talleresmed.es\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "name", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "commercial_name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tax_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "vat_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "email", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "phone", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "fax", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "mobile", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "website", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "contact_person", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "latitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "longitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_discount", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_vat_rate", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_retention_rate", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_surcharge_subject", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "accumulate_347", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "preferred_operation_regime", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"general", "intracomunitaria", "importacion_exportacion", "isp"}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"bank_transfer", "direct_debit", "cash", "credit_card", "check", "paypal", "other"}, Children: []genBodyField{}}, {Name: "payment_terms_days", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "dir3_accounting_office", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "dir3_managing_body", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "dir3_processing_unit", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "billing_emails", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "alternative_id", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "type", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"passport", "national_id", "tax_id_foreign", "not_registered"}, Children: []genBodyField{}}, {Name: "value", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "country_code", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "address", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "line1", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "line2", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "number", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "floor", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "door", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "staircase", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "postal_code", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "city", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "province", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "country", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "bank_accounts", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.clients.bulk_delete", Method: "POST", Path: "/clients/bulk-delete",
@@ -62,7 +70,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.clients.verify_census", Method: "POST", Path: "/clients/census-verification",
@@ -71,7 +79,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "tax_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "name", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.clients.find_by_external_id", Method: "POST", Path: "/clients/find-by-external-id",
@@ -80,7 +88,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "external_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.clients.find_by_tax_id", Method: "POST", Path: "/clients/find-by-tax-id",
@@ -89,7 +97,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"tax_id\":\"A87654321\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"tax_id\":\"A87654321\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "tax_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.clients.search", Method: "GET", Path: "/clients/search",
@@ -130,7 +138,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"clients"},
 			PathParams:  []genParam{{Name: "client", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"contact_person\":\"Pablo Ruiz\",\"default_discount\":8,\"email\":\"nuevo-contacto@talleresmed.es\",\"notes\":\"Se actualizó el contacto comercial.\",\"phone\":\"961119988\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"contact_person\":\"Pablo Ruiz\",\"default_discount\":8,\"email\":\"nuevo-contacto@talleresmed.es\",\"notes\":\"Se actualizó el contacto comercial.\",\"phone\":\"961119988\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "name", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "commercial_name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tax_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "vat_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "email", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "phone", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "fax", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "mobile", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "website", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "contact_person", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "latitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "longitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_discount", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_vat_rate", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_retention_rate", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_surcharge_subject", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "accumulate_347", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "preferred_operation_regime", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"general", "intracomunitaria", "importacion_exportacion", "isp"}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"bank_transfer", "direct_debit", "cash", "credit_card", "check", "paypal", "other"}, Children: []genBodyField{}}, {Name: "payment_terms_days", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "dir3_accounting_office", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "dir3_managing_body", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "dir3_processing_unit", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "billing_emails", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "alternative_id", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "type", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"passport", "national_id", "tax_id_foreign", "not_registered"}, Children: []genBodyField{}}, {Name: "value", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "country_code", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "address", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "line1", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "line2", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "number", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "floor", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "door", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "staircase", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "postal_code", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "city", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "province", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "country", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "bank_accounts", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.clients.activities", Method: "GET", Path: "/clients/{client}/activities",
@@ -171,7 +179,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"stripe-autoinvoicing", "accounts"},
 			PathParams:  []genParam{{Name: "account", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "name", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "simplified_threshold_cents", Type: "integer", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "autoinvoicing_enabled", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "require_nif", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "refunds_enabled", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "subscription_autoinvoicing_enabled", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.delivery_notes.list", Method: "GET", Path: "/delivery_notes",
@@ -188,7 +196,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"billing_emails\":[\"administracion@cliente.com\"],\"carrier_company\":\"SEUR\",\"client_id\":\"01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a01\",\"delivery_date\":\"2026-01-21\",\"driver_name\":\"Pedro Sánchez Ruiz\",\"driver_tax_id\":\"12345678Z\",\"lines\":[{\"description\":\"Portátil 14\\\" i7\",\"quantity\":2,\"tax_rate\":21,\"unit_price\":400}],\"metadata\":{\"orden_interna\":\"OT-554\"},\"notes\":\"Entregar en horario de mañana.\",\"reference_number\":\"PED-2026-0099\",\"series_id\":\"01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a02\",\"tracking_number\":\"TRK-2026-0099\",\"vehicle_plate\":\"5678JKL\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"billing_emails\":[\"administracion@cliente.com\"],\"carrier_company\":\"SEUR\",\"client_id\":\"01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a01\",\"delivery_date\":\"2026-01-21\",\"driver_name\":\"Pedro Sánchez Ruiz\",\"driver_tax_id\":\"12345678Z\",\"lines\":[{\"description\":\"Portátil 14\\\" i7\",\"quantity\":2,\"tax_rate\":21,\"unit_price\":400}],\"metadata\":{\"orden_interna\":\"OT-554\"},\"notes\":\"Entregar en horario de mañana.\",\"reference_number\":\"PED-2026-0099\",\"series_id\":\"01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a02\",\"tracking_number\":\"TRK-2026-0099\",\"vehicle_plate\":\"5678JKL\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_date", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "internal_notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reference_number", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "transport_details", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_address", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_city", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_postal_code", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_province", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_country", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "vehicle_plate", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "driver_name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "driver_tax_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tracking_number", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "carrier_company", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "received_by_name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "received_by_tax_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "currency", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"EUR"}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "billing_emails", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.delivery_notes.bulk_delete", Method: "POST", Path: "/delivery_notes/bulk-delete",
@@ -197,7 +205,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e822d-1ffb-7179-8a4d-8872118a5627\"]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e822d-1ffb-7179-8a4d-8872118a5627\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.delivery_notes.find_by_external_id", Method: "POST", Path: "/delivery_notes/find-by-external-id",
@@ -206,7 +214,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "external_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.delivery_notes.signature_audits.forget", Method: "POST", Path: "/delivery_notes/signature-audits/{auditId}/forget",
@@ -255,7 +263,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"driver_name\":\"Lucía Fernández\",\"driver_tax_id\":\"87654321X\",\"notes\":\"Cambio de dirección de entrega.\",\"vehicle_plate\":\"9012MNP\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"driver_name\":\"Lucía Fernández\",\"driver_tax_id\":\"87654321X\",\"notes\":\"Cambio de dirección de entrega.\",\"vehicle_plate\":\"9012MNP\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_date", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "internal_notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reference_number", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "transport_details", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_address", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_city", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_postal_code", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_province", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_country", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "vehicle_plate", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "driver_name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "driver_tax_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tracking_number", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "carrier_company", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "received_by_name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "received_by_tax_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "billing_emails", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.delivery_notes.cancel", Method: "POST", Path: "/delivery_notes/{delivery_note}/cancel",
@@ -272,7 +280,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"target\":\"invoice\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"target\":\"invoice\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "target", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"invoice"}, Children: []genBodyField{}}, {Name: "target_series_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.delivery_notes.duplicate", Method: "POST", Path: "/delivery_notes/{delivery_note}/duplicate",
@@ -289,7 +297,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"delivery_date\":\"2026-01-21T10:00:00Z\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"delivery_date\":\"2026-01-21T10:00:00Z\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "delivery_date", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.delivery_notes.pdf", Method: "GET", Path: "/delivery_notes/{delivery_note}/pdf",
@@ -316,7 +324,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"delivery-notes", "public-link"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"action\":\"extend\",\"extend_days\":30}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"action\":\"extend\",\"extend_days\":30}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "action", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"revoke", "activate", "extend", "reset"}, Children: []genBodyField{}}, {Name: "extend_days", Type: "integer", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.delivery_notes.send", Method: "POST", Path: "/delivery_notes/{delivery_note}/send",
@@ -325,7 +333,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"email\":\"cliente@example.com\",\"message\":\"Adjuntamos el albarán de la entrega de hoy.\",\"subject\":\"Su albarán de entrega\",\"template_id\":3}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"email\":\"cliente@example.com\",\"message\":\"Adjuntamos el albarán de la entrega de hoy.\",\"subject\":\"Su albarán de entrega\",\"template_id\":3}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "email", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "subject", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "message", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "template_id", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.delivery_notes.sign", Method: "POST", Path: "/delivery_notes/{delivery_note}/sign",
@@ -334,7 +342,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"delivery-notes"},
 			PathParams:  []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"recipient_dni\":\"87654321X\",\"signature_image_base64\":\"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\",\"signed_at\":\"2026-06-01T10:00:00+02:00\",\"signed_by\":\"Ana Torres Gil\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"recipient_dni\":\"87654321X\",\"signature_image_base64\":\"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==\",\"signed_at\":\"2026-06-01T10:00:00+02:00\",\"signed_by\":\"Ana Torres Gil\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "signed_by", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "recipient_dni", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "signature_image_base64", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "signed_at", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.event_catalog.list", Method: "GET", Path: "/event-catalog",
@@ -375,7 +383,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"face-submissions"},
 			PathParams:  []genParam{{Name: "faceSubmission", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "reason", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.list", Method: "GET", Path: "/invoices",
@@ -392,7 +400,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"client_id\":\"f58fbf7f-333f-499b-affc-c0d396cbd83f\",\"due_on\":\"2026-07-01\",\"issued_on\":\"2026-06-01\",\"lines\":[{\"description\":\"Servicio de consultoria\",\"discount_percent\":0,\"quantity\":2,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":150}],\"metadata\":{\"order_ref\":\"PO-2026-0042\"},\"notes\":\"Factura creada via API v1\",\"series_id\":\"019e5584-7a72-7038-a8f6-561ed180b699\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"client_id\":\"f58fbf7f-333f-499b-affc-c0d396cbd83f\",\"due_on\":\"2026-07-01\",\"issued_on\":\"2026-06-01\",\"lines\":[{\"description\":\"Servicio de consultoria\",\"discount_percent\":0,\"quantity\":2,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":150}],\"metadata\":{\"order_ref\":\"PO-2026-0042\"},\"notes\":\"Factura creada via API v1\",\"series_id\":\"019e5584-7a72-7038-a8f6-561ed180b699\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "due_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.bulk_delete", Method: "POST", Path: "/invoices/bulk-delete",
@@ -401,7 +409,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"dd6b82a6-3bb6-4b54-b06e-4515c0ec7260\",\"c08e0274-d2f3-4337-85c7-a1f918ee8f8c\"]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"dd6b82a6-3bb6-4b54-b06e-4515c0ec7260\",\"c08e0274-d2f3-4337-85c7-a1f918ee8f8c\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.find_by_external_id", Method: "POST", Path: "/invoices/find-by-external-id",
@@ -410,7 +418,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "external_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.find_by_number", Method: "POST", Path: "/invoices/find-by-number",
@@ -419,7 +427,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"number\":\"F-2026-015\",\"year\":2026}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"number\":\"F-2026-015\",\"year\":2026}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "number", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "year", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.quarterly.available", Method: "GET", Path: "/invoices/quarterly/available-quarters",
@@ -436,7 +444,7 @@ func generatedOps() []genOp {
 			Groups:            []string{"invoices", "quarterly"},
 			PathParams:        []genParam{},
 			QueryParams:       []genParam{},
-			Body:              &genBody{Kind: "json", Example: "{\"include_index\":true,\"quarter\":1,\"year\":2026}", FileFields: []string{}},
+			Body:              &genBody{Kind: "json", Example: "{\"include_index\":true,\"quarter\":1,\"year\":2026}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "year", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "quarter", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "include_index", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "email", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "message", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 			BinaryContentType: "application/zip",
 		},
 		{
@@ -446,7 +454,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices", "quarterly"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"email\":\"contable@empresa.example\",\"message\":\"Adjuntamos el dossier trimestral de facturas Q1 2026.\",\"quarter\":1,\"year\":2026}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"email\":\"contable@empresa.example\",\"message\":\"Adjuntamos el dossier trimestral de facturas Q1 2026.\",\"quarter\":1,\"year\":2026}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "year", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "quarter", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "include_index", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "email", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "message", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.simplified_eligibility", Method: "POST", Path: "/invoices/simplified-eligibility",
@@ -455,7 +463,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"client_country\":\"ES\",\"client_id\":\"f58fbf7f-333f-499b-affc-c0d396cbd83f\",\"client_requires_deductible\":false,\"is_intra_community\":false,\"is_reverse_charge\":false,\"total\":5000}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"client_country\":\"ES\",\"client_id\":\"f58fbf7f-333f-499b-affc-c0d396cbd83f\",\"client_requires_deductible\":false,\"is_intra_community\":false,\"is_reverse_charge\":false,\"total\":5000}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "total", Type: "number", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "client_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "client_country", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_intra_community", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_reverse_charge", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "client_requires_deductible", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.stats", Method: "GET", Path: "/invoices/stats",
@@ -480,7 +488,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"client_id\":\"f58fbf7f-333f-499b-affc-c0d396cbd83f\",\"notes\":\"Sustitución de facturas simplificadas por factura completa.\",\"simplified_invoice_ids\":[\"feb47de0-d6ed-40de-a4d4-8825182f5a6d\"]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"client_id\":\"f58fbf7f-333f-499b-affc-c0d396cbd83f\",\"notes\":\"Sustitución de facturas simplificadas por factura completa.\",\"simplified_invoice_ids\":[\"feb47de0-d6ed-40de-a4d4-8825182f5a6d\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "simplified_invoice_ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.delete", Method: "DELETE", Path: "/invoices/{invoice}",
@@ -505,7 +513,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"lines\":[{\"description\":\"Servicio de consultoria (revisado)\",\"discount_percent\":10,\"quantity\":3,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":150}],\"notes\":\"Notas actualizadas via API v1\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"lines\":[{\"description\":\"Servicio de consultoria (revisado)\",\"discount_percent\":10,\"quantity\":3,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":150}],\"notes\":\"Notas actualizadas via API v1\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "due_on", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.activities", Method: "GET", Path: "/invoices/{invoice}/activities",
@@ -522,7 +530,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"Anulación solicitada por el cliente: pedido cancelado antes de la entrega.\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"Anulación solicitada por el cliente: pedido cancelado antes de la entrega.\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "reason", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.assign_real_number", Method: "POST", Path: "/invoices/{invoice}/assign-real-number",
@@ -547,7 +555,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"correction_reason\":\"error_importe\",\"correction_type\":\"full\",\"notes\":\"Rectificación total por error en el importe facturado\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"correction_reason\":\"error_importe\",\"correction_type\":\"full\",\"notes\":\"Rectificación total por error en el importe facturado\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "correction_reason", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"error_fundado", "concurso", "incobrable", "error_importe", "error_cliente", "devolucion", "descuento", "otras"}, Children: []genBodyField{}}, {Name: "correction_type", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"full", "partial"}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.correctives", Method: "GET", Path: "/invoices/{invoice}/correctives",
@@ -598,7 +606,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"notes\":\"Pago recibido por transferencia bancaria.\",\"paid_on\":\"2026-06-01\",\"payment_method\":\"transferencia\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"notes\":\"Pago recibido por transferencia bancaria.\",\"paid_on\":\"2026-06-01\",\"payment_method\":\"transferencia\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "paid_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_reference", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.mark_sent", Method: "POST", Path: "/invoices/{invoice}/mark-sent",
@@ -633,7 +641,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "amount", Type: "number", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "paid_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"bank_transfer", "direct_debit", "sepa_direct_debit", "cash", "credit_card", "check", "paypal", "bizum", "other"}, Children: []genBodyField{}}, {Name: "reference", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.pdf", Method: "GET", Path: "/invoices/{invoice}/pdf",
@@ -668,7 +676,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"action\":\"extend\",\"extend_days\":30}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"action\":\"extend\",\"extend_days\":30}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "action", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"revoke", "activate", "extend", "reset"}, Children: []genBodyField{}}, {Name: "extend_days", Type: "integer", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.reminder_preview", Method: "POST", Path: "/invoices/{invoice}/reminder-preview",
@@ -677,7 +685,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"bcc\":[\"registro@cliente.example\"],\"cc\":[\"copia@cliente.example\"],\"email\":\"contacto@cliente.example\",\"message\":\"Le recordamos que la factura F-2026-015 se encuentra pendiente de pago.\",\"subject\":\"Recordatorio de pago: Factura F-2026-015\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"bcc\":[\"registro@cliente.example\"],\"cc\":[\"copia@cliente.example\"],\"email\":\"contacto@cliente.example\",\"message\":\"Le recordamos que la factura F-2026-015 se encuentra pendiente de pago.\",\"subject\":\"Recordatorio de pago: Factura F-2026-015\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "email", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "subject", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "message", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "cc", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "bcc", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.send", Method: "POST", Path: "/invoices/{invoice}/send",
@@ -686,7 +694,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"bcc\":[\"registro@cliente.example\"],\"body\":\"Adjuntamos la factura correspondiente al servicio prestado.\",\"cc\":[\"copia@cliente.example\"],\"subject\":\"Factura F-2026-015 de Factuarea\",\"to\":\"contacto@cliente.example\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"bcc\":[\"registro@cliente.example\"],\"body\":\"Adjuntamos la factura correspondiente al servicio prestado.\",\"cc\":[\"copia@cliente.example\"],\"subject\":\"Factura F-2026-015 de Factuarea\",\"to\":\"contacto@cliente.example\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "to", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "subject", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "body", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "cc", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "bcc", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.send_reminder", Method: "POST", Path: "/invoices/{invoice}/send-reminder",
@@ -695,7 +703,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"bcc\":[\"registro@cliente.example\"],\"cc\":[\"copia@cliente.example\"],\"email\":\"contacto@cliente.example\",\"message\":\"Le recordamos que la factura F-2026-015 se encuentra pendiente de pago.\",\"subject\":\"Recordatorio de pago: Factura F-2026-015\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"bcc\":[\"registro@cliente.example\"],\"cc\":[\"copia@cliente.example\"],\"email\":\"contacto@cliente.example\",\"message\":\"Le recordamos que la factura F-2026-015 se encuentra pendiente de pago.\",\"subject\":\"Recordatorio de pago: Factura F-2026-015\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "email", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "subject", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "message", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "cc", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "bcc", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.verifactu_get", Method: "GET", Path: "/invoices/{invoice}/verifactu",
@@ -720,7 +728,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"invoices"},
 			PathParams:  []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"Anulada via API v1: factura emitida por error.\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"Anulada via API v1: factura emitida por error.\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "reason", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.payment_methods.list", Method: "GET", Path: "/payment-methods",
@@ -761,7 +769,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"currency\":\"EUR\",\"is_active\":true,\"metadata\":{\"categoria\":\"monitores\",\"fabricante\":\"Dell\"},\"name\":\"Monitor 27 pulgadas 4K\",\"price\":\"329.90\",\"sku\":\"MON-27-4K-001\",\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"currency\":\"EUR\",\"is_active\":true,\"metadata\":{\"categoria\":\"monitores\",\"fabricante\":\"Dell\"},\"name\":\"Monitor 27 pulgadas 4K\",\"price\":\"329.90\",\"sku\":\"MON-27-4K-001\",\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "name", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "sku", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "price", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "description", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "stock", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "low_stock_threshold", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "currency", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"EUR"}, Children: []genBodyField{}}, {Name: "tax_rate_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_active", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.products.bulk_delete", Method: "POST", Path: "/products/bulk-delete",
@@ -770,7 +778,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e5584-7c1b-7260-bc52-34613ad04c09\",\"019e5584-7c1c-71b6-b825-01f5443bae47\"]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e5584-7c1b-7260-bc52-34613ad04c09\",\"019e5584-7c1c-71b6-b825-01f5443bae47\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.products.bulk_update_stock", Method: "POST", Path: "/products/bulk-update-stock",
@@ -779,7 +787,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"updates\":[{\"operation\":\"set\",\"product_id\":\"019e5584-7c1b-7260-bc52-34613ad04c09\",\"stock\":999},{\"operation\":\"set\",\"product_id\":\"019e5584-7c1c-71b6-b825-01f5443bae47\",\"stock\":999}]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"updates\":[{\"operation\":\"set\",\"product_id\":\"019e5584-7c1b-7260-bc52-34613ad04c09\",\"stock\":999},{\"operation\":\"set\",\"product_id\":\"019e5584-7c1c-71b6-b825-01f5443bae47\",\"stock\":999}]}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "updates", Type: "", Kind: "object_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.products.find_by_external_id", Method: "POST", Path: "/products/find-by-external-id",
@@ -788,7 +796,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "external_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.products.find_by_sku", Method: "POST", Path: "/products/find-by-sku",
@@ -797,7 +805,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"products"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"sku\":\"CONS-EST-001\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"sku\":\"CONS-EST-001\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "sku", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.products.low_stock_report", Method: "GET", Path: "/products/low-stock-report",
@@ -846,7 +854,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"products"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"currency\":\"EUR\",\"is_active\":true,\"metadata\":{\"categoria\":\"desarrollo\",\"tipo\":\"servicio\"},\"name\":\"Desarrollo web a medida (jornada)\",\"price\":\"480.00\",\"sku\":\"DEV-WEB-001\",\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"currency\":\"EUR\",\"is_active\":true,\"metadata\":{\"categoria\":\"desarrollo\",\"tipo\":\"servicio\"},\"name\":\"Desarrollo web a medida (jornada)\",\"price\":\"480.00\",\"sku\":\"DEV-WEB-001\",\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "name", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "sku", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "price", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "description", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "low_stock_threshold", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "currency", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"EUR"}, Children: []genBodyField{}}, {Name: "tax_rate_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_active", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.products.activities", Method: "GET", Path: "/products/{product}/activities",
@@ -863,7 +871,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"products", "gallery"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "multipart", Example: "", FileFields: []string{"image"}},
+			Body:        &genBody{Kind: "multipart", Example: "", FileFields: []string{"image"}, HasObjectArray: false, Fields: []genBodyField{}},
 		},
 		{
 			OperationID: "public-api.v1.products.gallery.delete", Method: "DELETE", Path: "/products/{product}/gallery/{index}",
@@ -898,7 +906,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"products"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"operation\":\"set\",\"stock\":999}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"operation\":\"set\",\"stock\":999}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "stock", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "operation", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"set", "increase", "decrease", "add", "subtract"}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.products.toggle_active", Method: "POST", Path: "/products/{product}/toggle-active",
@@ -923,7 +931,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"products", "video"},
 			PathParams:  []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "multipart", Example: "", FileFields: []string{"video"}},
+			Body:        &genBody{Kind: "multipart", Example: "", FileFields: []string{"video"}, HasObjectArray: false, Fields: []genBodyField{}},
 		},
 		{
 			OperationID: "public-api.v1.products.video.download", Method: "GET", Path: "/products/{product}/video/download",
@@ -950,7 +958,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"client_id\":\"019e5584-79ba-718e-80e3-3d257e1e67f0\",\"delivery_terms\":\"Entrega en 5 dias habiles, portes incluidos\",\"estimated_delivery_date\":\"2026-06-10\",\"issued_on\":\"2026-05-31\",\"lines\":[{\"description\":\"Consultoria tecnica (paquete 10h)\",\"discount_percent\":0,\"quantity\":10,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":90},{\"description\":\"Licencia software anual\",\"discount_percent\":10,\"quantity\":1,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":600}],\"metadata\":{\"origen\":\"api_publica\"},\"notes\":\"Proforma de ejemplo para documentacion de la API publica v1.\",\"payment_method\":\"bank_transfer\",\"payment_terms\":30,\"reference\":\"REF-API-2026-001\",\"series_id\":\"019e5584-7a7b-7222-991b-a39255914278\",\"shipping_cost\":15.5,\"terms_and_conditions\":\"Validez 30 dias. Proforma sin valor fiscal hasta su conversion en factura.\",\"valid_until\":\"2026-06-30\",\"validity_days\":30}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"client_id\":\"019e5584-79ba-718e-80e3-3d257e1e67f0\",\"delivery_terms\":\"Entrega en 5 dias habiles, portes incluidos\",\"estimated_delivery_date\":\"2026-06-10\",\"issued_on\":\"2026-05-31\",\"lines\":[{\"description\":\"Consultoria tecnica (paquete 10h)\",\"discount_percent\":0,\"quantity\":10,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":90},{\"description\":\"Licencia software anual\",\"discount_percent\":10,\"quantity\":1,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":600}],\"metadata\":{\"origen\":\"api_publica\"},\"notes\":\"Proforma de ejemplo para documentacion de la API publica v1.\",\"payment_method\":\"bank_transfer\",\"payment_terms\":30,\"reference\":\"REF-API-2026-001\",\"series_id\":\"019e5584-7a7b-7222-991b-a39255914278\",\"shipping_cost\":15.5,\"terms_and_conditions\":\"Validez 30 dias. Proforma sin valor fiscal hasta su conversion en factura.\",\"valid_until\":\"2026-06-30\",\"validity_days\":30}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "valid_until", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "validity_days", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "terms_and_conditions", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reference", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_terms", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "shipping_cost", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_terms", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "estimated_delivery_date", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "currency", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"EUR"}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.proformas.bulk_delete", Method: "POST", Path: "/proformas/bulk-delete",
@@ -959,7 +967,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e822d-33c9-736d-9cc2-c271735ebcf0\"]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e822d-33c9-736d-9cc2-c271735ebcf0\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.proformas.find_by_external_id", Method: "POST", Path: "/proformas/find-by-external-id",
@@ -968,7 +976,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "external_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.proformas.stats", Method: "GET", Path: "/proformas/stats",
@@ -1009,7 +1017,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"notes\":\"Notas actualizadas via API\",\"payment_terms\":15,\"reference\":\"REF-UPD-001\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"notes\":\"Notas actualizadas via API\",\"payment_terms\":15,\"reference\":\"REF-UPD-001\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "valid_until", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "validity_days", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "terms_and_conditions", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reference", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_terms", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "shipping_cost", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_terms", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "estimated_delivery_date", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "operation_regime", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"general", "intracomunitaria", "importacion_exportacion", "isp"}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.proformas.accept", Method: "POST", Path: "/proformas/{proforma}/accept",
@@ -1018,7 +1026,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"Cliente confirma pedido por telefono\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"Cliente confirma pedido por telefono\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "reason", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.proformas.convert", Method: "POST", Path: "/proformas/{proforma}/convert",
@@ -1027,7 +1035,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"target\":\"invoice\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"target\":\"invoice\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "target", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"invoice"}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.proformas.duplicate", Method: "POST", Path: "/proformas/{proforma}/duplicate",
@@ -1044,6 +1052,8 @@ func generatedOps() []genOp {
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "download", In: "query", Type: "string", Description: "", Required: false}},
+
+			BinaryContentType: "application/pdf",
 		},
 		{
 			OperationID: "public-api.v1.proformas.public_link_get", Method: "GET", Path: "/proformas/{proforma}/public-link",
@@ -1060,7 +1070,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"action\":\"extend\",\"extend_days\":30}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"action\":\"extend\",\"extend_days\":30}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "action", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"revoke", "activate", "extend", "reset"}, Children: []genBodyField{}}, {Name: "extend_days", Type: "integer", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.proformas.reject", Method: "POST", Path: "/proformas/{proforma}/reject",
@@ -1069,7 +1079,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"Cliente opta por otro proveedor\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"Cliente opta por otro proveedor\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "reason", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.proformas.send", Method: "POST", Path: "/proformas/{proforma}/send",
@@ -1078,7 +1088,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"proformas"},
 			PathParams:  []genParam{{Name: "proforma", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"body\":\"Adjuntamos la proforma solicitada.\",\"subject\":\"Su proforma PRO-2026-006\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"body\":\"Adjuntamos la proforma solicitada.\",\"subject\":\"Su proforma PRO-2026-006\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "to", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "subject", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "body", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "cc", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "bcc", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.list", Method: "GET", Path: "/purchase_invoices",
@@ -1095,7 +1105,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"due_on\":\"2026-05-15\",\"expense_account\":\"6280001\",\"external_invoice_number\":\"HARVEST-PI-EXT-2026-0007\",\"internal_code\":\"GASTO-2026-0007\",\"internal_notes\":\"Revisar con contabilidad antes del cierre trimestral.\",\"is_reverse_charge\":false,\"issued_on\":\"2026-04-15\",\"lines\":[{\"description\":\"Suministro electrico abril 2026\",\"quantity\":1,\"tax_rate\":21,\"unit_price\":450},{\"description\":\"Cargo fijo de potencia contratada\",\"quantity\":1,\"tax_rate\":21,\"unit_price\":50}],\"metadata\":{\"cost_center\":\"operaciones\",\"po_number\":\"PO-4521\"},\"notes\":\"Factura de suministro electrico abril 2026.\",\"payment_method\":\"bank_transfer\",\"payment_terms_days\":30,\"received_on\":\"2026-04-18\",\"status\":\"draft\",\"supplier_id\":\"456abe0d-79de-44e4-aa62-beedd41a7993\",\"tags\":[\"suministros\",\"electricidad\",\"recurrente\"],\"tax_period\":\"2026-Q2\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"due_on\":\"2026-05-15\",\"expense_account\":\"6280001\",\"external_invoice_number\":\"HARVEST-PI-EXT-2026-0007\",\"internal_code\":\"GASTO-2026-0007\",\"internal_notes\":\"Revisar con contabilidad antes del cierre trimestral.\",\"is_reverse_charge\":false,\"issued_on\":\"2026-04-15\",\"lines\":[{\"description\":\"Suministro electrico abril 2026\",\"quantity\":1,\"tax_rate\":21,\"unit_price\":450},{\"description\":\"Cargo fijo de potencia contratada\",\"quantity\":1,\"tax_rate\":21,\"unit_price\":50}],\"metadata\":{\"cost_center\":\"operaciones\",\"po_number\":\"PO-4521\"},\"notes\":\"Factura de suministro electrico abril 2026.\",\"payment_method\":\"bank_transfer\",\"payment_terms_days\":30,\"received_on\":\"2026-04-18\",\"status\":\"draft\",\"supplier_id\":\"456abe0d-79de-44e4-aa62-beedd41a7993\",\"tags\":[\"suministros\",\"electricidad\",\"recurrente\"],\"tax_period\":\"2026-Q2\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "supplier_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "expense_category_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_invoice_number", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "internal_code", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "received_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "due_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "status", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"draft", "pending"}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "internal_notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_terms_days", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "bank_account_id", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "expense_account", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tax_period", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_reverse_charge", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "deductible_percentage", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "operation_class", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"corriente", "bien_inversion", "importacion", "intracomunitaria"}, Children: []genBodyField{}}, {Name: "exclude_347", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.bulk_delete", Method: "POST", Path: "/purchase_invoices/bulk-delete",
@@ -1104,7 +1114,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e822c-f683-7277-a6ee-c4a8d42088c0\"]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e822c-f683-7277-a6ee-c4a8d42088c0\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.find_by_external_id", Method: "POST", Path: "/purchase_invoices/find-by-external-id",
@@ -1113,7 +1123,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "external_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.overdue", Method: "GET", Path: "/purchase_invoices/overdue",
@@ -1162,7 +1172,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"expense_account\":\"6280002\",\"internal_notes\":\"Validada por contabilidad. Lista para pago.\",\"is_reverse_charge\":false,\"notes\":\"Factura de suministro electrico abril 2026 (revisada).\",\"payment_terms_days\":45,\"tags\":[\"suministros\",\"electricidad\",\"validada\"],\"tax_period\":\"2026-Q2\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"expense_account\":\"6280002\",\"internal_notes\":\"Validada por contabilidad. Lista para pago.\",\"is_reverse_charge\":false,\"notes\":\"Factura de suministro electrico abril 2026 (revisada).\",\"payment_terms_days\":45,\"tags\":[\"suministros\",\"electricidad\",\"validada\"],\"tax_period\":\"2026-Q2\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "supplier_id", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "expense_category_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_invoice_number", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "internal_code", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "received_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "due_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "internal_notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_terms_days", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "bank_account_id", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "expense_account", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tax_period", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_reverse_charge", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "deductible_percentage", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "operation_class", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"corriente", "bien_inversion", "importacion", "intracomunitaria"}, Children: []genBodyField{}}, {Name: "exclude_347", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.attach_file", Method: "POST", Path: "/purchase_invoices/{purchase_invoice}/attach-file",
@@ -1171,7 +1181,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "multipart", Example: "", FileFields: []string{"file"}},
+			Body:        &genBody{Kind: "multipart", Example: "", FileFields: []string{"file"}, HasObjectArray: false, Fields: []genBodyField{}},
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.delete_file", Method: "DELETE", Path: "/purchase_invoices/{purchase_invoice}/file",
@@ -1196,7 +1206,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"notes\":\"Pagada por transferencia SEPA.\",\"paid_on\":\"2026-05-10\",\"payment_method\":\"bank_transfer\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"notes\":\"Pagada por transferencia SEPA.\",\"paid_on\":\"2026-05-10\",\"payment_method\":\"bank_transfer\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "paid_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"bank_transfer", "direct_debit", "cash", "credit_card", "check", "paypal", "other"}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.payment_receipt", Method: "GET", Path: "/purchase_invoices/{purchase_invoice}/payment-receipt",
@@ -1221,7 +1231,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"purchase-invoices"},
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "amount", Type: "number", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "paid_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "bank_account_id", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reference", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.quotes.list", Method: "GET", Path: "/quotes",
@@ -1238,7 +1248,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"client_id\":\"019e5584-79ba-718e-80e3-3d257e1e67f0\",\"issued_on\":\"2026-06-01\",\"lines\":[{\"description\":\"Consultoria estrategica anual\",\"discount_percent\":0,\"product_id\":\"019e5584-7c1b-7260-bc52-34613ad04c09\",\"quantity\":12,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":120},{\"description\":\"Formacion presencial (sesion)\",\"discount_percent\":10,\"quantity\":4,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":350}],\"metadata\":{\"channel\":\"api\",\"po_number\":\"PO-2026-0042\"},\"notes\":\"Presupuesto de servicios de consultoria Q3\",\"series_id\":\"019e5584-7a74-7035-aac1-fc6e278c57f8\",\"terms\":\"Presupuesto valido durante 30 dias desde la fecha de emision.\",\"valid_until\":\"2026-07-01\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"client_id\":\"019e5584-79ba-718e-80e3-3d257e1e67f0\",\"issued_on\":\"2026-06-01\",\"lines\":[{\"description\":\"Consultoria estrategica anual\",\"discount_percent\":0,\"product_id\":\"019e5584-7c1b-7260-bc52-34613ad04c09\",\"quantity\":12,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":120},{\"description\":\"Formacion presencial (sesion)\",\"discount_percent\":10,\"quantity\":4,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":350}],\"metadata\":{\"channel\":\"api\",\"po_number\":\"PO-2026-0042\"},\"notes\":\"Presupuesto de servicios de consultoria Q3\",\"series_id\":\"019e5584-7a74-7035-aac1-fc6e278c57f8\",\"terms\":\"Presupuesto valido durante 30 dias desde la fecha de emision.\",\"valid_until\":\"2026-07-01\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "valid_until", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "terms", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "currency", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"EUR"}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.quotes.bulk_delete", Method: "POST", Path: "/quotes/bulk-delete",
@@ -1247,7 +1257,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e822d-e304-72b7-a2af-4c95eb872c95\",\"019e822d-e3aa-72e1-bc45-16feaffccf06\"]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e822d-e304-72b7-a2af-4c95eb872c95\",\"019e822d-e3aa-72e1-bc45-16feaffccf06\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.quotes.find_by_external_id", Method: "POST", Path: "/quotes/find-by-external-id",
@@ -1256,7 +1266,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "external_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.quotes.stats", Method: "GET", Path: "/quotes/stats",
@@ -1297,7 +1307,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"metadata\":{\"revision\":\"2\"},\"notes\":\"Presupuesto actualizado: revision de alcance Q3\",\"terms\":\"Presupuesto valido durante 45 dias desde la fecha de emision.\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"metadata\":{\"revision\":\"2\"},\"notes\":\"Presupuesto actualizado: revision de alcance Q3\",\"terms\":\"Presupuesto valido durante 45 dias desde la fecha de emision.\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "valid_until", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "terms", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.quotes.accept", Method: "POST", Path: "/quotes/{quote}/accept",
@@ -1306,7 +1316,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"accepted_on\":\"2026-06-01\",\"notes\":\"Aceptado por el cliente via telefono\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"accepted_on\":\"2026-06-01\",\"notes\":\"Aceptado por el cliente via telefono\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "accepted_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.quotes.convert", Method: "POST", Path: "/quotes/{quote}/convert",
@@ -1315,7 +1325,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"due_on\":\"2026-07-01\",\"issued_on\":\"2026-06-01\",\"target\":\"invoice\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"due_on\":\"2026-07-01\",\"issued_on\":\"2026-06-01\",\"target\":\"invoice\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "target", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"invoice"}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "due_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.quotes.duplicate", Method: "POST", Path: "/quotes/{quote}/duplicate",
@@ -1332,6 +1342,8 @@ func generatedOps() []genOp {
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{{Name: "download", In: "query", Type: "string", Description: "", Required: false}},
+
+			BinaryContentType: "application/pdf",
 		},
 		{
 			OperationID: "public-api.v1.quotes.public_link_get", Method: "GET", Path: "/quotes/{quote}/public-link",
@@ -1348,7 +1360,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"action\":\"extend\",\"extend_days\":30}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"action\":\"extend\",\"extend_days\":30}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "action", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"revoke", "activate", "extend", "reset"}, Children: []genBodyField{}}, {Name: "extend_days", Type: "integer", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.quotes.reject", Method: "POST", Path: "/quotes/{quote}/reject",
@@ -1357,7 +1369,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"El cliente ha optado por otra propuesta\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"reason\":\"El cliente ha optado por otra propuesta\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "reason", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.quotes.send", Method: "POST", Path: "/quotes/{quote}/send",
@@ -1366,7 +1378,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"quotes"},
 			PathParams:  []genParam{{Name: "quote", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"body\":\"Adjuntamos el presupuesto solicitado. Quedamos a su disposicion.\",\"subject\":\"Presupuesto P-2026 de servicios de consultoria\",\"to\":\"contacto@cliente-ejemplo.com\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"body\":\"Adjuntamos el presupuesto solicitado. Quedamos a su disposicion.\",\"subject\":\"Presupuesto P-2026 de servicios de consultoria\",\"to\":\"contacto@cliente-ejemplo.com\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "to", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "subject", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "body", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "cc", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "bcc", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.recurring_invoices.list", Method: "GET", Path: "/recurring_invoices",
@@ -1383,7 +1395,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"client_id\":\"019e7f77-2dd2-7060-8cb7-41b3e35d5fba\",\"days_before_due\":5,\"description\":\"Contrato de soporte y mantenimiento Plan Pro\",\"email_to\":\"facturacion@cliente.com\",\"frequency\":\"monthly\",\"holiday_handling\":\"before\",\"lines\":[{\"description\":\"Cuota soporte mensual\",\"quantity\":1,\"tax_rate\":21,\"unit_price\":200}],\"max_occurrences\":12,\"metadata\":{\"team\":\"integrations\"},\"name\":\"Mantenimiento mensual Acme\",\"notes\":\"Renovación automática. Facturar el día 1 de cada mes.\",\"series_id\":\"019e7f77-6dd3-70c7-94f8-ba48b9c90c8d\",\"start_on\":\"2026-06-01\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"client_id\":\"019e7f77-2dd2-7060-8cb7-41b3e35d5fba\",\"days_before_due\":5,\"description\":\"Contrato de soporte y mantenimiento Plan Pro\",\"email_to\":\"facturacion@cliente.com\",\"frequency\":\"monthly\",\"holiday_handling\":\"before\",\"lines\":[{\"description\":\"Cuota soporte mensual\",\"quantity\":1,\"tax_rate\":21,\"unit_price\":200}],\"max_occurrences\":12,\"metadata\":{\"team\":\"integrations\"},\"name\":\"Mantenimiento mensual Acme\",\"notes\":\"Renovación automática. Facturar el día 1 de cada mes.\",\"series_id\":\"019e7f77-6dd3-70c7-94f8-ba48b9c90c8d\",\"start_on\":\"2026-06-01\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "description", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "frequency", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"daily", "weekly", "biweekly", "monthly", "quarterly", "semiannual", "yearly"}, Children: []genBodyField{}}, {Name: "start_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "end_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "holiday_handling", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "days_before_due", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "max_occurrences", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "email_to", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "send_automatically", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.recurring_invoices.bulk-delete", Method: "POST", Path: "/recurring_invoices/bulk-delete",
@@ -1392,7 +1404,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e7f80-1a2b-7c3d-8e4f-5a6b7c8d9e0f\",\"019e7f80-2b3c-7d4e-9f5a-6b7c8d9e0f1a\"]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"ids\":[\"019e7f80-1a2b-7c3d-8e4f-5a6b7c8d9e0f\",\"019e7f80-2b3c-7d4e-9f5a-6b7c8d9e0f1a\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.recurring_invoices.find_by_external_id", Method: "POST", Path: "/recurring_invoices/find-by-external-id",
@@ -1401,7 +1413,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "external_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.recurring_invoices.stats", Method: "GET", Path: "/recurring_invoices/stats",
@@ -1434,7 +1446,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"recurring-invoices"},
 			PathParams:  []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"frequency\":\"quarterly\",\"lines\":[{\"description\":\"Cuota soporte trimestral\",\"quantity\":1,\"tax_rate\":21,\"unit_price\":540}],\"name\":\"Mantenimiento mensual (revisado)\",\"notes\":\"Actualizado a facturación trimestral\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"frequency\":\"quarterly\",\"lines\":[{\"description\":\"Cuota soporte trimestral\",\"quantity\":1,\"tax_rate\":21,\"unit_price\":540}],\"name\":\"Mantenimiento mensual (revisado)\",\"notes\":\"Actualizado a facturación trimestral\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "description", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "frequency", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"daily", "weekly", "biweekly", "monthly", "quarterly", "semiannual", "yearly"}, Children: []genBodyField{}}, {Name: "holiday_handling", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "start_on", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "end_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "days_before_due", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "max_occurrences", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "email_to", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "send_automatically", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.recurring_invoices.activate", Method: "POST", Path: "/recurring_invoices/{recurring_invoice}/activate",
@@ -1515,7 +1527,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"series"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"code\":\"HARV01\",\"document_type\":\"invoice\",\"name\":\"Facturas Harvest\",\"prefix\":\"HARV01\",\"year_reset\":true}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"code\":\"HARV01\",\"document_type\":\"invoice\",\"name\":\"Facturas Harvest\",\"prefix\":\"HARV01\",\"year_reset\":true}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "code", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "document_type", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"invoice", "quote", "delivery_note", "proforma"}, Children: []genBodyField{}}, {Name: "prefix", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "year_reset", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "number_format", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "initial_number", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.series.active", Method: "GET", Path: "/series/active",
@@ -1531,7 +1543,7 @@ func generatedOps() []genOp {
 			Irreversible: false, RequiredScope: "series:read",
 			Groups:      []string{"series"},
 			PathParams:  []genParam{},
-			QueryParams: []genParam{},
+			QueryParams: []genParam{{Name: "document_type", In: "query", Type: "string", Description: "tipo de documento (invoice, quote, proforma, delivery_note)", Required: true}},
 		},
 		{
 			OperationID: "public-api.v1.series.find_by_code", Method: "POST", Path: "/series/find-by-code",
@@ -1540,7 +1552,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"series"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"code\":\"HARV01\",\"document_type\":\"invoice\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"code\":\"HARV01\",\"document_type\":\"invoice\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "code", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "document_type", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"invoice", "quote", "delivery_note", "proforma"}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.series.stats", Method: "GET", Path: "/series/stats",
@@ -1605,7 +1617,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"stripe-autoinvoicing", "config"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "enabled", Type: "boolean", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "simplified_threshold_cents", Type: "integer", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "require_nif", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "refunds_enabled", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "subscription_autoinvoicing_enabled", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.stripe_autoinvoicing.correctives.list", Method: "GET", Path: "/stripe-autoinvoicing/correctives",
@@ -1638,7 +1650,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"address\":{\"city\":\"Malaga\",\"country\":\"ES\",\"door\":\"B\",\"floor\":\"3\",\"line1\":\"Calle Mendez Nunez 12\",\"line2\":\"Edificio Central\",\"number\":\"12\",\"postal_code\":\"29008\",\"province\":\"Malaga\"},\"bank_accounts\":[{\"bic\":\"CAIXESBBXXX\",\"iban\":\"ES9121000418450200051332\",\"is_default\":true,\"notes\":\"Cuenta principal\"}],\"billing_emails\":[\"facturacion@garcialogistica.es\",\"contabilidad@garcialogistica.es\"],\"business_name\":\"Transportes Garcia e Hijos S.L.\",\"commercial_name\":\"Garcia Logistica\",\"contact_person\":\"Maria Garcia\",\"coordinates\":{\"latitude\":36.7202,\"longitude\":-4.4203},\"default_discount\":5,\"default_retention_rate\":15,\"default_vat_rate\":21,\"email\":\"administracion@garcialogistica.es\",\"fax\":\"952667789\",\"is_surcharge_subject\":false,\"metadata\":{\"erp_code\":\"PROV-2026-001\"},\"mobile\":\"655443322\",\"name\":\"Transportes Garcia e Hijos S.L.\",\"notes\":\"Proveedor de transporte y logistica\",\"payment_method\":\"bank_transfer\",\"payment_terms_days\":30,\"phone\":\"952667788\",\"preferred_operation_regime\":\"general\",\"tax_id\":\"B12345674\",\"vat_id\":\"ESB12345674\",\"website\":\"https://www.garcialogistica.es\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"address\":{\"city\":\"Malaga\",\"country\":\"ES\",\"door\":\"B\",\"floor\":\"3\",\"line1\":\"Calle Mendez Nunez 12\",\"line2\":\"Edificio Central\",\"number\":\"12\",\"postal_code\":\"29008\",\"province\":\"Malaga\"},\"bank_accounts\":[{\"bic\":\"CAIXESBBXXX\",\"iban\":\"ES9121000418450200051332\",\"is_default\":true,\"notes\":\"Cuenta principal\"}],\"billing_emails\":[\"facturacion@garcialogistica.es\",\"contabilidad@garcialogistica.es\"],\"business_name\":\"Transportes Garcia e Hijos S.L.\",\"commercial_name\":\"Garcia Logistica\",\"contact_person\":\"Maria Garcia\",\"coordinates\":{\"latitude\":36.7202,\"longitude\":-4.4203},\"default_discount\":5,\"default_retention_rate\":15,\"default_vat_rate\":21,\"email\":\"administracion@garcialogistica.es\",\"fax\":\"952667789\",\"is_surcharge_subject\":false,\"metadata\":{\"erp_code\":\"PROV-2026-001\"},\"mobile\":\"655443322\",\"name\":\"Transportes Garcia e Hijos S.L.\",\"notes\":\"Proveedor de transporte y logistica\",\"payment_method\":\"bank_transfer\",\"payment_terms_days\":30,\"phone\":\"952667788\",\"preferred_operation_regime\":\"general\",\"tax_id\":\"B12345674\",\"vat_id\":\"ESB12345674\",\"website\":\"https://www.garcialogistica.es\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "name", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "business_name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "commercial_name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tax_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "vat_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "email", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "phone", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "fax", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "mobile", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "website", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "contact_person", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "latitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "longitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_discount", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_vat_rate", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_retention_rate", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_surcharge_subject", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "accumulate_347", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "iban", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_taxes_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "preferred_operation_regime", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"general", "intracomunitaria", "importacion_exportacion", "isp"}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"bank_transfer", "direct_debit", "cash", "credit_card", "check", "paypal", "other"}, Children: []genBodyField{}}, {Name: "payment_terms_days", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "billing_emails", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "coordinates", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "latitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "longitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "alternative_id", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "type", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"passport", "national_id", "tax_id_foreign", "not_registered"}, Children: []genBodyField{}}, {Name: "value", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "country_code", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "address", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "line1", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "line2", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "number", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "floor", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "door", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "staircase", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "postal_code", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "city", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "province", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "country", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "bank_accounts", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.suppliers.bulk_delete", Method: "POST", Path: "/suppliers/bulk-delete",
@@ -1647,7 +1659,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.suppliers.find_by_external_id", Method: "POST", Path: "/suppliers/find-by-external-id",
@@ -1656,7 +1668,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "external_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.suppliers.find_by_tax_id", Method: "POST", Path: "/suppliers/find-by-tax-id",
@@ -1665,7 +1677,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"tax_id\":\"A29111222\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"tax_id\":\"A29111222\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "tax_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.suppliers.search", Method: "GET", Path: "/suppliers/search",
@@ -1706,7 +1718,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"suppliers"},
 			PathParams:  []genParam{{Name: "supplier", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"default_retention_rate\":7,\"email\":\"nuevo-contacto@garcialogistica.es\",\"notes\":\"Datos de contacto actualizados\",\"phone\":\"952667700\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"default_retention_rate\":7,\"email\":\"nuevo-contacto@garcialogistica.es\",\"notes\":\"Datos de contacto actualizados\",\"phone\":\"952667700\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "name", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "business_name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "commercial_name", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tax_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "vat_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "email", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "phone", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "fax", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "mobile", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "website", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "contact_person", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "latitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "longitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_discount", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_vat_rate", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_retention_rate", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_surcharge_subject", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "accumulate_347", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_active", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "iban", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_taxes_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "preferred_operation_regime", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"general", "intracomunitaria", "importacion_exportacion", "isp"}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"bank_transfer", "direct_debit", "cash", "credit_card", "check", "paypal", "other"}, Children: []genBodyField{}}, {Name: "payment_terms_days", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "billing_emails", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "coordinates", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "latitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "longitude", Type: "number", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "alternative_id", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "type", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"passport", "national_id", "tax_id_foreign", "not_registered"}, Children: []genBodyField{}}, {Name: "value", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "country_code", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "address", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "line1", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "line2", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "number", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "floor", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "door", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "staircase", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "postal_code", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "city", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "province", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "country", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "bank_accounts", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.suppliers.activities", Method: "GET", Path: "/suppliers/{supplier}/activities",
@@ -1731,7 +1743,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "year", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "quarter", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "format", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"txt_aeat", "pdf", "excel"}, Children: []genBodyField{}}, {Name: "deduccion_vivienda_centimos", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "resultado_complementaria_centimos", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "pagos_fraccionados_anteriores_override_centimos", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.tax_reports.generate_303", Method: "POST", Path: "/tax_reports/303",
@@ -1740,7 +1752,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"format\":\"pdf\",\"quarter\":1,\"year\":2026}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"format\":\"pdf\",\"quarter\":1,\"year\":2026}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "year", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "quarter", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "format", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"txt_aeat", "pdf", "excel"}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.tax_reports.generate_347", Method: "POST", Path: "/tax_reports/347",
@@ -1749,7 +1761,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"format\":\"txt_aeat\",\"year\":2025}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"format\":\"txt_aeat\",\"year\":2025}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "year", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "quarter", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "format", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"txt_aeat", "pdf", "excel"}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.tax_reports.find_by_period", Method: "POST", Path: "/tax_reports/find-by-period",
@@ -1758,7 +1770,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"quarter\":1,\"type\":\"modelo_303\",\"year\":2026}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"quarter\":1,\"type\":\"modelo_303\",\"year\":2026}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "type", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"modelo_303", "modelo_347", "modelo_130"}, Children: []genBodyField{}}, {Name: "year", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "quarter", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.tax_reports.history", Method: "GET", Path: "/tax_reports/history",
@@ -1775,7 +1787,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"quarter\":1,\"type\":\"modelo_303\",\"year\":2026}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"quarter\":1,\"type\":\"modelo_303\",\"year\":2026}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "type", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"modelo_303", "modelo_347", "modelo_130"}, Children: []genBodyField{}}, {Name: "year", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "quarter", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.tax_reports.stats", Method: "GET", Path: "/tax_reports/stats",
@@ -1800,6 +1812,8 @@ func generatedOps() []genOp {
 			Groups:      []string{"tax-reports"},
 			PathParams:  []genParam{{Name: "tax_report", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
+
+			BinaryContentType: "application/pdf",
 		},
 		{
 			OperationID: "public-api.v1.taxes.list", Method: "GET", Path: "/taxes",
@@ -1816,7 +1830,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"applies_to\":\"both\",\"code\":\"IVA_HARV_24238\",\"country\":\"ES\",\"country_aeat_zone\":\"peninsula\",\"customer_visible_label\":\"IVA 21% incluido\",\"default_for_documents\":{\"delivery_note\":false,\"invoice\":false,\"proforma\":false,\"purchase_invoice\":false,\"quote\":false,\"recurring_invoice\":false},\"description\":\"IVA general para campaña de verano\",\"external_reference\":\"S1\",\"is_active\":true,\"metadata\":{\"campaign\":\"verano-2026\"},\"name\":\"IVA campaña verano\",\"rate\":21,\"reverse_charge\":false,\"type\":\"vat\",\"valid_from\":\"2026-06-01\",\"valid_until\":\"2026-09-30\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"applies_to\":\"both\",\"code\":\"IVA_HARV_24238\",\"country\":\"ES\",\"country_aeat_zone\":\"peninsula\",\"customer_visible_label\":\"IVA 21% incluido\",\"default_for_documents\":{\"delivery_note\":false,\"invoice\":false,\"proforma\":false,\"purchase_invoice\":false,\"quote\":false,\"recurring_invoice\":false},\"description\":\"IVA general para campaña de verano\",\"external_reference\":\"S1\",\"is_active\":true,\"metadata\":{\"campaign\":\"verano-2026\"},\"name\":\"IVA campaña verano\",\"rate\":21,\"reverse_charge\":false,\"type\":\"vat\",\"valid_from\":\"2026-06-01\",\"valid_until\":\"2026-09-30\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "name", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "code", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "type", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"vat", "retention", "surcharge", "other"}, Children: []genBodyField{}}, {Name: "rate", Type: "number", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "applies_to", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"sale", "purchase", "both"}, Children: []genBodyField{}}, {Name: "is_active", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "country", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "description", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "customer_visible_label", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_reference", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "valid_from", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "valid_until", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reverse_charge", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "country_aeat_zone", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"peninsula", "canarias", "ceuta", "melilla"}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_for_documents", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "invoice", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "quote", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_note", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "proforma", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "purchase_invoice", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "recurring_invoice", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}}}},
 		},
 		{
 			OperationID: "public-api.v1.taxes.active", Method: "GET", Path: "/taxes/active",
@@ -1832,7 +1846,7 @@ func generatedOps() []genOp {
 			Irreversible: false, RequiredScope: "taxes:read",
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
-			QueryParams: []genParam{{Name: "type", In: "query", Type: "string", Description: "", Required: false}},
+			QueryParams: []genParam{{Name: "type", In: "query", Type: "string", Description: "", Required: true}},
 		},
 		{
 			OperationID: "public-api.v1.taxes.calculate", Method: "POST", Path: "/taxes/calculate",
@@ -1841,7 +1855,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"base\":1000,\"taxes_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"base\":1000,\"taxes_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "base", Type: "number", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "taxes_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.taxes.calculate_totals", Method: "POST", Path: "/taxes/calculate-totals",
@@ -1850,7 +1864,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"lines\":[{\"discount\":10,\"quantity\":2,\"retention_rate\":15,\"surcharge_rate\":5.2,\"unit_price\":100,\"vat_rate\":21}]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"lines\":[{\"discount\":10,\"quantity\":2,\"retention_rate\":15,\"surcharge_rate\":5.2,\"unit_price\":100,\"vat_rate\":21}]}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "lines", Type: "", Kind: "object_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.taxes.defaults", Method: "GET", Path: "/taxes/defaults/{docType}",
@@ -1907,7 +1921,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"taxes"},
 			PathParams:  []genParam{{Name: "tax", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"customer_visible_label\":\"IVA 21%\",\"description\":\"Descripción actualizada\",\"name\":\"IVA campaña verano (renombrado)\",\"reverse_charge\":true}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"customer_visible_label\":\"IVA 21%\",\"description\":\"Descripción actualizada\",\"name\":\"IVA campaña verano (renombrado)\",\"reverse_charge\":true}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "name", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "code", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "rate", Type: "number", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "applies_to", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"sale", "purchase", "both"}, Children: []genBodyField{}}, {Name: "country", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "description", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_active", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "customer_visible_label", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_reference", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "valid_from", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "valid_until", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reverse_charge", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "country_aeat_zone", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"peninsula", "canarias", "ceuta", "melilla"}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "default_for_documents", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "invoice", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "quote", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "delivery_note", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "proforma", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "purchase_invoice", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "recurring_invoice", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}}}},
 		},
 		{
 			OperationID: "public-api.v1.taxes.is_in_use", Method: "GET", Path: "/taxes/{tax}/is-in-use",
@@ -1972,7 +1986,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"verifactu", "certificates"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "multipart", Example: "", FileFields: []string{"certificate_file"}},
+			Body:        &genBody{Kind: "multipart", Example: "", FileFields: []string{"certificate_file"}, HasObjectArray: false, Fields: []genBodyField{}},
 		},
 		{
 			OperationID: "public-api.v1.verifactu.certificates.active", Method: "GET", Path: "/verifactu/certificates/active",
@@ -2077,7 +2091,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"aeat_csv\":\"ABC123DEF456GHI789\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"aeat_csv\":\"ABC123DEF456GHI789\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "aeat_csv", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.verifactu.records.find_by_huella", Method: "POST", Path: "/verifactu/records/find-by-huella",
@@ -2086,7 +2100,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"huella\":\"3C8F1A2B9D4E5F6071829304A5B6C7D8E9F0A1B2C3D4E5F60718293041526378\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"huella\":\"3C8F1A2B9D4E5F6071829304A5B6C7D8E9F0A1B2C3D4E5F60718293041526378\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "huella", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.verifactu.records.find_by_invoice_number", Method: "POST", Path: "/verifactu/records/find-by-invoice-number",
@@ -2095,7 +2109,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"verifactu", "records"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"number\":\"00042\",\"series\":\"FAC-2026\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"number\":\"00042\",\"series\":\"FAC-2026\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "series", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "number", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.verifactu.records.show", Method: "GET", Path: "/verifactu/records/{record}",
@@ -2136,7 +2150,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"verifactu", "settings"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"auto_transmit\":true,\"enabled\":true,\"environment\":\"production\",\"mode\":\"verifactu\",\"notification_emails\":[\"avisos@empresa.es\"]}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"auto_transmit\":true,\"enabled\":true,\"environment\":\"production\",\"mode\":\"verifactu\",\"notification_emails\":[\"avisos@empresa.es\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "enabled", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "mode", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"verifactu", "no_verifactu"}, Children: []genBodyField{}}, {Name: "auto_transmit", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "environment", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"sandbox", "production"}, Children: []genBodyField{}}, {Name: "notification_emails", Type: "string", Kind: "scalar_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.verifactu.stats", Method: "GET", Path: "/verifactu/stats",
@@ -2161,7 +2175,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"webhook-endpoints"},
 			PathParams:  []genParam{},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"api_version\":\"2026-05-01\",\"custom_headers\":{\"X-Custom-Auth\":\"tenant-a\"},\"description\":\"Webhook principal de producción.\",\"enabled_events\":[\"invoice.created\",\"invoice.paid\",\"quote.converted\"],\"ip_allowlist\":[\"203.0.113.10\",\"198.51.100.0/24\"],\"metadata\":{\"team\":\"integrations\"},\"timeout_seconds\":10,\"url\":\"https://example.com/webhooks/factuarea\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"api_version\":\"2026-05-01\",\"custom_headers\":{\"X-Custom-Auth\":\"tenant-a\"},\"description\":\"Webhook principal de producción.\",\"enabled_events\":[\"invoice.created\",\"invoice.paid\",\"quote.converted\"],\"ip_allowlist\":[\"203.0.113.10\",\"198.51.100.0/24\"],\"metadata\":{\"team\":\"integrations\"},\"timeout_seconds\":10,\"url\":\"https://example.com/webhooks/factuarea\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "url", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "description", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "api_version", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "timeout_seconds", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "enabled_events", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "ip_allowlist", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_headers", Type: "", Kind: "map", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.webhook_endpoints.delete", Method: "DELETE", Path: "/webhook_endpoints/{webhook_endpoint}",
@@ -2186,7 +2200,7 @@ func generatedOps() []genOp {
 			Groups:      []string{"webhook-endpoints"},
 			PathParams:  []genParam{{Name: "webhook_endpoint", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
-			Body:        &genBody{Kind: "json", Example: "{\"api_version\":\"2026-05-01\",\"custom_headers\":{\"X-Custom-Auth\":\"tenant-a\"},\"description\":\"Webhook principal de producción.\",\"enabled_events\":[\"invoice.created\",\"invoice.paid\",\"quote.converted\"],\"ip_allowlist\":[\"203.0.113.10\",\"198.51.100.0/24\"],\"metadata\":{\"team\":\"integrations\"},\"timeout_seconds\":10,\"url\":\"https://example.com/webhooks/factuarea\"}", FileFields: []string{}},
+			Body:        &genBody{Kind: "json", Example: "{\"api_version\":\"2026-05-01\",\"custom_headers\":{\"X-Custom-Auth\":\"tenant-a\"},\"description\":\"Webhook principal de producción.\",\"enabled_events\":[\"invoice.created\",\"invoice.paid\",\"quote.converted\"],\"ip_allowlist\":[\"203.0.113.10\",\"198.51.100.0/24\"],\"metadata\":{\"team\":\"integrations\"},\"timeout_seconds\":10,\"url\":\"https://example.com/webhooks/factuarea\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "url", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "description", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "api_version", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "timeout_seconds", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "enabled_events", Type: "string", Kind: "scalar_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "ip_allowlist", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_headers", Type: "", Kind: "map", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.webhook_endpoints.deliveries.list", Method: "GET", Path: "/webhook_endpoints/{webhook_endpoint}/deliveries",
