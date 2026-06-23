@@ -7,3 +7,7 @@ dist/
 /manpages/
 npm/dist-packages/
 npm/node_modules/
+.idea
+.superpowers
+docs/plans/
+docs/design/
