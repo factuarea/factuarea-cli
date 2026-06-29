@@ -116,6 +116,7 @@ var binaryDownloadFallbacks = map[string]string{
 	"public-api.v1.tax_reports.download":              "application/pdf",
 	"public-api.v1.purchase_invoices.file":            "application/octet-stream",
 	"public-api.v1.purchase_invoices.payment_receipt": "application/pdf",
+	"public-api.v1.invoices.pdf_preview":              "application/pdf",
 }
 
 func applyOverrides(o *Operation) {
