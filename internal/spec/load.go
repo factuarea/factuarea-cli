@@ -210,6 +210,13 @@ func buildBody(op *v3.Operation) *Body {
 	if mt, ok := content.Get("application/json"); ok && mt != nil {
 		b := &Body{Kind: "json"}
 		b.Example = exampleJSON(mt.Example)
+		if b.Example == "" && mt.Examples != nil {
+			if first := mt.Examples.First(); first != nil {
+				if ex := first.Value(); ex != nil {
+					b.Example = exampleJSON(ex.Value)
+				}
+			}
+		}
 		if mt.Schema != nil {
 			b.Fields = bodyFields(mt.Schema.Schema(), 0)
 		}
