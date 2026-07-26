@@ -85,6 +85,36 @@ factuarea api post /v1/invoices -d '{…}'
 
 **Operaciones en producción** (mutaciones con una key `fact_live_`) requieren el flag explícito `--live` como red de seguridad.
 
+### Control horario (workforce)
+
+Con el add-on de **control horario** activo (módulo `control_horario`), el CLI
+expone los recursos de jornada, cada uno con su scope fino (`employees:*`,
+`time_entries:*`, `absences:*`, `work_schedules:*`, `presence:read`,
+`holidays:read`, `payroll_exports:*`): `employees`, `employee-invitations`,
+`employee-seats`, `work-schedules`, `time-entries`, `time-corrections`,
+`time-balances`, `time-tracking-settings`, `monthly-time-record-closes`,
+`payroll-export-formats`, `absence-types`, `absence-policies`,
+`absence-balances`, `absence-requests`, `absence-calendar`, `presence`,
+`holidays` y `gestoria workforce-summary`.
+
+```bash
+# Fichar entrada y salida (cada asiento encadena su huella — RD-ley 8/2019)
+factuarea time-entries clock-in  -d '{"employee_id":"…","source":"web"}'
+factuarea time-entries clock-out -d '{"employee_id":"…","source":"web"}'
+
+# Solicitar una ausencia y aprobarla
+factuarea absence-requests create \
+  -d '{"employee_id":"…","absence_type_id":"…","start_date":"2026-08-01","end_date":"2026-08-05"}'
+factuarea absence-requests approve <uuid>
+
+# Presencia del equipo en vivo
+factuarea presence live --json
+
+# Cerrar el registro mensual inalterable y exportarlo (ITSS RD-ley 8/2019)
+factuarea monthly-time-record-closes create -d '{"year":2026,"month":7}'
+factuarea monthly-time-record-closes export <uuid> --format rdley_8_2019 --json
+```
+
 ## Devloop (webhooks)
 
 Prueba tus webhooks en local sin desplegar ni ngrok, al estilo del CLI de Stripe:
