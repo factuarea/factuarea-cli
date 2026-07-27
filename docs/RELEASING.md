@@ -44,12 +44,14 @@ goreleaser release --snapshot --clean --skip=sign,sbom   # cosign/syft solo en C
 ## Actualizar el spec antes de una release
 
 ```bash
-make generate        # baja el openapi vivo y regenera resources_gen.go
-# o, contra el backend local (canónico mientras el spec público esté roto):
+make generate        # baja el openapi vivo de prod y regenera resources_gen.go
+# o, contra el backend local, para incluir superficie aún no desplegada:
 make generate-dev
 ```
 
-> **Aviso (estado actual del spec público):** `GET https://api.factuarea.com/v1/openapi.json` devuelve un spec vacío y `https://api.factuarea.com/openapi.json` sirve un spec stale e incompleto (le faltan operaciones que sí funcionan, p.ej. `payouts`/`payment_methods`). Hasta que el backend restaure un endpoint de spec completo, **NO uses `make generate` contra prod** (perdería comandos): usa `make generate-dev` (`scramble:export` del backend). El drift-guard de CI se salta solo el endpoint vacío y se reactivará cuando el backend lo arregle.
+> **Elige la fuente a conciencia.** `GET https://api.factuarea.com/v1/openapi.json` (el `SPEC_URL` por defecto) sirve la spec completa que el backend genera en runtime, así que `make generate` es fiable. Lo que da es la superficie **de producción**, y producción va por detrás de `develop`: si el CLI ya embebe recursos que aún no se han desplegado, regenerar contra prod los BORRA. Para una release que deba adelantarse al deploy, usa `make generate-dev` (`scramble:export` del backend local).
+>
+> El `spec drift-guard` de CI compara lo embebido con el spec vivo, pero es `continue-on-error: true` y trata "develop adelantado a prod" como resultado normal: su verde **no** demuestra paridad con producción. Si necesitas saber qué falta en prod, lee su log.
 
 ## Fase 2 (pendiente)
 

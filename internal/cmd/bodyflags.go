@@ -25,12 +25,27 @@ func (op genOp) isUpdate() bool {
 	return op.Method == "PUT" || op.Method == "PATCH"
 }
 
+var reservedBuiltinFlagNames = map[string]struct{}{
+	"data":             {},
+	"data-file":        {},
+	"dry-run":          {},
+	"skeleton":         {},
+	"paginate":         {},
+	"confirm":          {},
+	"output":           {},
+	"skip-scope-check": {},
+}
+
 func fieldFlagName(path []string) string {
 	parts := make([]string, len(path))
 	for i, p := range path {
 		parts[i] = strings.ReplaceAll(p, "_", "-")
 	}
-	return strings.Join(parts, ".")
+	name := strings.Join(parts, ".")
+	if _, reserved := reservedBuiltinFlagNames[name]; reserved {
+		return "body-" + name
+	}
+	return name
 }
 
 func collectFieldFlags(fields []genBodyField, parent []string) []fieldFlag {

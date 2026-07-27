@@ -70,6 +70,7 @@ func TestOverridesFixBinaryDownloadsAndSeriesDefault(t *testing.T) {
 		"public-api.v1.quotes.pdf",
 		"public-api.v1.proformas.pdf",
 		"public-api.v1.tax_reports.download",
+		"public-api.v1.invoices.pdf_preview",
 	} {
 		o := by[id]
 		if o.BinaryResponse == nil || o.BinaryResponse.ContentType != "application/pdf" {
