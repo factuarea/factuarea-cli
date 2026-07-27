@@ -151,9 +151,6 @@
     ],
     "security": [
         {
-            "http": []
-        },
-        {
             "BearerAuth": []
         },
         {
@@ -33643,7 +33640,7 @@
         "/employee-seats": {
             "get": {
                 "operationId": "public-api.v1.employee-seats.status",
-                "description": "Return the billing status of the per-employee add-on for your company: whether the `employee-seats` subscription is active, how many seats are billed (`quantity`), how many employees are active, and the recurring per-seat cost with VAT. Amounts are in the currency minor units (cents) and are `null` when the cost is not resolvable (not subscribed, no active plan, enterprise outside Stripe, sandbox) \u2014 never a misleading 0. Employees never count towards the plan `users` seat limit.",
+                "description": "Return the billing status of the per-employee add-on for your company: whether the `employee-seats` subscription is active, how many seats are billed (`quantity`), how many employees are active, and the recurring per-seat cost with VAT. Amounts are in the currency minor units (cents) and are `null` when the cost is not resolvable (not subscribed, no active plan, enterprise outside Stripe, sandbox) \u2014 never a misleading 0. `seats_billable` tells whether your plan MUST be paying per seat, independently of `subscribed`: `subscribed: false` with `seats_billable: true` and active employees is a billing anomaly, while `seats_billable: false` is a legitimate no-charge state (enterprise by contract, trial or sandbox). Employees never count towards the plan `users` seat limit.",
                 "summary": "Retrieve employee seat billing status",
                 "tags": [
                     "Employees"
@@ -33671,6 +33668,24 @@
                                     "required": [
                                         "data"
                                     ]
+                                },
+                                "example": {
+                                    "data": {
+                                        "object": "employee_seat_billing_status",
+                                        "subscribed": true,
+                                        "quantity": 4,
+                                        "active_employees": 4,
+                                        "unit_amount": 150,
+                                        "tax_rate": 21,
+                                        "tax_amount": 32,
+                                        "total_per_seat": 182,
+                                        "recurring_total": 728,
+                                        "currency": "EUR",
+                                        "billing_interval": "month",
+                                        "next_invoice_at": "2026-08-01T09:12:00+00:00",
+                                        "requires_active_plan": false,
+                                        "seats_billable": true
+                                    }
                                 }
                             }
                         },
@@ -43568,7 +43583,6 @@
         "/purchase_invoices/{purchase_invoice}/payments": {
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.list_payments",
-                "description": "List Purchase Invoice Payments.",
                 "summary": "List purchase invoice payments",
                 "tags": [
                     "Purchase Invoices"
@@ -43678,7 +43692,6 @@
             },
             "post": {
                 "operationId": "public-api.v1.purchase_invoices.register_payment",
-                "description": "Register Purchase Invoice Payment.",
                 "summary": "Register a purchase invoice payment",
                 "tags": [
                     "Purchase Invoices"
@@ -59757,10 +59770,6 @@
     },
     "components": {
         "securitySchemes": {
-            "http": {
-                "type": "http",
-                "scheme": "bearer"
-            },
             "BearerAuth": {
                 "type": "http",
                 "scheme": "bearer",
@@ -59776,9 +59785,9 @@
                 "description": "OAuth 2.1 authorization-code flow with PKCE (`code_challenge_method=S256`).\nDiscovery metadata (RFC 8414) is published at `/.well-known/oauth-authorization-server`.\n\n## API key rotation policy\n\nAPI keys and OAuth client secrets are long-lived credentials and MUST be rotated periodically and immediately after any suspected leak.\n\n- **Prefixes**: every key carries an unambiguous environment prefix \u2014 `fact_live_` (production) and `fact_test_` (sandbox). The prefix is the source of truth for the environment; never mix them across environments.\n- **How to rotate**: rotate an API key from the Factuarea portal (or via the self-service `account:write` endpoints). Rotation issues a brand-new secret and returns it **once** \u2014 store it immediately, it is never shown again.\n- **Grace window (dual-secret)**: after a rotation the previous secret keeps working for a **24-hour grace window**, so you can roll out the new secret with zero downtime. During that window both the new and the previous secret are accepted; once the window expires the previous secret is rejected and purged.\n- **When to rotate**: on a regular schedule (e.g. every 90 days), whenever a teammate with access leaves, and **immediately** if a secret is ever exposed in logs, source control or a public client.\n- Secrets are bound to a single company (tenant) and MUST NEVER be embedded in browsers, mobile apps or any public client \u2014 keep them server-side only.",
                 "flows": {
                     "authorizationCode": {
-                        "authorizationUrl": "http://localhost:8000/api/oauth/authorize",
-                        "tokenUrl": "http://localhost:8000/api/oauth/token",
-                        "refreshUrl": "http://localhost:8000/api/oauth/token",
+                        "authorizationUrl": "https://app.factuarea.com/api/oauth/authorize",
+                        "tokenUrl": "https://app.factuarea.com/api/oauth/token",
+                        "refreshUrl": "https://app.factuarea.com/api/oauth/token",
                         "scopes": {
                             "clients:read": "Read clients.",
                             "clients:write": "Create and update clients.",
@@ -70120,7 +70129,7 @@
             },
             "EmployeeSeatBillingStatus": {
                 "type": "object",
-                "description": "Billing status of the per-employee add-on for your company (Control Horario). Whether the dedicated `employee-seats` subscription is active, how many seats are billed, how many employees are active and the recurring per-seat cost. Amounts are in minor currency units (cents) and are null when the cost is not resolvable (not subscribed, no active plan, enterprise outside Stripe, sandbox) \u2014 never a misleading 0. Employees never count towards the plan `users` seat limit.",
+                "description": "Billing status of the per-employee add-on for your company (Control Horario). Whether the dedicated `employee-seats` subscription is active, how many seats are billed, how many employees are active and the recurring per-seat cost. Amounts are in minor currency units (cents) and are null when the cost is not resolvable (not subscribed, no active plan, enterprise outside Stripe, sandbox) \u2014 never a misleading 0. Employees never count towards the plan `users` seat limit. Read `subscribed` together with `seats_billable` to tell a legitimate no-charge state apart from a billing anomaly.",
                 "properties": {
                     "object": {
                         "type": "string",
@@ -70128,22 +70137,34 @@
                             "employee_seat_billing_status"
                         ],
                         "example": "employee_seat_billing_status",
-                        "description": "Stripe-like discriminator. Always `employee_seat_billing_status` for this resource."
+                        "description": "Stripe-like discriminator. Always `employee_seat_billing_status` for this resource.",
+                        "examples": [
+                            "employee_seat_billing_status"
+                        ]
                     },
                     "subscribed": {
                         "type": "boolean",
                         "example": true,
-                        "description": "true when the company has the per-employee add-on subscribed (`employee-seats` subscription active)."
+                        "description": "true when the company has the per-employee add-on subscribed (`employee-seats` subscription active).",
+                        "examples": [
+                            true
+                        ]
                     },
                     "quantity": {
                         "type": "integer",
                         "example": 4,
-                        "description": "Number of BILLED seats: while subscribed it follows the number of active employees; 0 when not subscribed."
+                        "description": "Number of BILLED seats: while subscribed it follows the number of active employees; 0 when not subscribed.",
+                        "examples": [
+                            4
+                        ]
                     },
                     "active_employees": {
                         "type": "integer",
                         "example": 4,
-                        "description": "Real number of `active` employees of the company. When not subscribed it reveals how many seats an opt-in would bill; when subscribed it matches `quantity`."
+                        "description": "Real number of `active` employees of the company. When not subscribed it reveals how many seats an opt-in would bill; when subscribed it matches `quantity`.",
+                        "examples": [
+                            4
+                        ]
                     },
                     "unit_amount": {
                         "type": [
@@ -70151,7 +70172,10 @@
                             "null"
                         ],
                         "example": 150,
-                        "description": "Taxable base of one seat per billing cycle, in cents, or null when not resolvable."
+                        "description": "Taxable base of one seat per billing cycle, in cents, or null when not resolvable.",
+                        "examples": [
+                            150
+                        ]
                     },
                     "tax_rate": {
                         "type": [
@@ -70159,7 +70183,10 @@
                             "null"
                         ],
                         "example": 21,
-                        "description": "Applied VAT rate (e.g. 21), or null when not resolved."
+                        "description": "Applied VAT rate (e.g. 21), or null when not resolved.",
+                        "examples": [
+                            21
+                        ]
                     },
                     "tax_amount": {
                         "type": [
@@ -70167,7 +70194,10 @@
                             "null"
                         ],
                         "example": 32,
-                        "description": "VAT amount of one seat, in cents, or null."
+                        "description": "VAT amount of one seat, in cents, or null.",
+                        "examples": [
+                            32
+                        ]
                     },
                     "total_per_seat": {
                         "type": [
@@ -70175,7 +70205,10 @@
                             "null"
                         ],
                         "example": 182,
-                        "description": "Base + VAT of one seat, in cents, or null."
+                        "description": "Base + VAT of one seat, in cents, or null.",
+                        "examples": [
+                            182
+                        ]
                     },
                     "recurring_total": {
                         "type": [
@@ -70183,12 +70216,18 @@
                             "null"
                         ],
                         "example": 728,
-                        "description": "Projected recurring total (`total_per_seat` \u00d7 `quantity`), in cents. Null when VAT is not resolved."
+                        "description": "Projected recurring total (`total_per_seat` \u00d7 `quantity`), in cents. Null when VAT is not resolved.",
+                        "examples": [
+                            728
+                        ]
                     },
                     "currency": {
                         "type": "string",
                         "example": "EUR",
-                        "description": "ISO 4217 currency code (uppercase)."
+                        "description": "ISO 4217 currency code (uppercase).",
+                        "examples": [
+                            "EUR"
+                        ]
                     },
                     "billing_interval": {
                         "type": [
@@ -70200,7 +70239,10 @@
                             null
                         ],
                         "example": "month",
-                        "description": "The seat is always billed monthly, regardless of the plan interval; null when not subscribed."
+                        "description": "The seat is always billed monthly, regardless of the plan interval; null when not subscribed.",
+                        "examples": [
+                            "month"
+                        ]
                     },
                     "next_invoice_at": {
                         "type": [
@@ -70209,12 +70251,26 @@
                         ],
                         "format": "date-time",
                         "example": "2026-08-01T09:12:00+00:00",
-                        "description": "End of the current covered period of the seat subscription (ISO 8601), or null."
+                        "description": "End of the current covered period of the seat subscription (ISO 8601), or null.",
+                        "examples": [
+                            "2026-08-01T09:12:00+00:00"
+                        ]
                     },
                     "requires_active_plan": {
                         "type": "boolean",
                         "example": false,
-                        "description": "true when the company has no active paid plan, so the seat cost cannot be resolved."
+                        "description": "true when the company has no active paid plan, so the seat cost cannot be resolved.",
+                        "examples": [
+                            false
+                        ]
+                    },
+                    "seats_billable": {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "true when your company MUST be paying per seat (live paid plan), regardless of whether the `employee-seats` subscription exists \u2014 it is independent of `subscribed`. Combine both: `subscribed: true` means seats are being billed normally; `subscribed: false` with `seats_billable: true` and `active_employees > 0` is a BILLING ANOMALY (active employees with no seat billed) that your provider must settle; `seats_billable: false` is a legitimate no-charge state (enterprise by contract, trial or sandbox).",
+                        "examples": [
+                            true
+                        ]
                     }
                 },
                 "required": [
@@ -70230,13 +70286,14 @@
                     "currency",
                     "billing_interval",
                     "next_invoice_at",
-                    "requires_active_plan"
+                    "requires_active_plan",
+                    "seats_billable"
                 ],
                 "title": "EmployeeSeatBillingStatus"
             },
             "EmployeeSeatChargePreview": {
                 "type": "object",
-                "description": "Preview of the prorated per-seat charge for activating or hiring employees, computed from the Stripe upcoming invoice without charging. The exclusive reason flags for a 0 amount, by precedence: `already_covered` > `requires_active_plan` > `included_in_trial` > `requires_payment_method`. At most one is true. Amounts are in minor currency units (cents).",
+                "description": "Preview of the prorated per-seat charge for activating or hiring employees, computed from the Stripe upcoming invoice without charging. The exclusive reason flags for a 0 amount, by precedence: `already_covered` > `requires_active_plan` > `included_in_trial`. At most one is true. `requires_payment_method` is NOT a 0-amount branch: it flags an obstacle on a REAL amount. Read `seats_billable` before promising a charge: when false the operation never bills (enterprise by contract, trial, sandbox or live mode off) even though the amount is computed. Amounts are in minor currency units (cents).",
                 "properties": {
                     "object": {
                         "type": "string",
@@ -70286,7 +70343,7 @@
                     "requires_payment_method": {
                         "type": "boolean",
                         "example": false,
-                        "description": "true when the company operates in live mode with no payment method on file (amount is 0; configure the payment method to proceed)."
+                        "description": "true when the company operates in live mode with no payment method on file. This does NOT zero the amount: the proration is still computed (previewing it needs no card), so you can show what the operation will cost before asking for the card. Configure the payment method to proceed."
                     },
                     "requires_active_plan": {
                         "type": "boolean",
@@ -70331,6 +70388,11 @@
                         ],
                         "example": 908,
                         "description": "Projected joint monthly cost with VAT, in cents; null when VAT is not calculable."
+                    },
+                    "seats_billable": {
+                        "type": "boolean",
+                        "example": true,
+                        "description": "true when the seat WILL actually be billed: the very same predicate the hiring/reactivation gate uses (live paid plan, company not in sandbox) and the same field `GET /employee-seats` exposes. When false the operation never charges (enterprise by contract, trial, sandbox or live mode off) even though `amount` is computed \u2014 do not present it as a payment, and do not ask for confirmation of a charge that will not happen. Independent of the 0-amount branches: it can be true together with `already_covered` (the plan does bill seats, but THIS operation is free)."
                     }
                 },
                 "required": [
@@ -70348,7 +70410,8 @@
                     "is_first_seat",
                     "recurring_quantity",
                     "recurring_base_cents",
-                    "recurring_total_cents"
+                    "recurring_total_cents",
+                    "seats_billable"
                 ],
                 "title": "EmployeeSeatChargePreview"
             },
@@ -80704,11 +80767,9 @@
                         "maxLength": 500
                     },
                     "proposed": {
-                        "type": "array",
+                        "type": "object",
                         "description": "Proposed values for the correction (consistency validated in the domain).",
-                        "items": {
-                            "type": "string"
-                        }
+                        "additionalProperties": {}
                     }
                 },
                 "required": [
@@ -98463,6 +98524,98 @@
                 "description": "Rechazo de una solicitud de ausencia. `reason` es obligatorio.",
                 "value": {
                     "reason": "Coincide con el cierre trimestral; por favor, solicita otras fechas."
+                }
+            }
+        }
+    },
+    "webhooks": {
+        "event": {
+            "post": {
+                "summary": "Webhook event delivery",
+                "description": "Factuarea POSTs this body to every subscribed endpoint when a subscribed event occurs. The receiver verifies the `Factuarea-Signature` HMAC header and SHALL respond with a 2xx status to acknowledge the delivery; any other status (or a timeout) is retried with exponential backoff.",
+                "operationId": "webhooks.event",
+                "parameters": [
+                    {
+                        "name": "Content-Type",
+                        "in": "header",
+                        "required": true,
+                        "description": "Always `application/json`.",
+                        "schema": {
+                            "type": "string",
+                            "example": "application/json"
+                        }
+                    },
+                    {
+                        "name": "Factuarea-Signature",
+                        "in": "header",
+                        "required": true,
+                        "description": "HMAC-SHA256 signature of the raw request body, used to verify the delivery is authentic. Format `t=<timestamp>,v1=<signature>` (and `v0=<signature>` while a rotated secret is still valid).",
+                        "schema": {
+                            "type": "string",
+                            "example": "t=1718200000,v1=5257a869e7ec..."
+                        }
+                    },
+                    {
+                        "name": "Factuarea-Event-Id",
+                        "in": "header",
+                        "required": true,
+                        "description": "Stable identifier of the event (UUID v7). Identical across redeliveries of the same event.",
+                        "schema": {
+                            "type": "string",
+                            "example": "01928f10-7c0e-7c4a-9b7d-2f8a6e3c1d4b"
+                        }
+                    },
+                    {
+                        "name": "Factuarea-Event-Type",
+                        "in": "header",
+                        "required": true,
+                        "description": "Type of the delivered event, e.g. `invoice.paid`.",
+                        "schema": {
+                            "type": "string",
+                            "example": "invoice.paid"
+                        }
+                    },
+                    {
+                        "name": "Factuarea-Delivery-Id",
+                        "in": "header",
+                        "required": true,
+                        "description": "Identifier of this specific delivery attempt (UUID v7). Differs on each redelivery of the same event.",
+                        "schema": {
+                            "type": "string",
+                            "example": "01928f10-9a1b-7d3e-8c2f-4b6a8e1d3c5f"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "required": true,
+                        "description": "Standard idempotency header. Its value is identical to `Factuarea-Event-Id` (the stable UUID v7 of the event), so a receiver can deduplicate redeliveries using the industry-standard header.",
+                        "schema": {
+                            "type": "string",
+                            "example": "01928f10-7c0e-7c4a-9b7d-2f8a6e3c1d4b"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/WebhookEventPayload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The receiver acknowledged the delivery. Any 2xx status is treated as success; the body is ignored."
+                    },
+                    "4XX": {
+                        "description": "The receiver rejected the delivery. Factuarea retries with exponential backoff until the endpoint is disabled."
+                    },
+                    "5XX": {
+                        "description": "The receiver failed to process the delivery. Factuarea retries with exponential backoff."
+                    }
                 }
             }
         }
