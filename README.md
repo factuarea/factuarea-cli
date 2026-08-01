@@ -2,7 +2,7 @@
 
 CLI oficial de [Factuarea](https://factuarea.com) para manejar la **API pública v1** desde la terminal. Diseñado *agent-first* (salida JSON estable, exit codes semánticos, descubrimiento en una llamada) e inspirado en el CLI de Stripe.
 
-> **Estado:** en desarrollo. Foundation, generación de comandos y devloop (`listen`/`trigger`/`docs`) completos; distribución (Homebrew/npm) en camino.
+> **Estado:** en desarrollo. Foundation, generación de comandos y devloop (`listen`/`trigger`/`docs search|list|grep|get`) completos; distribución (Homebrew/npm) en camino.
 
 ## Instalación
 
@@ -134,7 +134,27 @@ Referencia rápida de la API, en local:
 
 ```bash
 factuarea docs search invoice          # busca en la referencia embebida (no sale de tu máquina)
+
+factuarea docs list                    # páginas de docs.factuarea.com: <ruta> — <título>
+factuarea docs list /guides            # solo las que cuelgan de ese prefijo
+factuarea docs grep "idempotency-key"  # secciones de la documentación que coinciden
+factuarea docs get /guides/idempotency # la página completa, en Markdown
 ```
+
+Dos fuentes distintas, ninguna con API key:
+
+- **`docs search`** consulta el **OpenAPI embebido en el binario**: devuelve *operaciones* (comando, resumen, método y ruta). No toca la red nunca.
+- **`docs list|grep|get`** consultan la **documentación publicada** (el corpus `llms-full` de [docs.factuarea.com](https://docs.factuarea.com)): devuelven *páginas y secciones* — guías, referencia de la API, catálogo de errores.
+
+El corpus se descarga **entero y una sola vez**, se guarda en el directorio de caché del sistema (`~/Library/Caches/factuarea/docs/` en macOS, `~/.cache/factuarea/docs/` en Linux) y se filtra en local. Mientras la copia tenga menos de **15 minutos** no hay ninguna petición de red, así que una sesión que encadene `list`, `grep` y `get` descarga una vez. **Tu término de búsqueda no sale de la máquina**: la URL que se pide es fija y no depende de lo que busques.
+
+| Opción | Qué hace |
+| --- | --- |
+| `--refresh` | Fuerza la descarga ignorando la copia vigente |
+| `--lang en\|es\|ca` | Idioma de las guías (default `en`, el idioma fuente). La referencia de la API no se traduce y sale siempre |
+| `--json` | Salida estable por stdout: `path`/`title` en `list`, `path`/`title`/`section`/`snippet` en `grep`, `path`/`title`/`markdown` en `get` |
+
+Si la descarga falla y hay una copia en caché —aunque esté caducada—, se usa esa y se avisa por **stderr**, de modo que el JSON de stdout sigue siendo parseable; sin ninguna copia, sale con código `10` (red). La URL del corpus se puede apuntar a otro origen con `FACTUAREA_DOCS_URL`.
 
 ### Para agentes / scripting
 
