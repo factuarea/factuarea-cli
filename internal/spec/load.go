@@ -110,20 +110,16 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 	return o
 }
 
-var binaryDownloadFallbacks = map[string]string{
-	"public-api.v1.quotes.pdf":                        "application/pdf",
-	"public-api.v1.proformas.pdf":                     "application/pdf",
-	"public-api.v1.tax_reports.download":              "application/pdf",
-	"public-api.v1.purchase_invoices.file":            "application/octet-stream",
-	"public-api.v1.purchase_invoices.payment_receipt": "application/pdf",
-	"public-api.v1.invoices.pdf_preview":              "application/pdf",
-}
+// Ya no hay lista de correcciones binarias a mano: el spec declara el
+// Content-Type real de cada descarga (`OpenApiSchemaRegistry::BINARY_DOWNLOAD_PATHS`
+// en el backend), así que `buildBinaryResponse` las detecta todas. Las seis
+// entradas que hubo aquí —los PDF de presupuesto, proforma y borrador de
+// factura, el recibo y el adjunto de la factura de compra, y la descarga de
+// informe fiscal— parcheaban en el cliente un contrato que mentía en el origen;
+// el arreglo correcto era el spec. Si vuelve a aparecer una descarga tratada
+// como JSON, corrígela allí: aquí solo se volvería a esconder.
 
 func applyOverrides(o *Operation) {
-	if ct, ok := binaryDownloadFallbacks[o.OperationID]; ok && o.BinaryResponse == nil {
-		o.BinaryResponse = &BinaryResponse{ContentType: ct}
-		o.Body = nil
-	}
 	if o.OperationID == "public-api.v1.series.default" && !hasQueryParam(o, "document_type") {
 		o.QueryParams = append(o.QueryParams, Param{
 			Name:        "document_type",

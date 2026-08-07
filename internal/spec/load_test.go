@@ -56,7 +56,11 @@ func TestLoadParsesRealSpec(t *testing.T) {
 	}
 }
 
-func TestOverridesFixBinaryDownloadsAndSeriesDefault(t *testing.T) {
+// Las descargas binarias salen del SPEC, no de una lista de correcciones del
+// cliente: el backend declara su Content-Type real y aquí solo se comprueba que
+// llegan bien. Si una de estas vuelve a `nil`, el spec ha dejado de declararla
+// (y el comando generado trataría los bytes como JSON).
+func TestBinaryDownloadsComeFromTheSpec(t *testing.T) {
 	ops, _, err := Load()
 	if err != nil {
 		t.Fatalf("Load: %v", err)
@@ -66,19 +70,40 @@ func TestOverridesFixBinaryDownloadsAndSeriesDefault(t *testing.T) {
 		by[o.OperationID] = o
 	}
 
-	for _, id := range []string{
-		"public-api.v1.quotes.pdf",
-		"public-api.v1.proformas.pdf",
-		"public-api.v1.tax_reports.download",
-		"public-api.v1.invoices.pdf_preview",
+	const xlsx = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+	for id, want := range map[string]string{
+		"public-api.v1.quotes.pdf":                                "application/pdf",
+		"public-api.v1.proformas.pdf":                             "application/pdf",
+		"public-api.v1.invoices.pdf_preview":                      "application/pdf",
+		"public-api.v1.purchase_invoices.payment_receipt":         "application/pdf",
+		"public-api.v1.purchase_invoices.file":                    "application/pdf",
+		"public-api.v1.tax_reports.download":                      "text/plain",
+		"public-api.v1.invoices.export_excel":                     xlsx,
+		"public-api.v1.monthly_time_record_closes.export":         xlsx,
+		"public-api.v1.monthly_time_record_closes.payroll_export": xlsx,
 	} {
 		o := by[id]
-		if o.BinaryResponse == nil || o.BinaryResponse.ContentType != "application/pdf" {
-			t.Errorf("%s debe tener BinaryResponse application/pdf (override): %+v", id, o.BinaryResponse)
+		if o.BinaryResponse == nil || o.BinaryResponse.ContentType != want {
+			t.Errorf("%s debe tener BinaryResponse %s desde el spec: %+v", id, want, o.BinaryResponse)
 		}
-		if o.Body != nil {
-			t.Errorf("%s no debe tener body tras el override: %+v", id, o.Body)
-		}
+	}
+
+	// Un POST binario conserva su cuerpo de petición: el export de facturas
+	// recibe los filtros en el body y devuelve la hoja de cálculo.
+	if xl := by["public-api.v1.invoices.export_excel"]; xl.Body == nil || xl.Body.Kind != "json" {
+		t.Errorf("invoices.export_excel debe conservar su body JSON: %+v", xl.Body)
+	}
+}
+
+func TestOverridesFixSeriesDefault(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
 	}
 
 	sd := by["public-api.v1.series.default"]
