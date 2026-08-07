@@ -1105,6 +1105,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -2265,6 +2270,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -2667,7 +2677,7 @@
         "/series/bootstrap": {
             "post": {
                 "operationId": "public-api.v1.series.bootstrap",
-                "description": "Leave a company able to issue documents in one call: for every document type of the public surface (`invoice`, `quote`, `delivery_note`, `proforma`) that has no active series, create its default series with the canonical code and name. No request body. Idempotent by business rule \u2014 calling it again creates nothing and fails nothing, it just reports the state again.\n\nThe response returns one entry per document type with a `status` of `created`, `existing` or `no_default`. The last one is not cosmetic: a type can end up with active series and none marked as default (archiving the default series demotes it without promoting a replacement), and in that state the company still cannot issue that document. The bootstrap deliberately does NOT promote one for you \u2014 choosing which series numbers a company's documents has registry consequences that only you can decide \u2014 so it returns the active series in `candidates` and you resolve it with `POST /v1/series/{id}/default`. Treat `no_default` as work still to do, not as success.\n\nThat business idempotency is INDEPENDENT of the `Idempotency-Key` header. Without the header, every call reflects the CURRENT state (a second call reports everything as `existing`). With the header, the generic idempotency layer replays the original body for 24 hours, so a repeated key returns the first response \u2014 `created` entries included \u2014 with `Idempotent-Replayed: true`. If you want the fresh state, omit the header or use a new key.",
+                "description": "Leave a company able to issue documents in one call: for every document type of the public surface (`invoice`, `quote`, `delivery_note`, `proforma`) that has no active series, create its default series with the canonical code and name. No request body.\n\n**What comes back**\n\n- One entry per document type, with a `status` of `created`, `existing` or `no_default`.\n- `no_default` means the type has active series but none marked as default \u2014 archiving the default demotes it without promoting a replacement \u2014 and the company still cannot issue that document.\n- Treat `no_default` as work still to do, not as success: the active series arrive in `candidates` and you resolve it with `POST /v1/series/{id}/default`.\n\n**Why it does not choose for you**\n\nPicking which series numbers a company's documents has registry consequences only you can decide, so the bootstrap never promotes one for you.\n\n**Calling it twice**\n\n- Idempotent by business rule: a second call creates nothing, fails nothing and reports the state again.\n- INDEPENDENT of the `Idempotency-Key` header: with the header, a repeated key replays the original body \u2014 `created` entries included \u2014 instead of reporting the current state.",
                 "summary": "Bootstrap the default series of a company",
                 "tags": [
                     "Series"
@@ -8616,6 +8626,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -8877,6 +8892,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -9140,6 +9160,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -12930,6 +12955,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -13470,6 +13500,11 @@
                                                         "payment_method_text": "Transferencia bancaria",
                                                         "reference": "TRF-2026-0042",
                                                         "notes": null,
+                                                        "is_reversed": false,
+                                                        "reversed_at": null,
+                                                        "reversal_reason": null,
+                                                        "reversal_reason_text": null,
+                                                        "reversal_note": null,
                                                         "created_at": "2026-03-20T10:30:00Z",
                                                         "updated_at": "2026-03-20T10:30:00Z"
                                                     }
@@ -13707,6 +13742,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -13951,6 +13991,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -16724,6 +16769,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -21344,6 +21394,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -21597,6 +21652,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -23687,7 +23747,7 @@
             },
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.file",
-                "description": "Stream the original PDF attached to the purchase invoice when it was uploaded. Returns 404 if no attachment is present.",
+                "description": "Stream the original file attached to the purchase invoice when it was uploaded \u2014 a PDF or a scanned image (`image/jpeg`, `image/png`), the formats accepted on upload. Returns 404 if no attachment is present.",
                 "summary": "Download the original purchase invoice file",
                 "tags": [
                     "Purchase Invoices"
@@ -23712,9 +23772,22 @@
                     "200": {
                         "description": "El adjunto est\u00e1 cifrado at-rest en el Vault; el handler entrega un\ntemp file DESCIFRADO de vida acotada que se elimina tras enviarse.",
                         "content": {
-                            "application/json": {
+                            "application/pdf": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "image/jpeg": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "image/png": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
                                 }
                             }
                         },
@@ -26647,9 +26720,10 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "application/json": {
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "string",
+                                    "format": "binary"
                                 }
                             }
                         },
@@ -27131,9 +27205,10 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "application/json": {
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "string",
+                                    "format": "binary"
                                 }
                             }
                         },
@@ -27463,9 +27538,10 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "application/json": {
+                            "application/pdf": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "format": "binary"
                                 }
                             }
                         },
@@ -27572,6 +27648,14 @@
                 "responses": {
                     "200": {
                         "description": "",
+                        "content": {
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
                         "headers": {
                             "X-Request-Id": {
                                 "description": "Unique request identifier, propagated for log correlation and support.",
@@ -27677,9 +27761,10 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "application/json": {
+                            "application/pdf": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "format": "binary"
                                 }
                             }
                         },
@@ -27787,12 +27872,22 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "application/json": {
+                            "text/plain": {
                                 "schema": {
-                                    "type": [
-                                        "string",
-                                        "null"
-                                    ]
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "application/pdf": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
                                 }
                             }
                         },
@@ -28133,6 +28228,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -28536,9 +28636,16 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "application/json": {
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
                                 "schema": {
-                                    "type": "object"
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            },
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
                                 }
                             }
                         },
@@ -29247,6 +29354,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -29494,6 +29606,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -33655,7 +33772,7 @@
         "/emails/indicators": {
             "get": {
                 "operationId": "public-api.v1.emails.indicators",
-                "description": "Answer \"did the email for these documents go out?\" for a whole batch at once, instead of paging through the deliveries of each one. Pass up to 100 document ids in `related_entity_ids` (comma-separated UUID v7) and get back, per document, how many emails were sent (`total`), the `last_status`, the last time something left for the SMTP server (`last_sent_at`), the highest number of `attempts` and how many `failed_count`. Ideal to paint a \"sent / not sent\" column over a page of invoices in a single call.\n\nDocuments with NO email at all are OMITTED from the response \u2014 they are not returned with zeros \u2014 and so are ids that do not belong to a document of the authenticated company. The returned collection can therefore be SHORTER than the batch you asked for, or empty, and the response is still 200: an absent id means \"nothing to report\", never \"not sent\". Match the results back by `related_entity_id` rather than by position.\n\n`related_entity_type` is OPTIONAL: UUID v7 is globally unique, so a batch MAY mix invoices, quotes, pro formas, delivery notes, purchase invoices and recurring invoices, and every entry declares the `related_entity_type` that was resolved for it. When you do send the type, it only narrows the resolution. More than 100 ids returns 422; an unknown query parameter returns 400 `parameter_unknown`. This endpoint does not paginate.\n\nIMPORTANT \u2014 `last_status` and `last_sent_at` describe the hand-off to the OUTGOING SMTP SERVER, not real delivery: a `sent` email may still bounce afterwards without the platform observing it, and there are no `delivered`, `bounced` or `opened` states. Note also that `last_sent_at` is the LATEST successful hand-off, so it can be non-null while `last_status` is `failed` (the last attempt failed, an earlier one went out), and `attempts` is the maximum across the document's emails, not their sum.",
+                "description": "Answer \"did the email for these documents go out?\" for a whole batch at once, instead of paging through the deliveries of each one: per document, how many emails were sent, the last status, the last hand-off and how many failed. Ideal to paint a \"sent / not sent\" column over a page of invoices in a single call.\n\nIMPORTANT \u2014 `last_status` and `last_sent_at` describe the hand-off to the OUTGOING SMTP SERVER, not real delivery: a `sent` email may still bounce afterwards without the platform observing it.",
                 "summary": "Summarize email delivery per document",
                 "tags": [
                     "Emails"
@@ -40158,7 +40275,7 @@
         "/absence-balances": {
             "get": {
                 "operationId": "public-api.v1.absence-balances.list",
-                "description": "List your company\u2019s absence balances with cursor-based pagination. Each balance is the accrued, carried-over and consumed days of one employee for one absence type in a given year, with the resulting `available_days`. Supports filtering by `employee_id` (UUID v7), `absence_type_id` (UUID v7) and `year`. Day amounts are exact decimal strings.",
+                "description": "List your company\u2019s absence balances with cursor-based pagination. Each balance is the accrued, carried-over and consumed days of one employee for one absence type in a given year, with the resulting `available_days`. Supports filtering by `employee_id` (UUID v7), `absence_type_id` (UUID v7) and `year`. Ledger amounts are exact decimal strings; `available_days` is rounded up to a whole day.",
                 "summary": "List all absence balances",
                 "tags": [
                     "Absence Balances"
@@ -40763,7 +40880,7 @@
         "/developers/request-logs": {
             "get": {
                 "operationId": "public-api.v1.developers.request_logs.list",
-                "description": "Inspect the requests your own integration has made against this API, newest first, so you can debug it without opening a support ticket: what you called, what came back, how long it took and, when a call failed, the `error_type` and `error_code` the API returned. The endpoint is scoped to the authenticated company \u2014 you only ever see your own traffic, never another company's.\n\nNarrow the page with `method`, `status_range` (`2xx`, `3xx`, `4xx`, `5xx`), `only_errors` (shorthand for `status_range=4xx,5xx`; an explicit `status_range` wins over it), `api_key_prefix`, `path_search`, the `created_at[gte]` / `created_at[lte]` window and `environment` (`live` or `test`). `method` and `status_range` accept a comma-separated list. A value outside those whitelists is rejected with 422 and no results \u2014 it is never silently dropped.\n\nPagination is cursor-based: `limit` (1 to 100, defaults to 50) and `starting_after`, which takes the `next_cursor` of the previous page. A malformed `limit` or cursor returns 400. Rows are kept for 30 days and then purged, so this is a debugging window, not an audit trail. The payload never includes request headers, bodies or query strings \u2014 they are not stored \u2014 and a key is identified only by its `api_key_prefix`.",
+                "description": "Inspect the requests your own integration has made against this API, newest first, so you can debug it without opening a support ticket: what you called, what came back, how long it took and, when a call failed, the error it returned. Scoped to the authenticated company. Rows are purged after 30 days, so this is a debugging window, not an audit trail.",
                 "summary": "List your API request logs",
                 "tags": [
                     "Developers"
@@ -41626,7 +41743,7 @@
         "/emails": {
             "get": {
                 "operationId": "public-api.v1.emails.list",
-                "description": "Browse the emails your company has sent through the platform \u2014 invoices, quotes, pro formas, delivery notes, payment reminders \u2014 newest first, so you can answer \"did the email for this invoice actually go out?\" without asking your customer. Each entry carries the recipient, the subject, the delivery status, how many attempts it took, the error message when it failed, and the document it belongs to. The listing is scoped to the authenticated company: you never see another company's emails.\n\nIMPORTANT \u2014 `status` describes the hand-off to the OUTGOING SMTP SERVER, not real delivery. `sent` means the outgoing mail server accepted the message; it does NOT mean the recipient received it, opened it or read it, and the message may still bounce or land in spam afterwards without the platform ever finding out. The published catalog is exactly `queued`, `sending`, `sent` and `failed`: there are no `delivered`, `bounced` or `opened` states, because observing them would require a mail provider with delivery webhooks, which is out of scope. Do not build a UI that promises your user more than that.\n\nFilter with `status`, `recipient_email` (EXACT address \u2014 for partial matches use `search`, which spans subject and recipient), `related_entity_id`, `related_entity_type` and the `created_at[gte]` / `created_at[lte]` window. `related_entity_id` is accepted WITHOUT `related_entity_type`: a UUID v7 is globally unique, so the document type is resolved for you and is only ever used to narrow the search. A document id that belongs to another company, or a `related_entity_type` that does not match the id, returns an empty page with 200 \u2014 never a 404 that would reveal the document exists. A `status` or `related_entity_type` outside its catalog returns 422, and an unknown query parameter returns 400 `parameter_unknown` instead of being ignored.\n\nPagination is cursor-based: `limit` (1 to 100, defaults to 25) and `starting_after`, which takes the `next_cursor` of the previous page. Treat the cursor as opaque \u2014 here it is a numeric string, not a UUID v7. A malformed `limit` or cursor returns 400.",
+                "description": "Browse the emails your company has sent through the platform \u2014 invoices, quotes, pro formas, delivery notes, payment reminders \u2014 newest first, so you can answer \"did the email for this invoice actually go out?\" without asking your customer. Scoped to the authenticated company.\n\nIMPORTANT \u2014 `status` describes the hand-off to the OUTGOING SMTP SERVER, not real delivery: `sent` means the outgoing mail server accepted the message, not that the recipient received it.",
                 "summary": "List sent emails",
                 "tags": [
                     "Emails"
@@ -42384,6 +42501,11 @@
                                                                 "payment_method_text": "Transferencia bancaria",
                                                                 "reference": "TRF-2026-0042",
                                                                 "notes": null,
+                                                                "is_reversed": false,
+                                                                "reversed_at": null,
+                                                                "reversal_reason": null,
+                                                                "reversal_reason_text": null,
+                                                                "reversal_note": null,
                                                                 "created_at": "2026-03-20T10:30:00Z",
                                                                 "updated_at": "2026-03-20T10:30:00Z"
                                                             }
@@ -42703,7 +42825,7 @@
         "/integrations/events": {
             "get": {
                 "operationId": "public-api.v1.integrations.events.list",
-                "description": "Browse everything the payment gateways have sent to Factuarea \u2014 what arrived, what it produced and, when it produced nothing, why. This is the inbox to open when a charge did not generate its invoice: every discarded event carries a typed `discard_reason` from a closed catalogue, its label, whether the account owner can do something about it (`is_actionable`) and whether it can be reprocessed (`is_replayable`). Newest first, and scoped to the authenticated company: you never see another company's events.\n\nIMPORTANT \u2014 `discard_reason` is the CLOSED axis, `event_type` is NOT an enum. `event_type` is free-form text coming from the provider and the column deliberately mixes two conventions: the branches instrumented later store the raw provider type (`charge.refunded`), while pre-existing ones keep their own semantic value (`autoinvoice.*`). Match it exactly when you know what you are looking for, but do not model it as a closed set. `provider` and `status` ARE closed sets, so a typo in them returns 422 instead of an empty page that would read as \"you have no events\".\n\nThe raw content of the event is NEVER returned, neither here nor in the detail: it carries personal data of your end customers and payment details. It is stored encrypted at rest ONLY for parked events, so that they can be reprocessed, and it is purged 30 days after being parked. An event that is still `is_parked` but no longer `is_replayable` means exactly that: the retention window elapsed.\n\nFilter with `provider`, `status`, `event_type`, `discard_reason`, `is_parked` and the `created_at[gte]` / `created_at[lte]` window. `is_parked=false` is not the same as omitting the parameter: the first one excludes parked events, the second one excludes nothing. Pagination is cursor-based: `limit` (1 to 100, defaults to 25) and `starting_after`, which takes the `next_cursor` of the previous page. Treat the cursor as opaque \u2014 here it is a numeric string, not a UUID v7. A value outside its catalogue returns 422, an unknown query parameter returns 400 `parameter_unknown` instead of being ignored, and a malformed `limit` or cursor returns 400.",
+                "description": "Browse everything the payment gateways have sent to Factuarea. This is the inbox to open when a charge did not generate its invoice: every discarded event carries a typed `discard_reason` and whether it can be reprocessed. Newest first, and scoped to the authenticated company. The raw content of the event is never returned.",
                 "summary": "List integration events",
                 "tags": [
                     "Integration Events"
@@ -42776,7 +42898,11 @@
                                 "payout_connected_account_missing",
                                 "payment_failed",
                                 "event_type_not_covered",
-                                "checkout_lines_retrieve_failed"
+                                "checkout_lines_retrieve_failed",
+                                "reversal_payment_not_found",
+                                "reversal_already_applied",
+                                "dispute_in_progress",
+                                "dispute_resolved"
                             ]
                         }
                     },
@@ -43547,7 +43673,7 @@
         "/invoices/{invoice}/payments": {
             "get": {
                 "operationId": "public-api.v1.invoices.payments_list",
-                "description": "List the payments registered against an invoice, ordered by payment date. Returns an empty array when no payments have been registered yet.",
+                "description": "List the payments registered against an invoice, ordered by payment date. Reverted payments stay in the ledger and are reported with `is_reversed: true` \u2014 read the flag, do not infer it from absence.",
                 "summary": "List invoice payments",
                 "tags": [
                     "Invoices"
@@ -43577,131 +43703,15 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/Invoice"
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/InvoicePaymentDetail"
+                                            }
                                         }
                                     },
                                     "required": [
                                         "data"
                                     ]
-                                },
-                                "example": {
-                                    "data": {
-                                        "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
-                                        "object": "invoice",
-                                        "number": "FAC-2026-00042",
-                                        "is_number_assigned": true,
-                                        "type": "F1",
-                                        "series": {
-                                            "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b02",
-                                            "code": "FAC-2026"
-                                        },
-                                        "client": {
-                                            "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a01",
-                                            "name": "Acme Soluciones SL"
-                                        },
-                                        "status": "paid",
-                                        "issued_on": "2026-03-15",
-                                        "due_on": "2026-04-14",
-                                        "subtotal": 1000,
-                                        "taxes_total": 210,
-                                        "total": 1210,
-                                        "total_disbursements": 0,
-                                        "total_to_pay": 1210,
-                                        "currency": "EUR",
-                                        "notes": "Servicios profesionales marzo 2026.",
-                                        "external_id": "ERP-2026-0042",
-                                        "lines": [
-                                            {
-                                                "object": "invoice_line",
-                                                "description": "Consultor\u00eda t\u00e9cnica (10 h)",
-                                                "product": {
-                                                    "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b03",
-                                                    "name": "Consultor\u00eda t\u00e9cnica (hora)"
-                                                },
-                                                "quantity": 10,
-                                                "unit_price": 100,
-                                                "tax_rate": 21,
-                                                "retention_rate": 0,
-                                                "surcharge_rate": 0,
-                                                "discount_percent": 0,
-                                                "subtotal": 1000,
-                                                "taxes": 210,
-                                                "total": 1210,
-                                                "indirect_tax_regime": "iva",
-                                                "aeat_tax_code": "S1",
-                                                "line_type": "NORMAL"
-                                            }
-                                        ],
-                                        "metadata": {
-                                            "order_id": "PO-2026-0042"
-                                        },
-                                        "tags": [
-                                            "consultoria",
-                                            "cliente-vip"
-                                        ],
-                                        "custom_fields": [
-                                            {
-                                                "field": "centro_coste",
-                                                "value": "CC-2026-001"
-                                            },
-                                            {
-                                                "field": "numero_pedido",
-                                                "value": "PO-2026-0042"
-                                            }
-                                        ],
-                                        "operation_regime": "general",
-                                        "exemption_reason": null,
-                                        "legal_mentions": [],
-                                        "exclude_347": false,
-                                        "verifactu_status": "accepted",
-                                        "paid_amount": 1210,
-                                        "pending_amount": 0,
-                                        "payments": {
-                                            "detail": [
-                                                {
-                                                    "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a90",
-                                                    "object": "payment",
-                                                    "invoice_id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
-                                                    "amount": 1210,
-                                                    "payment_date": "2026-03-20",
-                                                    "payment_method": "bank_transfer",
-                                                    "payment_method_text": "Transferencia bancaria",
-                                                    "reference": "TRF-2026-0042",
-                                                    "notes": null,
-                                                    "created_at": "2026-03-20T10:30:00Z",
-                                                    "updated_at": "2026-03-20T10:30:00Z"
-                                                }
-                                            ],
-                                            "total": 1210,
-                                            "pending": 0
-                                        },
-                                        "is_corrective": false,
-                                        "corrective": null,
-                                        "payment": {
-                                            "method": "bank_transfer",
-                                            "reference": "TRF-2026-0042",
-                                            "date": "2026-03-20"
-                                        },
-                                        "public_link": {
-                                            "object": "public_link",
-                                            "url": "https://app.factuarea.com/d/01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
-                                            "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
-                                            "enabled": true,
-                                            "expires_at": "2026-09-15T23:59:59Z",
-                                            "max_days": 120
-                                        },
-                                        "substituted_by": null,
-                                        "recurring": null,
-                                        "paid_at": "2026-03-20T10:30:00Z",
-                                        "paid_on": "2026-03-20",
-                                        "sent_at": "2026-03-15T11:45:00Z",
-                                        "voided_at": null,
-                                        "void_reason": null,
-                                        "scheduled_for": null,
-                                        "scheduled_action": null,
-                                        "created_at": "2026-03-15T11:30:00Z",
-                                        "updated_at": "2026-03-20T10:30:00Z"
-                                    }
                                 }
                             }
                         },
@@ -43816,131 +43826,12 @@
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/components/schemas/Invoice"
+                                            "$ref": "#/components/schemas/InvoicePaymentDetail"
                                         }
                                     },
                                     "required": [
                                         "data"
                                     ]
-                                },
-                                "example": {
-                                    "data": {
-                                        "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
-                                        "object": "invoice",
-                                        "number": "FAC-2026-00042",
-                                        "is_number_assigned": true,
-                                        "type": "F1",
-                                        "series": {
-                                            "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b02",
-                                            "code": "FAC-2026"
-                                        },
-                                        "client": {
-                                            "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a01",
-                                            "name": "Acme Soluciones SL"
-                                        },
-                                        "status": "paid",
-                                        "issued_on": "2026-03-15",
-                                        "due_on": "2026-04-14",
-                                        "subtotal": 1000,
-                                        "taxes_total": 210,
-                                        "total": 1210,
-                                        "total_disbursements": 0,
-                                        "total_to_pay": 1210,
-                                        "currency": "EUR",
-                                        "notes": "Servicios profesionales marzo 2026.",
-                                        "external_id": "ERP-2026-0042",
-                                        "lines": [
-                                            {
-                                                "object": "invoice_line",
-                                                "description": "Consultor\u00eda t\u00e9cnica (10 h)",
-                                                "product": {
-                                                    "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b03",
-                                                    "name": "Consultor\u00eda t\u00e9cnica (hora)"
-                                                },
-                                                "quantity": 10,
-                                                "unit_price": 100,
-                                                "tax_rate": 21,
-                                                "retention_rate": 0,
-                                                "surcharge_rate": 0,
-                                                "discount_percent": 0,
-                                                "subtotal": 1000,
-                                                "taxes": 210,
-                                                "total": 1210,
-                                                "indirect_tax_regime": "iva",
-                                                "aeat_tax_code": "S1",
-                                                "line_type": "NORMAL"
-                                            }
-                                        ],
-                                        "metadata": {
-                                            "order_id": "PO-2026-0042"
-                                        },
-                                        "tags": [
-                                            "consultoria",
-                                            "cliente-vip"
-                                        ],
-                                        "custom_fields": [
-                                            {
-                                                "field": "centro_coste",
-                                                "value": "CC-2026-001"
-                                            },
-                                            {
-                                                "field": "numero_pedido",
-                                                "value": "PO-2026-0042"
-                                            }
-                                        ],
-                                        "operation_regime": "general",
-                                        "exemption_reason": null,
-                                        "legal_mentions": [],
-                                        "exclude_347": false,
-                                        "verifactu_status": "accepted",
-                                        "paid_amount": 1210,
-                                        "pending_amount": 0,
-                                        "payments": {
-                                            "detail": [
-                                                {
-                                                    "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a90",
-                                                    "object": "payment",
-                                                    "invoice_id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
-                                                    "amount": 1210,
-                                                    "payment_date": "2026-03-20",
-                                                    "payment_method": "bank_transfer",
-                                                    "payment_method_text": "Transferencia bancaria",
-                                                    "reference": "TRF-2026-0042",
-                                                    "notes": null,
-                                                    "created_at": "2026-03-20T10:30:00Z",
-                                                    "updated_at": "2026-03-20T10:30:00Z"
-                                                }
-                                            ],
-                                            "total": 1210,
-                                            "pending": 0
-                                        },
-                                        "is_corrective": false,
-                                        "corrective": null,
-                                        "payment": {
-                                            "method": "bank_transfer",
-                                            "reference": "TRF-2026-0042",
-                                            "date": "2026-03-20"
-                                        },
-                                        "public_link": {
-                                            "object": "public_link",
-                                            "url": "https://app.factuarea.com/d/01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
-                                            "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
-                                            "enabled": true,
-                                            "expires_at": "2026-09-15T23:59:59Z",
-                                            "max_days": 120
-                                        },
-                                        "substituted_by": null,
-                                        "recurring": null,
-                                        "paid_at": "2026-03-20T10:30:00Z",
-                                        "paid_on": "2026-03-20",
-                                        "sent_at": "2026-03-15T11:45:00Z",
-                                        "voided_at": null,
-                                        "void_reason": null,
-                                        "scheduled_for": null,
-                                        "scheduled_action": null,
-                                        "created_at": "2026-03-15T11:30:00Z",
-                                        "updated_at": "2026-03-20T10:30:00Z"
-                                    }
                                 }
                             }
                         },
@@ -45288,6 +45179,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -47473,6 +47369,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -47720,6 +47621,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -48682,9 +48588,10 @@
                     "200": {
                         "description": "",
                         "content": {
-                            "application/json": {
+                            "application/pdf": {
                                 "schema": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "format": "binary"
                                 }
                             }
                         },
@@ -50572,7 +50479,7 @@
         "/integrations/events/{event}/replay": {
             "post": {
                 "operationId": "public-api.v1.integrations.events.replay",
-                "description": "Reprocess a gateway event that was parked, once the cause that prevented it from producing its effect is gone \u2014 you turned automatic invoicing back on, you re-linked the connected account, the official exchange rate of the day became available.\n\nWARNING \u2014 THIS ACTION CAN HAVE REAL FISCAL CONSEQUENCES. If the cause of the discard is already resolved, the replay CAN ISSUE A REAL INVOICE, with its series number and its registration in VeriFactu. It is not an innocuous retry: confirm with the account owner before calling it. That is why it takes its own write scope, `integration_events:write`, instead of the read scope of the inbox \u2014 a read-only credential must never be able to invoice.\n\nIt does NOT duplicate invoices. The replay goes through the very same idempotency check as the original attempt, so if that charge already ended up producing an invoice, the job stops on its own and creates nothing.\n\nThe reprocessing is ASYNCHRONOUS: 202 means accepted and queued, NOT completed. The body returns the event as it stands NOW \u2014 its `is_replayable` is still `true` \u2014 not the outcome of the retry, which shows up as a NEW event in the inbox; poll `GET /v1/integrations/events` to see how it ended. And if the cause of the discard is still present (automatic invoicing still off, for instance), the event is discarded again and recorded once more, which is correct and observable.\n\nOnly events published with `is_replayable` set to `true` can be replayed. The three non-replayable situations all return 422 `business_rule_violation` and tell you which one it is through the `subcode`: `integration_event_not_parked` (the event was never parked \u2014 it either succeeded or its discard reason does not keep the content \u2014 so there is nothing to reprocess and there never will be), `integration_event_payload_purged` (it was parked, but its content was deleted when the 30-day retention window elapsed) and `integration_event_reason_not_replayable` (it is parked and still holds its content, but its discard reason would take exactly the same branch again). An event of another company and one that does not exist return the same 404 `resource_not_found`.\n\nThis operation takes NO input: any query parameter or body key returns 400 `parameter_unknown` instead of being ignored. Sending one means believing you are configuring something about the retry \u2014 a mode, a series, a date \u2014 that this operation does not support, and silently ignoring it would confirm that false expectation about an action that can issue an invoice.",
+                "description": "Reprocess a gateway event that was parked, once the cause that prevented it from producing its effect is gone.\n\n**Before you call it**\n\n- The event must be published with `is_replayable` set to `true` \u2014 anything else returns 422.\n- Fix the cause first: turn automatic invoicing back on, re-link the connected account, wait for the exchange rate.\n- It needs the write scope `integration_events:write`, never the read scope of the inbox.\n\n**What it can do**\n\n> **This action can have real fiscal consequences.** If the cause is already resolved, the replay CAN ISSUE A REAL INVOICE, with its series number and its registration in VeriFactu. Confirm with the account owner before calling it.\n\n**What comes back**\n\n- `202` means accepted and queued, **not** completed.\n- The body returns the event as it stands now, not the outcome of the retry.\n- The outcome appears as a NEW event in the inbox \u2014 poll `GET /v1/integrations/events` to see how it ended.\n- It never duplicates invoices: the replay goes through the same idempotency check as the original attempt.",
                 "summary": "Replay a parked integration event",
                 "tags": [
                     "Integration Events"
@@ -50994,6 +50901,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -51923,6 +51835,154 @@
                     "retryConnectionErrors": true
                 },
                 "x-required-scope": "verifactu:write"
+            }
+        },
+        "/invoices/{invoice}/payments/{payment}/reversal": {
+            "post": {
+                "operationId": "public-api.v1.invoices.payments_revert",
+                "description": "Void a payment recorded against an invoice, stating why. The payment keeps its amount, date, method and reference and is flagged as reverted (`is_reversed: true`) together with the reason, the instant and the author \u2014 it is never deleted, because a payment that existed and stopped having effect is accounting information.\n\n`reason` is **required** and belongs to a closed catalog: `direct_debit_return` (returned SEPA direct debit), `card_dispute` (card chargeback or reversal), `misapplied_payment` (booked against the wrong invoice), `bounced_effect` (dishonoured bill) and `recording_error`. A value outside the catalog returns 422 `payment_reversal_reason_invalid`. `note` is an optional free-text remark of up to 500 characters; going over returns 422 `payment_reversal_invalid`. Reverting a payment that is already reverted returns 422 `payment_already_reversed`.\n\nA reverted payment stops counting towards `paid_amount`, `pending_amount` and every treasury aggregate, so the invoice goes **back into the collection circuit**: `overdue` if its due date has passed, `sent` otherwise, and it accepts a new payment again. That transition is derived from the ledger and can only originate here \u2014 the generic status-change endpoint cannot move an invoice out of `paid`.\n\n**Refund or reversal?** Revert when the customer got their money back without the operation being reduced (returned direct debit, chargeback, booking mistake): the debt survives and you want to collect it. Issue a corrective invoice (`POST /v1/invoices/{id}/corrective`) when the operation itself is reduced \u2014 that is where revenue actually decreases. Reverting never issues a corrective, and a returned receipt is not a bad-debt claim (art. 80.Cuatro LIVA has its own formal requirements).\n\nIrreversible: there is no un-revert. To restate the collection, register a new payment.",
+                "summary": "Revert an invoice payment",
+                "tags": [
+                    "Invoices"
+                ],
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "payment",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RevertInvoicePaymentRequest"
+                            },
+                            "example": {
+                                "reason": "direct_debit_return",
+                                "note": "Recibo devuelto por el banco; el cliente domicilia de nuevo el d\u00eda 5."
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InvoicePaymentDetail"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds). Omitted when the API key has no cap (unlimited tier).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "example": "2026-06-01"
+                                }
+                            },
+                            "Idempotent-Replayed": {
+                                "description": "Present with value `\"true\"` only when this response was replayed from the idempotency cache for a repeated `Idempotency-Key` (same key, same request fingerprint). Absent on the first, freshly executed request.",
+                                "schema": {
+                                    "type": "string",
+                                    "example": "true"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntityInvoice"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/ConflictInvoice"
+                    }
+                },
+                "x-speakeasy-group": "invoices",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "invoices:write",
+                "x-irreversible": true
             }
         },
         "/account/api-keys/{api_key}/revoke": {
@@ -52978,6 +53038,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -54002,6 +54067,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -55927,7 +55997,7 @@
         "/developers/request-logs/{request_id}": {
             "get": {
                 "operationId": "public-api.v1.developers.request_logs.show",
-                "description": "Retrieve a single request of your own integration by the `request_id` the API returned in the `X-Request-Id` header of that response \u2014 the identifier you already have in hand when a call misbehaved, and the one to quote in a support request. It is an opaque `req_\u2026` string, not a UUID v7: request logs are ephemeral rows purged after 30 days, not domain resources.\n\nThe body carries the same fields as the listing for that one request. A `request_id` that does not exist and one that belongs to another company return the exact same 404 `resource_not_found`, so the endpoint never reveals whether a request exists somewhere else.",
+                "description": "Retrieve a single request of your own integration by the `request_id` the API returned in the `X-Request-Id` header of that response \u2014 the identifier you already have in hand when a call misbehaved, and the one to quote in a support request. It is an opaque `req_\u2026` string, not a UUID v7. The body carries the same fields as the listing.",
                 "summary": "Retrieve an API request log",
                 "tags": [
                     "Developers"
@@ -56039,7 +56109,7 @@
         "/emails/{email}": {
             "get": {
                 "operationId": "public-api.v1.emails.show",
-                "description": "Retrieve one email by its id (UUID v7), typically after finding it in the listing, to investigate what happened to it \u2014 recipient, `cc` and `bcc`, subject, status, attempts, the error message when it failed, the timestamps, and the document it was sent for. The internal implementation details are never exposed: no mailable class, job id, user id or raw metadata.\n\nIMPORTANT \u2014 `status` describes the hand-off to the OUTGOING SMTP SERVER, not real delivery: `sent` means the outgoing mail server accepted the message, not that the recipient received, opened or read it, and it may bounce later without the platform finding out. The catalog is exactly `queued`, `sending`, `sent` and `failed`.\n\nAn email of another company and one that does not exist return the exact same 404 `resource_not_found`, so the endpoint never reveals whether an id exists elsewhere.",
+                "description": "Retrieve one email by its id, typically after finding it in the listing, to investigate what happened to it: recipient, subject, status, attempts, the error message when it failed, and the document it was sent for. Scoped to the authenticated company.\n\nIMPORTANT \u2014 `status` describes the hand-off to the OUTGOING SMTP SERVER, not real delivery: `sent` means the outgoing mail server accepted the message, not that the recipient received it.",
                 "summary": "Retrieve a sent email",
                 "tags": [
                     "Emails"
@@ -56535,6 +56605,11 @@
                                                             "payment_method_text": "Transferencia bancaria",
                                                             "reference": "TRF-2026-0042",
                                                             "notes": null,
+                                                            "is_reversed": false,
+                                                            "reversed_at": null,
+                                                            "reversal_reason": null,
+                                                            "reversal_reason_text": null,
+                                                            "reversal_note": null,
                                                             "created_at": "2026-03-20T10:30:00Z",
                                                             "updated_at": "2026-03-20T10:30:00Z"
                                                         }
@@ -56764,7 +56839,7 @@
         "/integrations/events/{event}": {
             "get": {
                 "operationId": "public-api.v1.integrations.events.show",
-                "description": "Retrieve one integration event by its id (UUID v7), typically after finding it in the listing, to know exactly why a charge did not produce its invoice and what to do next. On top of everything the listing returns, the detail adds `recommended_action`: one imperative sentence with the next step for that specific reason, or `null` when the reason is merely informative \u2014 if there is nothing to do, the contract does not invent an instruction. The sentence deliberately tells reproducible reasons (\"\u2026 and reprocess the event\") apart from the ones that are not (\"\u2026 issue it by hand\"), so it never sends you to an operation that would answer 422.\n\n`is_replayable` is the CONTRACT of the replay operation: when it is `true`, `POST /v1/integrations/events/{event}/replay` does not answer 422. It is the conjunction of three conditions \u2014 the event is parked, it still holds its content, and its discard reason admits reprocessing \u2014 evaluated in that same order by the very handler that guards the replay. That is what lets you offer a retry button without guessing.\n\nThe raw content of the event is NEVER returned: it holds personal data of your end customers and payment details, exists only so the event can be reprocessed, and is purged 30 days after being parked.\n\nAn event of another company and one that does not exist return the exact same 404 `resource_not_found`, so the endpoint never reveals whether an id exists elsewhere.",
+                "description": "Retrieve one integration event by its id, typically after finding it in the listing, to know exactly why a charge did not produce its invoice and what to do next. On top of the listing fields, the detail adds `recommended_action`, one imperative sentence with the next step, and `is_replayable`, which tells you whether the replay operation would accept the event.",
                 "summary": "Retrieve an integration event",
                 "tags": [
                     "Integration Events"
@@ -58462,6 +58537,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -59845,6 +59925,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -60086,6 +60171,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -61499,6 +61589,11 @@
                                                     "payment_method_text": "Transferencia bancaria",
                                                     "reference": "TRF-2026-0042",
                                                     "notes": null,
+                                                    "is_reversed": false,
+                                                    "reversed_at": null,
+                                                    "reversal_reason": null,
+                                                    "reversal_reason_text": null,
+                                                    "reversal_note": null,
                                                     "created_at": "2026-03-20T10:30:00Z",
                                                     "updated_at": "2026-03-20T10:30:00Z"
                                                 }
@@ -61741,7 +61836,7 @@
         "schemas": {
             "AbsenceBalance": {
                 "type": "object",
-                "description": "An absence balance for the Control Horario (time tracking) module: the accrued, carried-over, consumed and available days of one employee for one absence type in a given year. Day amounts are exact decimal strings. `available_days` is the usable balance (accrued + non-expired carried-over \u2212 consumed).",
+                "description": "An absence balance for the Control Horario (time tracking) module: the accrued, carried-over, consumed and available days of one employee for one absence type in a given year. Day amounts are decimal strings. `accrued_days`, `carried_over_days` and `consumed_days` are the exact ledger figures; `available_days` is the usable balance (accrued + non-expired carried-over \u2212 consumed) **rounded up to a whole day**, because absences are requested in whole working days. As a result `available_days` can exceed the exact arithmetic by up to one day \u2014 that fraction is granted by the company \u2014 so do not expect it to reconcile to the cent with the other three fields.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -61836,10 +61931,10 @@
                     },
                     "available_days": {
                         "type": "string",
-                        "description": "Usable balance (accrued + non-expired carried-over \u2212 consumed), as an exact decimal string.",
-                        "example": "18.50",
+                        "description": "Usable balance (accrued + non-expired carried-over \u2212 consumed), rounded up to a whole day. Always an integer value, serialised as a decimal string.",
+                        "example": "19.00",
                         "examples": [
-                            "18.50"
+                            "19.00"
                         ]
                     },
                     "measurement_unit": {
@@ -69015,7 +69110,8 @@
                             "corriente",
                             "bien_inversion",
                             "importacion",
-                            "intracomunitaria"
+                            "intracomunitaria",
+                            "isp"
                         ]
                     },
                     "exclude_347": {
@@ -69089,7 +69185,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "Per-line IRPF retention and deductible VAT. `retention_rate` is the percentage withheld from the supplier (0\u2013100); `vat_deductible` flags VAT deductibility (informational, does not change the amount paid).",
+                                    "description": "Per-line IRPF retention and deductible VAT. `retention_rate` is the percentage withheld from the supplier (0\u2013100); `vat_deductible` flags VAT deductibility \u2014 it does not change the amount paid, but a `false` line is excluded from the deductible input VAT of Modelo 303 (boxes [28]-[37]).",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -70469,6 +70565,7 @@
                                 "product.created",
                                 "product.updated",
                                 "payment.received",
+                                "payment.reversed",
                                 "tax.metadata_changed",
                                 "tax.validity_changed",
                                 "tax.external_reference_changed",
@@ -73358,6 +73455,9 @@
                         "$ref": "#/components/schemas/EventDataPaymentReceived"
                     },
                     {
+                        "$ref": "#/components/schemas/EventDataPaymentReversed"
+                    },
+                    {
                         "$ref": "#/components/schemas/EventDataTaxMetadataChanged"
                     },
                     {
@@ -73519,6 +73619,7 @@
                         "product.created": "#/components/schemas/EventDataProductCreated",
                         "product.updated": "#/components/schemas/EventDataProductUpdated",
                         "payment.received": "#/components/schemas/EventDataPaymentReceived",
+                        "payment.reversed": "#/components/schemas/EventDataPaymentReversed",
                         "tax.metadata_changed": "#/components/schemas/EventDataTaxMetadataChanged",
                         "tax.validity_changed": "#/components/schemas/EventDataTaxValidityChanged",
                         "tax.external_reference_changed": "#/components/schemas/EventDataTaxExternalReferenceChanged",
@@ -74888,7 +74989,7 @@
                         "const": "payment.received"
                     },
                     "object": {
-                        "$ref": "#/components/schemas/EventPaymentSnapshot"
+                        "$ref": "#/components/schemas/InvoicePaymentDetail"
                     }
                 },
                 "required": [
@@ -74896,6 +74997,53 @@
                     "object"
                 ],
                 "title": "EventDataPaymentReceived"
+            },
+            "EventDataPaymentReversed": {
+                "type": "object",
+                "description": "Payload (`data`) emitted with the `payment.reversed` event: the full resource snapshot captured at emission time under `object`, plus event-specific keys.",
+                "properties": {
+                    "type": {
+                        "type": "string",
+                        "const": "payment.reversed"
+                    },
+                    "object": {
+                        "$ref": "#/components/schemas/InvoicePaymentDetail"
+                    },
+                    "reversal": {
+                        "type": "object",
+                        "properties": {
+                            "reason": {
+                                "type": "string",
+                                "enum": [
+                                    "direct_debit_return",
+                                    "card_dispute",
+                                    "misapplied_payment",
+                                    "bounced_effect",
+                                    "recording_error"
+                                ],
+                                "description": "Reason the payment was reverted, from the closed catalog."
+                            },
+                            "origin": {
+                                "type": "string",
+                                "enum": [
+                                    "gateway",
+                                    "manual"
+                                ],
+                                "description": "Where the reversal came from: `gateway` when the payment provider reported a return, dispute or chargeback (a bank movement already happened); `manual` when a user recorded it."
+                            }
+                        },
+                        "required": [
+                            "reason",
+                            "origin"
+                        ]
+                    }
+                },
+                "required": [
+                    "type",
+                    "object",
+                    "reversal"
+                ],
+                "title": "EventDataPaymentReversed"
             },
             "EventDataPayoutReconciled": {
                 "type": "object",
@@ -76359,66 +76507,6 @@
                 "additionalProperties": false,
                 "title": "EventDeletedObject"
             },
-            "EventPaymentSnapshot": {
-                "type": "object",
-                "description": "Snapshot of a received payment captured at emission time. Payments have no dedicated v1 endpoint; this shape only appears inside `payment.*` events.",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "format": "uuid"
-                    },
-                    "object": {
-                        "type": "string",
-                        "enum": [
-                            "payment"
-                        ]
-                    },
-                    "invoice_id": {
-                        "type": "string",
-                        "format": "uuid",
-                        "description": "Identifier of the invoice the payment was applied to."
-                    },
-                    "invoice_number": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "amount": {
-                        "type": "number",
-                        "format": "float"
-                    },
-                    "payment_date": {
-                        "type": "string",
-                        "format": "date"
-                    },
-                    "payment_method": {
-                        "type": "string"
-                    },
-                    "reference": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "format": "date-time"
-                    }
-                },
-                "required": [
-                    "id",
-                    "object",
-                    "invoice_id",
-                    "invoice_number",
-                    "amount",
-                    "payment_date",
-                    "payment_method",
-                    "reference",
-                    "created_at"
-                ],
-                "title": "EventPaymentSnapshot"
-            },
             "ExportInvoicesExcelV1Request": {
                 "type": "object",
                 "description": "Export invoices to a spreadsheet. `format` selects the content layout (`SUMMARY` one row per invoice, `ITEMS` one row per line) and `file_format` the file type (`xlsx` or `csv`). Narrow the selection with `date_from`/`date_to`, `client_id`, `series_id` or `invoice_ids`, or omit them to export everything.",
@@ -76954,6 +77042,13 @@
                             "null"
                         ],
                         "minimum": 0
+                    },
+                    "rendimiento_neto_ejercicio_anterior_centimos": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "[13] Rendimiento neto del EJERCICIO ANTERIOR (base de la minoraci\u00f3n\ndel art. 110.3.c RIRPF). SIN `min:0`: el ejercicio anterior puede\nhaber cerrado en p\u00e9rdidas y un valor negativo es fiscalmente v\u00e1lido."
                     }
                 },
                 "required": [
@@ -77279,6 +77374,10 @@
                             "payment_failed",
                             "event_type_not_covered",
                             "checkout_lines_retrieve_failed",
+                            "reversal_payment_not_found",
+                            "reversal_already_applied",
+                            "dispute_in_progress",
+                            "dispute_resolved",
                             null
                         ],
                         "example": "autoinvoicing_disabled",
@@ -77963,6 +78062,11 @@
                                 "payment_method_text": "Transferencia bancaria",
                                 "reference": "TRF-2026-0042",
                                 "notes": null,
+                                "is_reversed": false,
+                                "reversed_at": null,
+                                "reversal_reason": null,
+                                "reversal_reason_text": null,
+                                "reversal_note": null,
                                 "created_at": "2026-03-20T10:30:00Z",
                                 "updated_at": "2026-03-20T10:30:00Z"
                             }
@@ -78493,6 +78597,51 @@
                         "example": "Pago parcial primer plazo.",
                         "description": "Internal notes for the payment. `null` if not provided."
                     },
+                    "is_reversed": {
+                        "type": "boolean",
+                        "example": false,
+                        "description": "Whether the payment has been reverted. A reverted payment stays in the ledger but stops counting towards `paid_amount`, `pending_amount` and every treasury aggregate \u2014 read this flag, do not infer the state from absence."
+                    },
+                    "reversed_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "When the payment was reverted (ISO 8601), or `null` while it is in force."
+                    },
+                    "reversal_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "direct_debit_return",
+                            "card_dispute",
+                            "misapplied_payment",
+                            "bounced_effect",
+                            "recording_error",
+                            null
+                        ],
+                        "example": null,
+                        "description": "Reason the payment was reverted, from the closed catalog. `null` while the payment is in force."
+                    },
+                    "reversal_reason_text": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": null,
+                        "description": "Human-readable label of the reversal reason (Spanish), or `null`."
+                    },
+                    "reversal_note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": null,
+                        "description": "Free-text remark recorded with the reversal (up to 500 characters), or `null`."
+                    },
                     "created_at": {
                         "type": [
                             "string",
@@ -78520,6 +78669,11 @@
                     "payment_method_text",
                     "reference",
                     "notes",
+                    "is_reversed",
+                    "reversed_at",
+                    "reversal_reason",
+                    "reversal_reason_text",
+                    "reversal_note",
                     "created_at",
                     "updated_at"
                 ],
@@ -79102,10 +79256,10 @@
                     },
                     "available_days": {
                         "type": "string",
-                        "description": "Available days of that absence type, frozen at closing (decimal string).",
-                        "example": "18.50",
+                        "description": "Available days of that absence type, frozen at closing. Rounded up to a whole day, like `AbsenceBalance.available_days` (decimal string).",
+                        "example": "19.00",
                         "examples": [
-                            "18.50"
+                            "19.00"
                         ]
                     }
                 },
@@ -81325,9 +81479,10 @@
                             "corriente",
                             "bien_inversion",
                             "importacion",
-                            "intracomunitaria"
+                            "intracomunitaria",
+                            "isp"
                         ],
-                        "description": "Operation class for the input VAT of Modelo 303. Defaults to `corriente`.",
+                        "description": "Operation class for the input VAT of Modelo 303. Defaults to `corriente`. `isp` (domestic reverse charge, Art. 84.Uno.2 LIVA) and `intracomunitaria` are self-assessed: the buyer declares both the output VAT and the deductible input VAT.",
                         "example": "corriente",
                         "examples": [
                             "corriente"
@@ -81631,7 +81786,7 @@
                     },
                     "vat_deductible": {
                         "type": "boolean",
-                        "description": "Whether the line VAT is deductible. Informational: it does not change the amount paid.",
+                        "description": "Whether the line VAT is deductible. It does not change the amount paid, but a `false` line is excluded from the deductible input VAT of Modelo 303 (boxes [28]-[37]).",
                         "example": true,
                         "examples": [
                             true
@@ -83454,6 +83609,26 @@
                 ],
                 "title": "RescheduleInvoiceRequest"
             },
+            "RevertInvoicePaymentRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "description": "Why the payment is being reverted. One of the closed catalog: `direct_debit_return` (returned SEPA direct debit), `card_dispute` (card chargeback or reversal), `misapplied_payment` (booked against the wrong invoice), `bounced_effect` (dishonoured bill) or `recording_error`. Any other value returns 422 `payment_reversal_reason_invalid`."
+                    },
+                    "note": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Optional free-text remark kept with the reversal trail, up to 500 characters. A longer note returns 422 `payment_reversal_invalid`."
+                    }
+                },
+                "required": [
+                    "reason"
+                ],
+                "title": "RevertInvoicePaymentRequest"
+            },
             "RevokeApiKeyV1Request": {
                 "type": "object",
                 "description": "Optionally record why the API key is being revoked. `reason` (string, \u2264500 chars) is optional; when omitted a default reason is stored for auditing.",
@@ -83935,6 +84110,7 @@
                             "product.created",
                             "product.updated",
                             "payment.received",
+                            "payment.reversed",
                             "tax.metadata_changed",
                             "tax.validity_changed",
                             "tax.external_reference_changed",
@@ -86541,6 +86717,13 @@
                         "examples": [
                             []
                         ]
+                    },
+                    "warning_codes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Stable machine-readable codes paired one-to-one (same index) with `warnings`. Branch on these instead of matching the Spanish text; unknown codes should fall back to the corresponding `warnings` entry."
                     }
                 },
                 "required": [
@@ -86556,7 +86739,8 @@
                     "generated_at",
                     "generated_by_id",
                     "download_url",
-                    "warnings"
+                    "warnings",
+                    "warning_codes"
                 ],
                 "title": "TaxReport"
             },
@@ -86916,6 +87100,13 @@
                         "examples": [
                             []
                         ]
+                    },
+                    "warning_codes": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Stable machine-readable codes paired one-to-one (same index) with `warnings`. Branch on these instead of matching the Spanish text; unknown codes should fall back to the corresponding `warnings` entry."
                     }
                 },
                 "required": [
@@ -86928,7 +87119,8 @@
                     "suppliers_347",
                     "invoice_count",
                     "purchase_invoice_count",
-                    "warnings"
+                    "warnings",
+                    "warning_codes"
                 ],
                 "title": "TaxReportPreview"
             },
@@ -90068,7 +90260,8 @@
                             "corriente",
                             "bien_inversion",
                             "importacion",
-                            "intracomunitaria"
+                            "intracomunitaria",
+                            "isp"
                         ]
                     },
                     "exclude_347": {
@@ -91416,6 +91609,7 @@
                                 "product.created",
                                 "product.updated",
                                 "payment.received",
+                                "payment.reversed",
                                 "tax.metadata_changed",
                                 "tax.validity_changed",
                                 "tax.external_reference_changed",
@@ -93175,6 +93369,9 @@
                         "$ref": "#/components/schemas/WebhookEventPayloadPaymentReceived"
                     },
                     {
+                        "$ref": "#/components/schemas/WebhookEventPayloadPaymentReversed"
+                    },
+                    {
                         "$ref": "#/components/schemas/WebhookEventPayloadTaxMetadataChanged"
                     },
                     {
@@ -93336,6 +93533,7 @@
                         "product.created": "#/components/schemas/WebhookEventPayloadProductCreated",
                         "product.updated": "#/components/schemas/WebhookEventPayloadProductUpdated",
                         "payment.received": "#/components/schemas/WebhookEventPayloadPaymentReceived",
+                        "payment.reversed": "#/components/schemas/WebhookEventPayloadPaymentReversed",
                         "tax.metadata_changed": "#/components/schemas/WebhookEventPayloadTaxMetadataChanged",
                         "tax.validity_changed": "#/components/schemas/WebhookEventPayloadTaxValidityChanged",
                         "tax.external_reference_changed": "#/components/schemas/WebhookEventPayloadTaxExternalReferenceChanged",
@@ -95931,6 +96129,63 @@
                     "data"
                 ],
                 "title": "WebhookEventPayloadPaymentReceived"
+            },
+            "WebhookEventPayloadPaymentReversed": {
+                "type": "object",
+                "description": "Webhook delivery body for the `payment.reversed` event.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Opaque identifier of the event (UUID v7)."
+                    },
+                    "type": {
+                        "type": "string",
+                        "const": "payment.reversed",
+                        "description": "Event type. Always `payment.reversed`."
+                    },
+                    "api_version": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "API version (date-based) the payload was serialized under, sealed at emission (e.g. `2026-05-22`). `null` only for legacy events emitted before versions were sealed."
+                    },
+                    "created": {
+                        "type": "integer",
+                        "description": "Unix timestamp (seconds) of when the event was created."
+                    },
+                    "livemode": {
+                        "type": "boolean",
+                        "description": "`true` for production events (`fact_live_`); `false` for test-mode events (`fact_test_`)."
+                    },
+                    "test": {
+                        "type": "boolean",
+                        "description": "`true` when the event is a test delivery triggered from the dashboard; `false` for real events. Orthogonal to `livemode`: a test delivery may be sent over a live endpoint (`livemode: true, test: true`)."
+                    },
+                    "correlation_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "UUID v7 correlating this event end-to-end with the operation that produced it. `null` for events without a correlation context. The key is always present."
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/EventDataPaymentReversed"
+                    }
+                },
+                "required": [
+                    "id",
+                    "type",
+                    "api_version",
+                    "created",
+                    "livemode",
+                    "test",
+                    "correlation_id",
+                    "data"
+                ],
+                "title": "WebhookEventPayloadPaymentReversed"
             },
             "WebhookEventPayloadPayoutReconciled": {
                 "type": "object",
