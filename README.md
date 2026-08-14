@@ -115,6 +115,81 @@ factuarea monthly-time-record-closes create -d '{"year":2026,"month":7}'
 factuarea monthly-time-record-closes export <uuid> --format rdley_8_2019 --json
 ```
 
+### Automatizaciones (automations)
+
+Con el add-on de **automatizaciones** activo (módulo `automations`, planes
+`empresario` y `enterprise`), el CLI expone el motor de reglas con sus cuatro
+recursos y sus scopes finos (`automations:read` en 8 comandos,
+`automations:write` en 6, `automations:delete` en 1 y `automation_runs:read` en
+3): el catálogo de metadatos (`automations catalog show` y
+`automations catalog trigger-fields`), las reglas (`automations rules`, con su
+historial en `automations rules versions`), las ejecuciones (`automations runs`,
+con su detalle por paso en `automations runs steps`) y el consumo frente al
+presupuesto del plan (`automations usage show`).
+
+```bash
+# Qué se puede automatizar: disparadores, operadores y acciones registradas.
+factuarea automations catalog show --json
+# Los campos evaluables NO están en el catálogo: son una segunda llamada, por disparador.
+factuarea automations catalog trigger-fields invoice.paid --json
+
+# Crear una regla: `actions` es una lista de objetos, así que el alta va SIEMPRE con
+# el cuerpo completo (-d / --data-file). `--skeleton` imprime la plantilla en blanco.
+factuarea automations rules create --skeleton
+factuarea automations rules create --json -d '{
+  "name": "Aviso al cobrar una factura grande",
+  "scope": "empresa",
+  "trigger_type": "invoice.paid",
+  "conditions": {"field": "total", "operator": "gte", "value": 1000},
+  "actions": [
+    {"type": "notify_in_app", "order": 0, "parameters": {
+      "recipient_type": "role", "role": "admin", "category": "invoice",
+      "title": "Cobro grande", "message": "Se ha cobrado una factura de más de 1.000 €"
+    }}
+  ]
+}'
+
+# Ensayarla contra un evento de ejemplo: devuelve la traza por paso y no materializa nada.
+factuarea automations rules dry-run <rule_id> --json \
+  -d '{"event_type":"invoice.paid","event_payload":{"total":1200,"status":"paid"}}'
+
+# Activarla (y pausarla cuando toque).
+factuarea automations rules activate <rule_id>
+factuarea automations rules pause <rule_id>
+
+# Qué ha disparado, recorriendo el cursor de forma transparente.
+factuarea automations runs list --paginate --json
+factuarea automations runs list --automation_rule_id <rule_id> --status failed --json
+
+# Una ejecución y sus pasos, con su estado y su motivo tipado.
+factuarea automations runs show <run_id> --json
+factuarea automations runs steps list <run_id> --json
+
+# Relanzar. Es irreversible: sin terminal interactiva hay que confirmar con --confirm,
+# y lo que se confirma es el ÚLTIMO argumento posicional (en un paso, su índice).
+factuarea automations runs replay <run_id> --confirm <run_id>
+factuarea automations runs steps replay <run_id> 0 --confirm 0
+
+# Historial de versiones de la regla. Es el único listado que pagina por POSICIÓN
+# (cursor numérico opaco), no por identificador.
+factuarea automations rules versions list <rule_id> --json
+factuarea automations rules versions show <rule_id> 2 --json
+
+# Borrar la regla (irreversible) y mirar el consumo frente al presupuesto del plan.
+factuarea automations rules delete <rule_id> --confirm <rule_id>
+factuarea automations usage show --json
+```
+
+El **alcance** se elige al crear la regla y no se puede cambiar después: `empresa`
+vigila sólo tu empresa, y `cartera` —para gestorías, con el módulo `gestoria`
+concedido— vigila las empresas que gestionas y te entrega a ti los avisos. En
+`cartera` sólo se admiten las cuatro acciones que avisan (`notify_in_app`,
+`notify_channel`, `emit_webhook`, `create_calendar_event`); las que actuarían
+sobre un documento de la empresa hija se rechazan al crear o editar la regla.
+`factuarea automations rules list --scope cartera` las filtra, y
+`factuarea automations runs list --subject_company_id <uuid>` filtra sus
+ejecuciones por la empresa sobre la que actuaron.
+
 ## Devloop (webhooks)
 
 Prueba tus webhooks en local sin desplegar ni ngrok, al estilo del CLI de Stripe:
