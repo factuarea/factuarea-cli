@@ -363,13 +363,18 @@ func scalarType(types []string) (jsonType string, nullable bool) {
 	return jsonType, nullable
 }
 
+// enumValues aplana los valores de un `enum` a texto para el flag. El `null`
+// que el backend añade al enum de todo campo nullable (`enum: [a, b, null]`) NO
+// es un valor que el usuario pueda teclear: se omite en vez de convertirse en
+// una cadena vacía que aparecía como opción fantasma en la ayuda y en la
+// validación del flag.
 func enumValues(nodes []*yaml.Node) []string {
 	if len(nodes) == 0 {
 		return nil
 	}
 	var vals []string
 	for _, n := range nodes {
-		if n == nil {
+		if n == nil || n.ShortTag() == "!!null" {
 			continue
 		}
 		var s string

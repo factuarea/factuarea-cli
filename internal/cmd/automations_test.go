@@ -481,8 +481,10 @@ func TestAutomationsPortfolioScopeContractIsFrozen(t *testing.T) {
 		Components struct {
 			Schemas map[string]struct {
 				Properties map[string]struct {
-					Type       json.RawMessage `json:"type"`
-					Enum       []string        `json:"enum"`
+					Type json.RawMessage `json:"type"`
+					// `[]any`, no `[]string`: el enum de un campo nullable trae un `null` y
+					// otros schemas del spec declaran enums numéricos/booleanos.
+					Enum       []any `json:"enum"`
 					Properties map[string]struct {
 						Type json.RawMessage `json:"type"`
 					} `json:"properties"`
@@ -501,8 +503,8 @@ func TestAutomationsPortfolioScopeContractIsFrozen(t *testing.T) {
 	ruleScope, ok := rule.Properties["scope"]
 	if !ok {
 		t.Error("AutomationRule ya no declara la propiedad `scope`: la salida --json de obtener y listar reglas perdería el alcance")
-	} else if strings.Join(ruleScope.Enum, ",") != "empresa,cartera" {
-		t.Errorf("AutomationRule.scope.enum = %v, quiero [empresa cartera]", ruleScope.Enum)
+	} else if got := stringEnumOf(ruleScope.Enum); strings.Join(got, ",") != "empresa,cartera" {
+		t.Errorf("AutomationRule.scope.enum = %v, quiero [empresa cartera]", got)
 	}
 
 	run, ok := doc.Components.Schemas["AutomationRun"]
@@ -677,6 +679,18 @@ func stringSliceOf(v any) []string {
 	for _, item := range raw {
 		s, _ := item.(string)
 		out = append(out, s)
+	}
+	return out
+}
+
+// stringEnumOf devuelve los valores de texto de un enum crudo del spec, sin el
+// `null` de los campos nullable.
+func stringEnumOf(raw []any) []string {
+	var out []string
+	for _, v := range raw {
+		if s, ok := v.(string); ok {
+			out = append(out, s)
+		}
 	}
 	return out
 }
