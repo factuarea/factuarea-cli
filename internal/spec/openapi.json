@@ -143578,39 +143578,6 @@
                             }
                         }
                     },
-                    "403": {
-                        "description": "The API key lacks the required scope for this operation.",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Error"
-                                },
-                                "examples": {
-                                    "insufficient_scope": {
-                                        "summary": "POST /v1/products/{product}/configurations/impact-preview \u00b7 403 insufficient_scope",
-                                        "value": {
-                                            "error": {
-                                                "type": "authorization_error",
-                                                "code": "insufficient_scope",
-                                                "message": "Esta operaci\u00f3n requiere el scope 'products:write'. Tu API key solo tiene los scopes: ninguno.",
-                                                "doc_url": "https://docs.factuarea.com/guides/errors#insufficient_scope",
-                                                "request_id": "req_eb861e8a6747ced8fc840e3c8b"
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        "headers": {
-                            "X-Request-Id": {
-                                "description": "Unique request identifier, propagated for log correlation and support.",
-                                "schema": {
-                                    "type": "string",
-                                    "format": "uuid"
-                                }
-                            }
-                        }
-                    },
                     "401": {
                         "description": "Missing or invalid API key.",
                         "content": {
@@ -143628,6 +143595,39 @@
                                                 "message": "Falta header Authorization o X-API-Key.",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#missing_api_key",
                                                 "request_id": "req_ec448a237a94f13f0246c9cd81"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The API key lacks the required scope for this operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "insufficient_scope": {
+                                        "summary": "POST /v1/products/{product}/configurations/impact-preview \u00b7 403 insufficient_scope",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "insufficient_scope",
+                                                "message": "Esta operaci\u00f3n requiere el scope 'products:write'. Tu API key solo tiene los scopes: ninguno.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#insufficient_scope",
+                                                "request_id": "req_eb861e8a6747ced8fc840e3c8b"
                                             }
                                         }
                                     }
@@ -236440,25 +236440,6 @@
             }
         },
         "responses": {
-            "AuthorizationException": {
-                "description": "Authorization error",
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "message": {
-                                    "type": "string",
-                                    "description": "Error overview."
-                                }
-                            },
-                            "required": [
-                                "message"
-                            ]
-                        }
-                    }
-                }
-            },
             "ModelNotFoundException": {
                 "description": "Not found",
                 "content": {
