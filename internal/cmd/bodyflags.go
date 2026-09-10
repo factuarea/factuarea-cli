@@ -179,6 +179,12 @@ func validateRequiredQueryFlags(cmd *cobra.Command, op genOp) error {
 		if !p.Required {
 			continue
 		}
+		if strings.HasSuffix(p.Name, "[]") {
+			values, _ := cmd.Flags().GetStringSlice(strings.TrimSuffix(p.Name, "[]"))
+			if len(values) > 0 {
+				continue
+			}
+		}
 		v, _ := cmd.Flags().GetString(p.Name)
 		if !cmd.Flags().Changed(p.Name) || strings.TrimSpace(v) == "" {
 			missing = append(missing, "--"+p.Name)
