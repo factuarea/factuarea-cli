@@ -222,14 +222,15 @@ func buildBody(op *v3.Operation) *Body {
 	if mt, ok := content.Get("multipart/form-data"); ok && mt != nil && mt.Schema != nil {
 		b := &Body{Kind: "multipart"}
 		if sc := mt.Schema.Schema(); sc != nil {
-			b.FileFields = binaryFields(sc)
+			b.FileFields = binaryFields(sc, false)
+			b.FileArrayFields = binaryFields(sc, true)
 		}
 		return b
 	}
 	return nil
 }
 
-func binaryFields(sc *base.Schema) []string {
+func binaryFields(sc *base.Schema, multiple bool) []string {
 	if sc == nil {
 		return nil
 	}
@@ -240,7 +241,11 @@ func binaryFields(sc *base.Schema) []string {
 			if ps == nil {
 				continue
 			}
-			if s := ps.Schema(); s != nil && s.Format == "binary" {
+			s := ps.Schema()
+			if s != nil && multiple {
+				s = arrayItemSchema(s)
+			}
+			if s != nil && s.Format == "binary" {
 				fields = append(fields, prop.Key())
 			}
 		}
@@ -249,7 +254,7 @@ func binaryFields(sc *base.Schema) []string {
 		if sub == nil {
 			continue
 		}
-		fields = append(fields, binaryFields(sub.Schema())...)
+		fields = append(fields, binaryFields(sub.Schema(), multiple)...)
 	}
 	return fields
 }

@@ -53,6 +53,7 @@ type genBodyField struct {
 type genBody struct {
 	Kind, Example string
 	FileFields    []string
+	FileArrayFields []string
 	Fields        []genBodyField
 	HasObjectArray bool
 }
@@ -77,7 +78,7 @@ func generatedOps() []genOp {
 			Groups: []string{ {{range .Groups}}{{q .}}, {{end}} },
 			PathParams: []genParam{ {{range .PathParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },
 			QueryParams: []genParam{ {{range .QueryParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },
-			{{if .Body}}Body: &genBody{Kind: {{q .Body.Kind}}, Example: {{q .Body.Example}}, FileFields: []string{ {{range .Body.FileFields}}{{q .}}, {{end}} }, HasObjectArray: {{hasObjectArray .Body.Fields}}, Fields: []genBodyField{ {{template "fields" .Body.Fields}} }},{{end}}
+			{{if .Body}}Body: &genBody{Kind: {{q .Body.Kind}}, Example: {{q .Body.Example}}, FileFields: []string{ {{range .Body.FileFields}}{{q .}}, {{end}} }, {{if .Body.FileArrayFields}}FileArrayFields: []string{ {{range .Body.FileArrayFields}}{{q .}}, {{end}} },{{end}} HasObjectArray: {{hasObjectArray .Body.Fields}}, Fields: []genBodyField{ {{template "fields" .Body.Fields}} }},{{end}}
 			{{if .BinaryResponse}}BinaryContentType: {{q .BinaryResponse.ContentType}},{{end}}
 		},
 {{- end}}

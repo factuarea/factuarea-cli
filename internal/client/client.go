@@ -63,7 +63,7 @@ type Response struct {
 func (c *Client) Do(ctx context.Context, method, path string, body []byte, extraHeaders map[string]string) (*Response, error) {
 	url := c.baseURL + path
 	idempotencyKey := extraHeaders["Idempotency-Key"]
-	if idempotencyKey == "" && method == http.MethodPost {
+	if idempotencyKey == "" && (method == http.MethodPost || method == http.MethodPut || method == http.MethodPatch || method == http.MethodDelete) {
 		idempotencyKey = newIdempotencyKey()
 	}
 
@@ -154,7 +154,7 @@ func newIdempotencyKey() string {
 	return "cli_" + hex.EncodeToString(b)
 }
 
-func MultipartBody(fields, files map[string]string) (body []byte, contentType string, err error) {
+func MultipartBody(fields, files map[string]string, fileArrays ...map[string][]string) (body []byte, contentType string, err error) {
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
 	for k, v := range fields {
@@ -165,6 +165,15 @@ func MultipartBody(fields, files map[string]string) (body []byte, contentType st
 	for field, path := range files {
 		if err := writeFormFile(mw, field, path); err != nil {
 			return nil, "", err
+		}
+	}
+	for _, arrays := range fileArrays {
+		for field, paths := range arrays {
+			for _, path := range paths {
+				if err := writeFormFile(mw, field, path); err != nil {
+					return nil, "", err
+				}
+			}
 		}
 	}
 	if err := mw.Close(); err != nil {
