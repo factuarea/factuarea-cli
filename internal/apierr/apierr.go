@@ -1,6 +1,7 @@
 package apierr
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -43,6 +44,9 @@ type APIError struct {
 	Param      string
 	DocURL     string
 	RequestID  string
+	Data       json.RawMessage
+	Details    any
+	Errors     any
 }
 
 func (e *APIError) Error() string {

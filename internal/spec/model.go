@@ -25,10 +25,11 @@ type Param struct {
 }
 
 type Body struct {
-	Kind       string
-	Example    string
-	FileFields []string
-	Fields     []BodyField
+	Kind            string
+	Example         string
+	FileFields      []string
+	FileArrayFields []string
+	Fields          []BodyField
 }
 
 type BodyField struct {

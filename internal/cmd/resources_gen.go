@@ -12,10 +12,11 @@ type genBodyField struct {
 	Children           []genBodyField
 }
 type genBody struct {
-	Kind, Example  string
-	FileFields     []string
-	Fields         []genBodyField
-	HasObjectArray bool
+	Kind, Example   string
+	FileFields      []string
+	FileArrayFields []string
+	Fields          []genBodyField
+	HasObjectArray  bool
 }
 type genOp struct {
 	OperationID, Method, Path, Action, Summary string
@@ -2648,6 +2649,14 @@ func generatedOps() []genOp {
 			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "ids", Type: "string", Kind: "scalar_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "new_status", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"paid"}, Children: []genBodyField{}}, {Name: "payment_date", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
+			OperationID: "public-api.v1.purchase_invoices.expense_categories", Method: "GET", Path: "/purchase_invoices/expense_categories",
+			Action: "expense-categories", Summary: "List purchase invoice expense categories", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
+			Groups:      []string{"purchase-invoices"},
+			PathParams:  []genParam{},
+			QueryParams: []genParam{},
+		},
+		{
 			OperationID: "public-api.v1.purchase_invoices.find_by_external_id", Method: "POST", Path: "/purchase_invoices/find-by-external-id",
 			Action: "find-by-external-id", Summary: "Find a purchase invoice by external ID", Deprecated: false,
 			Irreversible: false, RequiredScope: "purchase_invoices:read",
@@ -2767,6 +2776,111 @@ func generatedOps() []genOp {
 			PathParams:  []genParam{{Name: "purchase_invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams: []genParam{},
 			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "amount", Type: "number", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "paid_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_method", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "bank_account_id", Type: "integer", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reference", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scan_emails.list", Method: "GET", Path: "/purchase_scan_emails",
+			Action: "list", Summary: "List purchase scanner emails", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
+			Groups:      []string{"purchase-scan-emails"},
+			PathParams:  []genParam{},
+			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "", Required: false}, {Name: "search", In: "query", Type: "string", Description: "", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "", Required: false}},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.list", Method: "GET", Path: "/purchase_scans",
+			Action: "list", Summary: "List purchase scans", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{},
+			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "", Required: false}, {Name: "ending_before", In: "query", Type: "string", Description: "", Required: false}, {Name: "search", In: "query", Type: "string", Description: "", Required: false}, {Name: "sort", In: "query", Type: "string", Description: "", Required: false}, {Name: "filter[status]", In: "query", Type: "string", Description: "", Required: false}, {Name: "filter[source]", In: "query", Type: "string", Description: "", Required: false}, {Name: "filter[supplier_id]", In: "query", Type: "string", Description: "", Required: false}, {Name: "filter[created][]", In: "query", Type: "array", Description: "", Required: false}, {Name: "filter[issued_on][]", In: "query", Type: "array", Description: "", Required: false}, {Name: "filter[total][]", In: "query", Type: "array", Description: "", Required: false}},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.create", Method: "POST", Path: "/purchase_scans",
+			Action: "create", Summary: "Upload documents to the purchase scanner", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:write",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{},
+			QueryParams: []genParam{},
+			Body:        &genBody{Kind: "multipart", Example: "", FileFields: []string{}, FileArrayFields: []string{"files"}, HasObjectArray: false, Fields: []genBodyField{}},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.stats", Method: "GET", Path: "/purchase_scans/stats",
+			Action: "stats", Summary: "Get purchase scanner stats", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{},
+			QueryParams: []genParam{},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.archive", Method: "DELETE", Path: "/purchase_scans/{purchase_scan}",
+			Action: "archive", Summary: "Archive a purchase scan", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:delete",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{{Name: "purchase_scan", In: "path", Type: "string", Description: "", Required: true}},
+			QueryParams: []genParam{},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "expected_version", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.show", Method: "GET", Path: "/purchase_scans/{purchase_scan}",
+			Action: "show", Summary: "Retrieve a purchase scan", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{{Name: "purchase_scan", In: "path", Type: "string", Description: "", Required: true}},
+			QueryParams: []genParam{},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.convert", Method: "POST", Path: "/purchase_scans/{purchase_scan}/convert",
+			Action: "convert", Summary: "Create the purchase invoice from a scan", Deprecated: false,
+			Irreversible: true, RequiredScope: "purchase_invoices:write",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{{Name: "purchase_scan", In: "path", Type: "string", Description: "", Required: true}},
+			QueryParams: []genParam{},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "expected_version", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "allow_create_supplier", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.duplicate_resolution", Method: "POST", Path: "/purchase_scans/{purchase_scan}/duplicate_resolution",
+			Action: "duplicate-resolution", Summary: "Resolve a duplicate purchase scan", Deprecated: false,
+			Irreversible: true, RequiredScope: "purchase_invoices:write",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{{Name: "purchase_scan", In: "path", Type: "string", Description: "", Required: true}},
+			QueryParams: []genParam{},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "expected_version", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "resolution", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"link_existing", "archive"}, Children: []genBodyField{}}, {Name: "purchase_invoice_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.restore", Method: "POST", Path: "/purchase_scans/{purchase_scan}/restore",
+			Action: "restore", Summary: "Restore an archived purchase scan", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:write",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{{Name: "purchase_scan", In: "path", Type: "string", Description: "", Required: true}},
+			QueryParams: []genParam{},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "expected_version", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.retry", Method: "POST", Path: "/purchase_scans/{purchase_scan}/retry",
+			Action: "retry", Summary: "Retry a failed purchase scan", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:write",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{{Name: "purchase_scan", In: "path", Type: "string", Description: "", Required: true}},
+			QueryParams: []genParam{},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "expected_version", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.review", Method: "PUT", Path: "/purchase_scans/{purchase_scan}/review",
+			Action: "review", Summary: "Save the review of a purchase scan", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:write",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{{Name: "purchase_scan", In: "path", Type: "string", Description: "", Required: true}},
+			QueryParams: []genParam{},
+			Body:        &genBody{Kind: "json", Example: "", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "expected_version", Type: "integer", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "fields", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "supplier_id", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "supplier_name", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "supplier_tax_id", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "is_simplified", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "document_number", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "issue_date", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "reception_date", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "due_date", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "currency", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment_method", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "expense_category", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "operation_class", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "issuer_tax_id", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "recipient_tax_id", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "lines", Type: "", Kind: "scalar_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
+		},
+		{
+			OperationID: "public-api.v1.purchase_scans.source", Method: "GET", Path: "/purchase_scans/{purchase_scan}/source",
+			Action: "source", Summary: "Download the original document", Deprecated: false,
+			Irreversible: false, RequiredScope: "purchase_invoices:read",
+			Groups:      []string{"purchase-scans"},
+			PathParams:  []genParam{{Name: "purchase_scan", In: "path", Type: "string", Description: "", Required: true}},
+			QueryParams: []genParam{},
+
+			BinaryContentType: "application/pdf",
 		},
 		{
 			OperationID: "public-api.v1.quotes.list", Method: "GET", Path: "/quotes",
