@@ -2783,7 +2783,7 @@ func generatedOps() []genOp {
 			Irreversible: false, RequiredScope: "purchase_invoices:read",
 			Groups:      []string{"purchase-scan-emails"},
 			PathParams:  []genParam{},
-			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "", Required: false}, {Name: "search", In: "query", Type: "string", Description: "", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "", Required: false}},
+			QueryParams: []genParam{{Name: "limit", In: "query", Type: "integer", Description: "", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "", Required: false}, {Name: "search", In: "query", Type: "string", Description: "", Required: false}, {Name: "result", In: "query", Type: "string", Description: "", Required: false}, {Name: "created[gte]", In: "query", Type: "string", Description: "", Required: false}, {Name: "created[lte]", In: "query", Type: "string", Description: "", Required: false}},
 		},
 		{
 			OperationID: "public-api.v1.purchase_scans.list", Method: "GET", Path: "/purchase_scans",

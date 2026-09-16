@@ -139324,7 +139324,7 @@
         "/purchase_scan_emails": {
             "get": {
                 "operationId": "public-api.v1.purchase_scan_emails.list",
-                "description": "List the emails received in the purchase scanner mailbox with sender, subject, accepted and rejected attachments and ingestion result. Search by sender or subject and filter by date range; cursor-based pagination.",
+                "description": "List the emails received in the purchase scanner mailbox with sender, subject, accepted and rejected attachments and ingestion result. Search by sender or subject and filter by ingestion result or date range; cursor-based pagination.",
                 "summary": "List purchase scanner emails",
                 "tags": [
                     "Purchase Scan Emails"
@@ -139357,6 +139357,19 @@
                             "type": "string",
                             "maxLength": 200
                         }
+                    },
+                    {
+                      "name": "result",
+                      "in": "query",
+                      "schema": {
+                        "type": "string",
+                        "enum": [
+                          "processed",
+                          "partially_processed",
+                          "no_compatible_attachments",
+                          "rejected"
+                        ]
+                      }
                     },
                     {
                         "name": "created[gte]",
