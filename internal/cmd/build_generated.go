@@ -23,8 +23,16 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	var dryRun, skeleton bool
 	fileFlags := map[string]*string{}
 
+	companyIdx := op.companyPathParamIndex()
 	use := op.Action
-	for _, p := range op.PathParams {
+	for i, p := range op.PathParams {
+		// El eje de empresa se declara OPCIONAL en el uso porque la flag
+		// persistente `--company` puede aportarlo; el resto sigue siendo
+		// obligatorio exactamente como antes.
+		if i == companyIdx {
+			use += " [" + p.Name + "]"
+			continue
+		}
 		use += " <" + p.Name + ">"
 	}
 	long := op.Summary
@@ -39,11 +47,25 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 
 	posField, hasPosField := singlePositionalField(op)
 	nPath := len(op.PathParams)
-	argsRule := cobra.ExactArgs(nPath)
+	// La aridad deja de ser exacta en cuanto uno de los posicionales es
+	// opcional. Los dos motivos son independientes y se componen: el eje de
+	// empresa quita uno por abajo y el atajo del campo único de cuerpo añade
+	// uno por arriba. Hoy no coinciden nunca —`singlePositionalField` exige
+	// cero parámetros de ruta— pero el cálculo no lo da por supuesto.
+	minArgs, maxArgs := nPath, nPath
+	if companyIdx >= 0 {
+		minArgs--
+		long += "\n\nPuedes fijar la empresa con la flag persistente --company en vez de" +
+			" pasarla como argumento posicional. Aportarla por las dos vías a la vez es un error de uso."
+	}
 	if hasPosField {
-		argsRule = cobra.RangeArgs(nPath, nPath+1)
+		maxArgs++
 		use += " [" + posField.flagName + "]"
 		long += "\n\nPuedes pasar " + posField.flagName + " como argumento posicional en vez de --" + posField.flagName + "."
+	}
+	var argsRule cobra.PositionalArgs = cobra.ExactArgs(minArgs)
+	if maxArgs != minArgs {
+		argsRule = cobra.RangeArgs(minArgs, maxArgs)
 	}
 
 	c := &cobra.Command{
@@ -53,11 +75,15 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		Args:       UsageArgs(argsRule),
 		Deprecated: deprecatedMsg(op),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if hasPosField && len(args) > nPath {
+			_, extra, err := op.splitPositionals(args, globalsFrom(cmd).Company)
+			if err != nil {
+				return err
+			}
+			if hasPosField && len(extra) > 0 {
 				if cmd.Flags().Changed(posField.flagName) {
 					return apierr.Usagef("no pases %s como argumento posicional y como --%s a la vez", posField.flagName, posField.flagName)
 				}
-				if err := cmd.Flags().Set(posField.flagName, args[nPath]); err != nil {
+				if err := cmd.Flags().Set(posField.flagName, extra[0]); err != nil {
 					return apierr.Usagef("valor inválido para %s: %v", posField.flagName, err)
 				}
 			}
@@ -82,7 +108,12 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := validateResourceArgs(op, args); err != nil {
+			g := globalsFrom(cmd)
+			pathValues, _, err := op.splitPositionals(args, g.Company)
+			if err != nil {
+				return err
+			}
+			if err := validateResourceArgs(op, pathValues); err != nil {
 				return err
 			}
 			if skeleton && op.typedBody() {
@@ -112,7 +143,6 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					return nil
 				}
 			}
-			g := globalsFrom(cmd)
 			cc, err := newCLIContext(g, "")
 			if err != nil {
 				return err
@@ -133,7 +163,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				}
 			}
 			if op.Irreversible {
-				resourceID := op.confirmResourceID(args)
+				resourceID := op.confirmResourceID(pathValues)
 				if err := safety.Confirm(resourceID, confirmFlag, output.IsTTY(os.Stdin), g.NoInput, func(p string) (string, error) {
 					fmt.Fprint(cmd.ErrOrStderr(), p)
 					line, rerr := bufio.NewReader(cmd.InOrStdin()).ReadString('\n')
@@ -142,7 +172,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					return err
 				}
 			}
-			path := op.buildPath(args)
+			path := op.buildPath(pathValues)
 			q := url.Values{}
 			for _, p := range op.QueryParams {
 				if v, _ := cmd.Flags().GetString(p.Name); v != "" {
@@ -199,9 +229,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			}
 			if op.isMutating() && len(bytesTrim(resp.Body)) == 0 {
 				if op.Method == "DELETE" {
-					return writeDeleteConfirmation(cmd, op, args, cc.format)
+					return writeDeleteConfirmation(cmd, op, pathValues, cc.format)
 				}
-				return writeMutationConfirmation(cmd, op, args, cc.format)
+				return writeMutationConfirmation(cmd, op, pathValues, cc.format)
 			}
 			return output.PrintBody(cmd.OutOrStdout(), resp.Body, cc.format)
 		},
