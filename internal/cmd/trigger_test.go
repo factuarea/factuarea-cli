@@ -41,14 +41,14 @@ func TestTriggerListShowsSupported(t *testing.T) {
 	}
 }
 
-func TestTriggerClientCreatedHitsAPI(t *testing.T) {
+func TestTriggerContactCreatedHitsAPI(t *testing.T) {
 	var posted bool
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/v1/clients") {
+		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/v1/contacts") {
 			posted = true
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"id":"cli_1"}}`))
+		_, _ = w.Write([]byte(`{"data":{"id":"0199152d-525d-7000-8000-000000000001"}}`))
 	}))
 	t.Cleanup(srv.Close)
 
@@ -59,11 +59,11 @@ func TestTriggerClientCreatedHitsAPI(t *testing.T) {
 	var out bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&out)
-	root.SetArgs([]string{"trigger", "client.created"})
+	root.SetArgs([]string{"trigger", "contact.created"})
 	if err := root.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
 	}
 	if !posted {
-		t.Fatal("trigger client.created debe hacer POST /v1/clients")
+		t.Fatal("trigger contact.created debe hacer POST /v1/contacts")
 	}
 }

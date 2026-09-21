@@ -203,9 +203,9 @@ func TestBodyFieldsScalarEnumNested(t *testing.T) {
 		by[o.OperationID] = o
 	}
 
-	create := by["public-api.v1.clients.create"]
+	create := by["public-api.v1.contacts.create"]
 	if create.Body == nil || len(create.Body.Fields) == 0 {
-		t.Fatalf("clients.create debe tener Body.Fields: %+v", create.Body)
+		t.Fatalf("contacts.create debe tener Body.Fields: %+v", create.Body)
 	}
 	fields := indexFields(create.Body.Fields)
 
@@ -217,17 +217,23 @@ func TestBodyFieldsScalarEnumNested(t *testing.T) {
 		t.Errorf("name no es nullable: %+v", name)
 	}
 
-	terms := fields["payment_terms_days"]
+	profile := fields["customer_profile"]
+	if profile == nil || profile.Kind != "object" {
+		t.Fatalf("customer_profile debe ser object: %+v", profile)
+	}
+	pf := indexFields(profile.Children)
+
+	terms := pf["payment_terms_days"]
 	if terms == nil || terms.Kind != "scalar" || terms.Type != "integer" || !terms.Nullable {
-		t.Errorf("payment_terms_days debe ser scalar/integer/nullable: %+v", terms)
+		t.Errorf("customer_profile.payment_terms_days debe ser scalar/integer/nullable: %+v", terms)
 	}
 
-	pm := fields["payment_method"]
+	pm := pf["payment_method"]
 	if pm == nil || len(pm.Enum) == 0 {
-		t.Fatalf("payment_method debe traer enum: %+v", pm)
+		t.Fatalf("customer_profile.payment_method debe traer enum: %+v", pm)
 	}
 	if !contains(pm.Enum, "direct_debit") {
-		t.Errorf("payment_method enum debe incluir direct_debit: %v", pm.Enum)
+		t.Errorf("customer_profile.payment_method enum debe incluir direct_debit: %v", pm.Enum)
 	}
 
 	addr := fields["address"]
@@ -250,8 +256,8 @@ func TestBodyFieldsArraysAndMap(t *testing.T) {
 		by[o.OperationID] = o
 	}
 
-	client := by["public-api.v1.clients.create"]
-	cf := indexFields(client.Body.Fields)
+	contact := by["public-api.v1.contacts.create"]
+	cf := indexFields(contact.Body.Fields)
 
 	emails := cf["billing_emails"]
 	if emails == nil || emails.Kind != "scalar_array" || emails.Type != "string" {
