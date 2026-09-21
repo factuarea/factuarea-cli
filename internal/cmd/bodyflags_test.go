@@ -37,9 +37,9 @@ func TestTypedFlagsBuildBodyWithTypes(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := runCmd(t, srv.URL, "clients", "create", "--skip-scope-check",
-		"--name", "ACME SL", "--tax-id", "B12345678",
-		"--payment-terms-days", "30", "--address.city", "Madrid",
+	_, err := runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check",
+		"--name", "ACME SL", "--kind", "company", "--roles", "customer", "--tax-id", "B12345678",
+		"--customer-profile.payment-terms-days", "30", "--address.city", "Madrid",
 		"--billing-emails", "a@x.com,b@x.com", "--metadata", "erp=CLI-1", "--json")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
@@ -47,8 +47,16 @@ func TestTypedFlagsBuildBodyWithTypes(t *testing.T) {
 	if got["name"] != "ACME SL" || got["tax_id"] != "B12345678" {
 		t.Errorf("strings mal mapeados: %v", got)
 	}
-	if n, ok := got["payment_terms_days"].(float64); !ok || n != 30 {
-		t.Errorf("payment_terms_days debe ser número 30: %v", got["payment_terms_days"])
+	roles, ok := got["roles"].([]any)
+	if !ok || len(roles) != 1 || roles[0] != "customer" {
+		t.Errorf("roles debe ser slice con customer: %v", got["roles"])
+	}
+	profile, ok := got["customer_profile"].(map[string]any)
+	if !ok {
+		t.Fatalf("customer_profile debe agruparse en objeto: %v", got["customer_profile"])
+	}
+	if n, ok := profile["payment_terms_days"].(float64); !ok || n != 30 {
+		t.Errorf("customer_profile.payment_terms_days debe ser número 30: %v", profile["payment_terms_days"])
 	}
 	addr, ok := got["address"].(map[string]any)
 	if !ok || addr["city"] != "Madrid" {
@@ -74,21 +82,27 @@ func TestTypedFlagsZeroVsOmitted(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := runCmd(t, srv.URL, "clients", "create", "--skip-scope-check", "--name", "X", "--json")
+	_, err := runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check",
+		"--name", "X", "--kind", "person", "--roles", "customer", "--json")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
 	}
-	if _, present := got["default_discount"]; present {
-		t.Errorf("default_discount omitido no debe estar presente: %v", got)
+	if _, present := got["customer_profile"]; present {
+		t.Errorf("customer_profile omitido no debe estar presente: %v", got)
 	}
 
 	got = nil
-	_, err = runCmd(t, srv.URL, "clients", "create", "--skip-scope-check", "--name", "X", "--default-discount", "0", "--json")
+	_, err = runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check",
+		"--name", "X", "--kind", "person", "--roles", "customer", "--customer-profile.discount", "0", "--json")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
 	}
-	if v, ok := got["default_discount"].(float64); !ok || v != 0 {
-		t.Errorf("--default-discount 0 debe enviarse como 0: %v", got["default_discount"])
+	profile, ok := got["customer_profile"].(map[string]any)
+	if !ok {
+		t.Fatalf("customer_profile debe enviarse al usar un flag anidado: %v", got)
+	}
+	if v, ok := profile["discount"].(float64); !ok || v != 0 {
+		t.Errorf("--customer-profile.discount 0 debe enviarse como 0: %v", profile["discount"])
 	}
 }
 
@@ -98,7 +112,7 @@ func TestMixingFlagsAndRawDataRejected(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := runCmd(t, srv.URL, "clients", "create", "--name", "X", "-d", `{"name":"Y"}`)
+	_, err := runCmd(t, srv.URL, "contacts", "create", "--name", "X", "-d", `{"name":"Y"}`)
 	if err == nil || !strings.Contains(err.Error(), "no mezcles") {
 		t.Fatalf("esperaba error de uso por mezcla, got %v", err)
 	}
@@ -124,7 +138,7 @@ func TestDataFromStdin(t *testing.T) {
 	root.SetOut(&out)
 	root.SetErr(&out)
 	root.SetIn(strings.NewReader(`{"name":"PIPED"}`))
-	root.SetArgs([]string{"clients", "create", "--skip-scope-check", "-d", "-", "--json"})
+	root.SetArgs([]string{"contacts", "create", "--skip-scope-check", "-d", "-", "--json"})
 	if err := root.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
 	}
@@ -139,7 +153,7 @@ func TestDryRunPrintsBodyNoNetwork(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	out, err := runCmd(t, srv.URL, "clients", "create", "--name", "ACME", "--dry-run")
+	out, err := runCmd(t, srv.URL, "contacts", "create", "--name", "ACME", "--kind", "person", "--roles", "customer", "--dry-run")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
 	}
@@ -158,7 +172,7 @@ func TestSkeletonEmitsTemplateNoNetwork(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	out, err := runCmd(t, srv.URL, "clients", "create", "--skeleton")
+	out, err := runCmd(t, srv.URL, "contacts", "create", "--skeleton")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
 	}
@@ -169,8 +183,15 @@ func TestSkeletonEmitsTemplateNoNetwork(t *testing.T) {
 	if _, ok := body["name"]; !ok {
 		t.Errorf("skeleton debe incluir el campo required name: %v", body)
 	}
-	if pm, ok := body["payment_method"].(string); !ok || !strings.Contains(pm, "direct_debit") {
-		t.Errorf("skeleton debe incluir hints de enum: %v", body["payment_method"])
+	if kind, ok := body["kind"].(string); !ok || !strings.Contains(kind, "company") {
+		t.Errorf("skeleton debe incluir hints de enum: %v", body["kind"])
+	}
+	profile, ok := body["customer_profile"].(map[string]any)
+	if !ok {
+		t.Fatalf("skeleton debe anidar customer_profile: %v", body["customer_profile"])
+	}
+	if pm, ok := profile["payment_method"].(string); !ok || !strings.Contains(pm, "direct_debit") {
+		t.Errorf("skeleton debe incluir hints de enum anidados: %v", profile["payment_method"])
 	}
 	if addr, ok := body["address"].(map[string]any); !ok || addr["city"] == nil {
 		t.Errorf("skeleton debe anidar objetos prof.1: %v", body["address"])
@@ -193,7 +214,7 @@ func TestObjectArrayOpHasNoLineFlagsAndDirectsToFile(t *testing.T) {
 }
 
 func TestUpdateHelpDescribesPartialEdit(t *testing.T) {
-	out, err := runCmd(t, "", "clients", "update", "--help")
+	out, err := runCmd(t, "", "contacts", "update", "--help")
 	if err != nil {
 		t.Fatalf("help: %v", err)
 	}
@@ -213,17 +234,17 @@ func TestManifestIncludesFieldSchema(t *testing.T) {
 	}
 	var create map[string]any
 	for _, e := range manifest {
-		if e["command"] == "factuarea clients create" {
+		if e["command"] == "factuarea contacts create" {
 			create = e
 			break
 		}
 	}
 	if create == nil {
-		t.Fatal("manifest sin clients create")
+		t.Fatal("manifest sin contacts create")
 	}
 	fields, ok := create["body_fields"].([]any)
 	if !ok || len(fields) == 0 {
-		t.Fatalf("clients create debe traer body_fields: %v", create["body_fields"])
+		t.Fatalf("contacts create debe traer body_fields: %v", create["body_fields"])
 	}
 	var sawName, sawEnum bool
 	for _, raw := range fields {
@@ -231,7 +252,7 @@ func TestManifestIncludesFieldSchema(t *testing.T) {
 		if f["name"] == "name" && f["required"] == true {
 			sawName = true
 		}
-		if f["name"] == "payment-method" {
+		if f["name"] == "customer-profile.payment-method" {
 			if enum, ok := f["enum"].([]any); ok && len(enum) > 0 {
 				sawEnum = true
 			}
@@ -241,6 +262,6 @@ func TestManifestIncludesFieldSchema(t *testing.T) {
 		t.Error("manifest debe marcar name como required")
 	}
 	if !sawEnum {
-		t.Error("manifest debe incluir enum de payment_method")
+		t.Error("manifest debe incluir enum de customer_profile.payment_method")
 	}
 }
