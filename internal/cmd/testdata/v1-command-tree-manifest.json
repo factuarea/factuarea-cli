@@ -1,0 +1,4618 @@
+{
+  "$meta": {
+    "source_digest": "ae080fa9a7d714391c4b2017adf069d5e2e1516b5bec4d983bfc3d44ade2d873",
+    "measured_commit": "3d8ed4ea48",
+    "generated_by": "desde la raiz del repo (factuarea), con el documento congelado en backend/api.json:  python3 -c 'import json;O=\"backend/docs/api/v1-command-tree-manifest.json\";m=json.load(open(O))[\"$meta\"];d=json.load(open(\"backend/api.json\"));M=[\"get\",\"post\",\"put\",\"patch\",\"delete\"];ops=[{\"operation_id\":o[\"operationId\"],\"method\":x.upper(),\"path\":p,\"path_params\":[q[\"name\"] for q in o.get(\"parameters\",[]) if q.get(\"in\")==\"path\"],\"command\":\" \".join([\"factuarea\"]+[s.replace(\"_\",\"-\") for s in o[\"operationId\"].removeprefix(\"public-api.v1.\").split(\".\")])} for p,it in d[\"paths\"].items() for x in M if it.get(x) for o in [it[x]]];m[\"operations\"]=len(ops);m[\"paths\"]=len(d[\"paths\"]);json.dump({\"$meta\":m,\"operations\":ops},open(O,\"w\"),indent=2,ensure_ascii=False);open(O,\"a\").write(\"\\n\")'  -- el programa RECONSTRUYE operations[] desde backend/api.json y CONSERVA literalmente $meta.source_digest, $meta.measured_commit y $meta.generated_by del fichero existente, asi que regenerarlo es idempotente. source_digest es el sha256 CANONICO del documento (parsear -> ordenar claves recursivamente -> descartar x-codeSamples -> serializar sin espacios -> sha256; `canonicalize` de ../factuarea-node/scripts/spec-sync.mjs), NUNCA el sha256 crudo del fichero, que para el mismo contrato cambia con el sangrado. NO EDITAR A MANO: el gate ../factuarea-cli/internal/cmd/axis_tree_test.go compara este manifiesto contra el arbol de comandos de la CLI y re-deriva cada `command` desde su `operation_id`.",
+    "operations": 481,
+    "paths": 396
+  },
+  "operations": [
+    {
+      "operation_id": "public-api.v1.account.claim_tokens.accept",
+      "method": "POST",
+      "path": "/accounts/{account}/claim-tokens/accept",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account claim-tokens accept"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.accept",
+      "method": "POST",
+      "path": "/companies/{company}/proformas/{proforma}/accept",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas accept"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.accept",
+      "method": "POST",
+      "path": "/companies/{company}/quotes/{quote}/accept",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes accept"
+    },
+    {
+      "operation_id": "public-api.v1.automations.rules.activate",
+      "method": "POST",
+      "path": "/companies/{company}/automations/rules/{rule}/activate",
+      "path_params": [
+        "company",
+        "rule"
+      ],
+      "command": "factuarea automations rules activate"
+    },
+    {
+      "operation_id": "public-api.v1.companies.activate_batch",
+      "method": "POST",
+      "path": "/accounts/{account}/companies/activate",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea companies activate-batch"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.certificates.activate",
+      "method": "POST",
+      "path": "/companies/{company}/verifactu/certificates/{certificate}/activate",
+      "path_params": [
+        "company",
+        "certificate"
+      ],
+      "command": "factuarea verifactu certificates activate"
+    },
+    {
+      "operation_id": "public-api.v1.companies.activate",
+      "method": "POST",
+      "path": "/accounts/{account}/companies/{company}/activate",
+      "path_params": [
+        "account",
+        "company"
+      ],
+      "command": "factuarea companies activate"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.activate",
+      "method": "POST",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}/activate",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices activate"
+    },
+    {
+      "operation_id": "public-api.v1.account.members.list",
+      "method": "GET",
+      "path": "/accounts/{account}/members",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account members list"
+    },
+    {
+      "operation_id": "public-api.v1.account.members.create",
+      "method": "POST",
+      "path": "/accounts/{account}/members",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account members create"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.annul",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/annul",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices annul"
+    },
+    {
+      "operation_id": "public-api.v1.absence-requests.approve",
+      "method": "POST",
+      "path": "/companies/{company}/absence-requests/{absence_request}/approve",
+      "path_params": [
+        "company",
+        "absence_request"
+      ],
+      "command": "factuarea absence-requests approve"
+    },
+    {
+      "operation_id": "public-api.v1.time_corrections.approve",
+      "method": "POST",
+      "path": "/companies/{company}/time-corrections/{time_correction}/approve",
+      "path_params": [
+        "company",
+        "time_correction"
+      ],
+      "command": "factuarea time-corrections approve"
+    },
+    {
+      "operation_id": "public-api.v1.absence-policies.archive",
+      "method": "POST",
+      "path": "/companies/{company}/absence-policies/{absence_policy}/archive",
+      "path_params": [
+        "company",
+        "absence_policy"
+      ],
+      "command": "factuarea absence-policies archive"
+    },
+    {
+      "operation_id": "public-api.v1.absence-types.archive",
+      "method": "POST",
+      "path": "/companies/{company}/absence-types/{absence_type}/archive",
+      "path_params": [
+        "company",
+        "absence_type"
+      ],
+      "command": "factuarea absence-types archive"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.archive",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/{contact}/archive",
+      "path_params": [
+        "company",
+        "contact"
+      ],
+      "command": "factuarea contacts archive"
+    },
+    {
+      "operation_id": "public-api.v1.series.archive",
+      "method": "POST",
+      "path": "/companies/{company}/series/{series}/archive",
+      "path_params": [
+        "company",
+        "series"
+      ],
+      "command": "factuarea series archive"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.archive",
+      "method": "POST",
+      "path": "/companies/{company}/work-schedules/{schedule}/archive",
+      "path_params": [
+        "company",
+        "schedule"
+      ],
+      "command": "factuarea work-schedules archive"
+    },
+    {
+      "operation_id": "public-api.v1.absence-policies.assign",
+      "method": "POST",
+      "path": "/companies/{company}/absence-policies/{absence_policy}/assign",
+      "path_params": [
+        "company",
+        "absence_policy"
+      ],
+      "command": "factuarea absence-policies assign"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.assign_contact_role",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/{contact}/roles/{role}",
+      "path_params": [
+        "company",
+        "contact",
+        "role"
+      ],
+      "command": "factuarea contacts assign-contact-role"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.remove_contact_role",
+      "method": "DELETE",
+      "path": "/companies/{company}/contacts/{contact}/roles/{role}",
+      "path_params": [
+        "company",
+        "contact",
+        "role"
+      ],
+      "command": "factuarea contacts remove-contact-role"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.assign_real_number",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/assign-real-number",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices assign-real-number"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.assign",
+      "method": "POST",
+      "path": "/companies/{company}/work-schedules/{schedule}/assign",
+      "path_params": [
+        "company",
+        "schedule"
+      ],
+      "command": "factuarea work-schedules assign"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.attach_file",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-invoices/{purchase_invoice}/attach-file",
+      "path_params": [
+        "company",
+        "purchase_invoice"
+      ],
+      "command": "factuarea purchase-invoices attach-file"
+    },
+    {
+      "operation_id": "public-api.v1.series.bootstrap",
+      "method": "POST",
+      "path": "/companies/{company}/series/bootstrap",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea series bootstrap"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.bulk_archive",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/bulk/archive",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts bulk-archive"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.bulk_change_contact_role_status",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/bulk/status",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts bulk-change-contact-role-status"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.bulk_create",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/bulk-create",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts bulk-create"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.bulk_create",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/bulk-create",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices bulk-create"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.bulk_delete",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/bulk-delete",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts bulk-delete"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.bulk_delete",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/bulk-delete",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea delivery-notes bulk-delete"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.bulk_delete",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/bulk-delete",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices bulk-delete"
+    },
+    {
+      "operation_id": "public-api.v1.products.bulk_delete",
+      "method": "POST",
+      "path": "/companies/{company}/products/bulk-delete",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products bulk-delete"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.bulk_delete",
+      "method": "POST",
+      "path": "/companies/{company}/proformas/bulk-delete",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea proformas bulk-delete"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.bulk_delete",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-invoices/bulk-delete",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-invoices bulk-delete"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.bulk_delete",
+      "method": "POST",
+      "path": "/companies/{company}/quotes/bulk-delete",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea quotes bulk-delete"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.bulk-delete",
+      "method": "POST",
+      "path": "/companies/{company}/recurring-invoices/bulk-delete",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea recurring-invoices bulk-delete"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.bulk_pdf",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/bulk-pdf",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea delivery-notes bulk-pdf"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.bulk_pdf",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/bulk-pdf",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices bulk-pdf"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.bulk_pdf",
+      "method": "POST",
+      "path": "/companies/{company}/proformas/bulk-pdf",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea proformas bulk-pdf"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.bulk_pdf",
+      "method": "POST",
+      "path": "/companies/{company}/quotes/bulk-pdf",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea quotes bulk-pdf"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.bulk_send",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/bulk-send",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea delivery-notes bulk-send"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.bulk_send",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/bulk-send",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices bulk-send"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.bulk_send",
+      "method": "POST",
+      "path": "/companies/{company}/proformas/bulk-send",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea proformas bulk-send"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.bulk_send",
+      "method": "POST",
+      "path": "/companies/{company}/quotes/bulk-send",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea quotes bulk-send"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.bulk_status",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/bulk-status",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea delivery-notes bulk-status"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.bulk_status",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/bulk-status",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices bulk-status"
+    },
+    {
+      "operation_id": "public-api.v1.products.bulk_status",
+      "method": "POST",
+      "path": "/companies/{company}/products/bulk-status",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products bulk-status"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.bulk_status",
+      "method": "POST",
+      "path": "/companies/{company}/proformas/bulk-status",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea proformas bulk-status"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.bulk_status",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-invoices/bulk-status",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-invoices bulk-status"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.bulk_status",
+      "method": "POST",
+      "path": "/companies/{company}/quotes/bulk-status",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea quotes bulk-status"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.bulk_status",
+      "method": "POST",
+      "path": "/companies/{company}/recurring-invoices/bulk-status",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea recurring-invoices bulk-status"
+    },
+    {
+      "operation_id": "public-api.v1.products.bulk_update_stock",
+      "method": "POST",
+      "path": "/companies/{company}/products/bulk-update-stock",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products bulk-update-stock"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.calculate",
+      "method": "POST",
+      "path": "/companies/{company}/taxes/calculate",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea taxes calculate"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.calculate_totals",
+      "method": "POST",
+      "path": "/companies/{company}/taxes/calculate-totals",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea taxes calculate-totals"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.can_annul",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/can-annul",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices can-annul"
+    },
+    {
+      "operation_id": "public-api.v1.absence-requests.cancel",
+      "method": "POST",
+      "path": "/companies/{company}/absence-requests/{absence_request}/cancel",
+      "path_params": [
+        "company",
+        "absence_request"
+      ],
+      "command": "factuarea absence-requests cancel"
+    },
+    {
+      "operation_id": "public-api.v1.account.invitations.cancel",
+      "method": "DELETE",
+      "path": "/accounts/{account}/invitations/{invitation}",
+      "path_params": [
+        "account",
+        "invitation"
+      ],
+      "command": "factuarea account invitations cancel"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.cancel",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}/cancel",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes cancel"
+    },
+    {
+      "operation_id": "public-api.v1.employee-invitations.cancel",
+      "method": "DELETE",
+      "path": "/companies/{company}/employee-invitations/{invitation}",
+      "path_params": [
+        "company",
+        "invitation"
+      ],
+      "command": "factuarea employee-invitations cancel"
+    },
+    {
+      "operation_id": "public-api.v1.employee-seats.cancel",
+      "method": "POST",
+      "path": "/accounts/{account}/employee-seats/cancel",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea employee-seats cancel"
+    },
+    {
+      "operation_id": "public-api.v1.face_submissions.cancel",
+      "method": "POST",
+      "path": "/companies/{company}/face-submissions/{faceSubmission}/cancel",
+      "path_params": [
+        "company",
+        "faceSubmission"
+      ],
+      "command": "factuarea face-submissions cancel"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.cancel",
+      "method": "POST",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}/cancel",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices cancel"
+    },
+    {
+      "operation_id": "public-api.v1.account.members.update",
+      "method": "PATCH",
+      "path": "/accounts/{account}/members/{member}",
+      "path_params": [
+        "account",
+        "member"
+      ],
+      "command": "factuarea account members update"
+    },
+    {
+      "operation_id": "public-api.v1.account.members.delete",
+      "method": "DELETE",
+      "path": "/accounts/{account}/members/{member}",
+      "path_params": [
+        "account",
+        "member"
+      ],
+      "command": "factuarea account members delete"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.change_contact_role_status",
+      "method": "PATCH",
+      "path": "/companies/{company}/contacts/{contact}/roles/{role}/status",
+      "path_params": [
+        "company",
+        "contact",
+        "role"
+      ],
+      "command": "factuarea contacts change-contact-role-status"
+    },
+    {
+      "operation_id": "public-api.v1.employee-seats.change-quantity",
+      "method": "POST",
+      "path": "/accounts/{account}/employee-seats/change-quantity",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea employee-seats change-quantity"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.simplified_eligibility",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/simplified-eligibility",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices simplified-eligibility"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.is_in_use",
+      "method": "GET",
+      "path": "/companies/{company}/taxes/{tax}/is-in-use",
+      "path_params": [
+        "company",
+        "tax"
+      ],
+      "command": "factuarea taxes is-in-use"
+    },
+    {
+      "operation_id": "public-api.v1.time_entries.clock_in",
+      "method": "POST",
+      "path": "/companies/{company}/time-entries/clock-in",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-entries clock-in"
+    },
+    {
+      "operation_id": "public-api.v1.time_entries.clock_out",
+      "method": "POST",
+      "path": "/companies/{company}/time-entries/clock-out",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-entries clock-out"
+    },
+    {
+      "operation_id": "public-api.v1.monthly_time_record_closes.list",
+      "method": "GET",
+      "path": "/companies/{company}/monthly-time-record-closes",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea monthly-time-record-closes list"
+    },
+    {
+      "operation_id": "public-api.v1.monthly_time_record_closes.create",
+      "method": "POST",
+      "path": "/companies/{company}/monthly-time-record-closes",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea monthly-time-record-closes create"
+    },
+    {
+      "operation_id": "public-api.v1.absence-policies.carryover",
+      "method": "POST",
+      "path": "/companies/{company}/absence-policies/{absence_policy}/carryover",
+      "path_params": [
+        "company",
+        "absence_policy"
+      ],
+      "command": "factuarea absence-policies carryover"
+    },
+    {
+      "operation_id": "public-api.v1.stores.index",
+      "method": "GET",
+      "path": "/companies/{company}/stores",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea stores index"
+    },
+    {
+      "operation_id": "public-api.v1.stores.create",
+      "method": "POST",
+      "path": "/companies/{company}/stores",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea stores create"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.convert",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}/convert",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes convert"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.convert",
+      "method": "POST",
+      "path": "/companies/{company}/proformas/{proforma}/convert",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas convert"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.convert",
+      "method": "POST",
+      "path": "/companies/{company}/quotes/{quote}/convert",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes convert"
+    },
+    {
+      "operation_id": "public-api.v1.absence-policies.list",
+      "method": "GET",
+      "path": "/companies/{company}/absence-policies",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea absence-policies list"
+    },
+    {
+      "operation_id": "public-api.v1.absence-policies.create",
+      "method": "POST",
+      "path": "/companies/{company}/absence-policies",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea absence-policies create"
+    },
+    {
+      "operation_id": "public-api.v1.absence-requests.list",
+      "method": "GET",
+      "path": "/companies/{company}/absence-requests",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea absence-requests list"
+    },
+    {
+      "operation_id": "public-api.v1.absence-requests.create",
+      "method": "POST",
+      "path": "/companies/{company}/absence-requests",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea absence-requests create"
+    },
+    {
+      "operation_id": "public-api.v1.absence-types.list",
+      "method": "GET",
+      "path": "/companies/{company}/absence-types",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea absence-types list"
+    },
+    {
+      "operation_id": "public-api.v1.absence-types.create",
+      "method": "POST",
+      "path": "/companies/{company}/absence-types",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea absence-types create"
+    },
+    {
+      "operation_id": "public-api.v1.account.claim_tokens.list",
+      "method": "GET",
+      "path": "/accounts/{account}/claim-tokens",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account claim-tokens list"
+    },
+    {
+      "operation_id": "public-api.v1.account.claim_tokens.create",
+      "method": "POST",
+      "path": "/accounts/{account}/claim-tokens",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account claim-tokens create"
+    },
+    {
+      "operation_id": "public-api.v1.account.api_keys.list",
+      "method": "GET",
+      "path": "/accounts/{account}/api-keys",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account api-keys list"
+    },
+    {
+      "operation_id": "public-api.v1.account.api_keys.create",
+      "method": "POST",
+      "path": "/accounts/{account}/api-keys",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account api-keys create"
+    },
+    {
+      "operation_id": "public-api.v1.automations.rules.list",
+      "method": "GET",
+      "path": "/companies/{company}/automations/rules",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea automations rules list"
+    },
+    {
+      "operation_id": "public-api.v1.automations.rules.create",
+      "method": "POST",
+      "path": "/companies/{company}/automations/rules",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea automations rules create"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.list",
+      "method": "GET",
+      "path": "/companies/{company}/contacts",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts list"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.create",
+      "method": "POST",
+      "path": "/companies/{company}/contacts",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts create"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.corrective",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/corrective",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices corrective"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.list",
+      "method": "GET",
+      "path": "/companies/{company}/delivery-notes",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea delivery-notes list"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.create",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea delivery-notes create"
+    },
+    {
+      "operation_id": "public-api.v1.employees.list",
+      "method": "GET",
+      "path": "/companies/{company}/employees",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea employees list"
+    },
+    {
+      "operation_id": "public-api.v1.employees.create",
+      "method": "POST",
+      "path": "/companies/{company}/employees",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea employees create"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.list",
+      "method": "GET",
+      "path": "/companies/{company}/invoices",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices list"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.create",
+      "method": "POST",
+      "path": "/companies/{company}/invoices",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices create"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.verifactu_get",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/verifactu",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices verifactu-get"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.verifactu_create",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/verifactu",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices verifactu-create"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.list",
+      "method": "GET",
+      "path": "/companies/{company}/price-lists",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea price-lists list"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.create",
+      "method": "POST",
+      "path": "/companies/{company}/price-lists",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea price-lists create"
+    },
+    {
+      "operation_id": "public-api.v1.products.list",
+      "method": "GET",
+      "path": "/companies/{company}/products",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products list"
+    },
+    {
+      "operation_id": "public-api.v1.products.create",
+      "method": "POST",
+      "path": "/companies/{company}/products",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products create"
+    },
+    {
+      "operation_id": "public-api.v1.products.presentations.list",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}/presentations",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products presentations list"
+    },
+    {
+      "operation_id": "public-api.v1.products.presentations.create",
+      "method": "POST",
+      "path": "/companies/{company}/products/{product}/presentations",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products presentations create"
+    },
+    {
+      "operation_id": "public-api.v1.products.variants.list",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}/variants",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products variants list"
+    },
+    {
+      "operation_id": "public-api.v1.products.variants.create",
+      "method": "POST",
+      "path": "/companies/{company}/products/{product}/variants",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products variants create"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.list",
+      "method": "GET",
+      "path": "/companies/{company}/proformas",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea proformas list"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.create",
+      "method": "POST",
+      "path": "/companies/{company}/proformas",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea proformas create"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.list",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-invoices",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-invoices list"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.create",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-invoices",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-invoices create"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.list",
+      "method": "GET",
+      "path": "/companies/{company}/quotes",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea quotes list"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.create",
+      "method": "POST",
+      "path": "/companies/{company}/quotes",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea quotes create"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.create_recurring",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/create-recurring",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices create-recurring"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.list",
+      "method": "GET",
+      "path": "/companies/{company}/recurring-invoices",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea recurring-invoices list"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.create",
+      "method": "POST",
+      "path": "/companies/{company}/recurring-invoices",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea recurring-invoices create"
+    },
+    {
+      "operation_id": "public-api.v1.series.list",
+      "method": "GET",
+      "path": "/companies/{company}/series",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea series list"
+    },
+    {
+      "operation_id": "public-api.v1.series.create",
+      "method": "POST",
+      "path": "/companies/{company}/series",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea series create"
+    },
+    {
+      "operation_id": "public-api.v1.products.supplier-offers.list",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}/supplier-offers",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products supplier-offers list"
+    },
+    {
+      "operation_id": "public-api.v1.products.supplier-offers.create",
+      "method": "POST",
+      "path": "/companies/{company}/products/{product}/supplier-offers",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products supplier-offers create"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.list",
+      "method": "GET",
+      "path": "/companies/{company}/taxes",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea taxes list"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.create",
+      "method": "POST",
+      "path": "/companies/{company}/taxes",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea taxes create"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.list",
+      "method": "GET",
+      "path": "/companies/{company}/webhook-endpoints",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea webhook-endpoints list"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.create",
+      "method": "POST",
+      "path": "/companies/{company}/webhook-endpoints",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea webhook-endpoints create"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.list",
+      "method": "GET",
+      "path": "/companies/{company}/work-schedules",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea work-schedules list"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.create",
+      "method": "POST",
+      "path": "/companies/{company}/work-schedules",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea work-schedules create"
+    },
+    {
+      "operation_id": "public-api.v1.companies.deactivate",
+      "method": "POST",
+      "path": "/accounts/{account}/companies/{company}/deactivate",
+      "path_params": [
+        "account",
+        "company"
+      ],
+      "command": "factuarea companies deactivate"
+    },
+    {
+      "operation_id": "public-api.v1.employees.deactivate",
+      "method": "POST",
+      "path": "/companies/{company}/employees/{employee}/deactivate",
+      "path_params": [
+        "company",
+        "employee"
+      ],
+      "command": "factuarea employees deactivate"
+    },
+    {
+      "operation_id": "public-api.v1.automations.rules.show",
+      "method": "GET",
+      "path": "/companies/{company}/automations/rules/{rule}",
+      "path_params": [
+        "company",
+        "rule"
+      ],
+      "command": "factuarea automations rules show"
+    },
+    {
+      "operation_id": "public-api.v1.automations.rules.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/automations/rules/{rule}",
+      "path_params": [
+        "company",
+        "rule"
+      ],
+      "command": "factuarea automations rules update"
+    },
+    {
+      "operation_id": "public-api.v1.automations.rules.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/automations/rules/{rule}",
+      "path_params": [
+        "company",
+        "rule"
+      ],
+      "command": "factuarea automations rules delete"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.show",
+      "method": "GET",
+      "path": "/companies/{company}/contacts/{contact}",
+      "path_params": [
+        "company",
+        "contact"
+      ],
+      "command": "factuarea contacts show"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/contacts/{contact}",
+      "path_params": [
+        "company",
+        "contact"
+      ],
+      "command": "factuarea contacts update"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/contacts/{contact}",
+      "path_params": [
+        "company",
+        "contact"
+      ],
+      "command": "factuarea contacts delete"
+    },
+    {
+      "operation_id": "public-api.v1.companies.show",
+      "method": "GET",
+      "path": "/accounts/{account}/companies/{company}",
+      "path_params": [
+        "account",
+        "company"
+      ],
+      "command": "factuarea companies show"
+    },
+    {
+      "operation_id": "public-api.v1.companies.update",
+      "method": "PATCH",
+      "path": "/accounts/{account}/companies/{company}",
+      "path_params": [
+        "account",
+        "company"
+      ],
+      "command": "factuarea companies update"
+    },
+    {
+      "operation_id": "public-api.v1.companies.delete",
+      "method": "DELETE",
+      "path": "/accounts/{account}/companies/{company}",
+      "path_params": [
+        "account",
+        "company"
+      ],
+      "command": "factuarea companies delete"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.show",
+      "method": "GET",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes show"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes update"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes delete"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.show",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices show"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/invoices/{invoice}",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices update"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/invoices/{invoice}",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices delete"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.show",
+      "method": "GET",
+      "path": "/companies/{company}/price-lists/{priceList}",
+      "path_params": [
+        "company",
+        "priceList"
+      ],
+      "command": "factuarea price-lists show"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/price-lists/{priceList}",
+      "path_params": [
+        "company",
+        "priceList"
+      ],
+      "command": "factuarea price-lists update"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/price-lists/{priceList}",
+      "path_params": [
+        "company",
+        "priceList"
+      ],
+      "command": "factuarea price-lists delete"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.items.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/price-lists/{priceList}/items/{item}",
+      "path_params": [
+        "company",
+        "priceList",
+        "item"
+      ],
+      "command": "factuarea price-lists items delete"
+    },
+    {
+      "operation_id": "public-api.v1.products.show",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products show"
+    },
+    {
+      "operation_id": "public-api.v1.products.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/products/{product}",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products update"
+    },
+    {
+      "operation_id": "public-api.v1.products.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/products/{product}",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products delete"
+    },
+    {
+      "operation_id": "public-api.v1.products.gallery.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/products/{product}/gallery/{index}",
+      "path_params": [
+        "company",
+        "product",
+        "index"
+      ],
+      "command": "factuarea products gallery delete"
+    },
+    {
+      "operation_id": "public-api.v1.products.presentations.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/products/{product}/presentations/{presentation}",
+      "path_params": [
+        "company",
+        "product",
+        "presentation"
+      ],
+      "command": "factuarea products presentations update"
+    },
+    {
+      "operation_id": "public-api.v1.products.presentations.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/products/{product}/presentations/{presentation}",
+      "path_params": [
+        "company",
+        "product",
+        "presentation"
+      ],
+      "command": "factuarea products presentations delete"
+    },
+    {
+      "operation_id": "public-api.v1.products.variants.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/products/{product}/variants/{variant}",
+      "path_params": [
+        "company",
+        "product",
+        "variant"
+      ],
+      "command": "factuarea products variants update"
+    },
+    {
+      "operation_id": "public-api.v1.products.variants.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/products/{product}/variants/{variant}",
+      "path_params": [
+        "company",
+        "product",
+        "variant"
+      ],
+      "command": "factuarea products variants delete"
+    },
+    {
+      "operation_id": "public-api.v1.products.video.upload",
+      "method": "POST",
+      "path": "/companies/{company}/products/{product}/video",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products video upload"
+    },
+    {
+      "operation_id": "public-api.v1.products.video.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/products/{product}/video",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products video delete"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.show",
+      "method": "GET",
+      "path": "/companies/{company}/proformas/{proforma}",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas show"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/proformas/{proforma}",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas update"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/proformas/{proforma}",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas delete"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.show",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-invoices/{purchase_invoice}",
+      "path_params": [
+        "company",
+        "purchase_invoice"
+      ],
+      "command": "factuarea purchase-invoices show"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/purchase-invoices/{purchase_invoice}",
+      "path_params": [
+        "company",
+        "purchase_invoice"
+      ],
+      "command": "factuarea purchase-invoices update"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/purchase-invoices/{purchase_invoice}",
+      "path_params": [
+        "company",
+        "purchase_invoice"
+      ],
+      "command": "factuarea purchase-invoices delete"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.file",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-invoices/{purchase_invoice}/file",
+      "path_params": [
+        "company",
+        "purchase_invoice"
+      ],
+      "command": "factuarea purchase-invoices file"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.delete_file",
+      "method": "DELETE",
+      "path": "/companies/{company}/purchase-invoices/{purchase_invoice}/file",
+      "path_params": [
+        "company",
+        "purchase_invoice"
+      ],
+      "command": "factuarea purchase-invoices delete-file"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.show",
+      "method": "GET",
+      "path": "/companies/{company}/quotes/{quote}",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes show"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/quotes/{quote}",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes update"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/quotes/{quote}",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes delete"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.show",
+      "method": "GET",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices show"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.update",
+      "method": "PUT",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices update"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices delete"
+    },
+    {
+      "operation_id": "public-api.v1.products.supplier-offers.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/products/{product}/supplier-offers/{offer}",
+      "path_params": [
+        "company",
+        "product",
+        "offer"
+      ],
+      "command": "factuarea products supplier-offers update"
+    },
+    {
+      "operation_id": "public-api.v1.products.supplier-offers.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/products/{product}/supplier-offers/{offer}",
+      "path_params": [
+        "company",
+        "product",
+        "offer"
+      ],
+      "command": "factuarea products supplier-offers delete"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.show",
+      "method": "GET",
+      "path": "/companies/{company}/taxes/{tax}",
+      "path_params": [
+        "company",
+        "tax"
+      ],
+      "command": "factuarea taxes show"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/taxes/{tax}",
+      "path_params": [
+        "company",
+        "tax"
+      ],
+      "command": "factuarea taxes update"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/taxes/{tax}",
+      "path_params": [
+        "company",
+        "tax"
+      ],
+      "command": "factuarea taxes delete"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.show",
+      "method": "GET",
+      "path": "/companies/{company}/webhook-endpoints/{webhook_endpoint}",
+      "path_params": [
+        "company",
+        "webhook_endpoint"
+      ],
+      "command": "factuarea webhook-endpoints show"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/webhook-endpoints/{webhook_endpoint}",
+      "path_params": [
+        "company",
+        "webhook_endpoint"
+      ],
+      "command": "factuarea webhook-endpoints update"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/webhook-endpoints/{webhook_endpoint}",
+      "path_params": [
+        "company",
+        "webhook_endpoint"
+      ],
+      "command": "factuarea webhook-endpoints delete"
+    },
+    {
+      "operation_id": "public-api.v1.stripe_autoinvoicing.accounts.show",
+      "method": "GET",
+      "path": "/companies/{company}/connected-accounts/{account}",
+      "path_params": [
+        "company",
+        "account"
+      ],
+      "command": "factuarea stripe-autoinvoicing accounts show"
+    },
+    {
+      "operation_id": "public-api.v1.stripe_autoinvoicing.accounts.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/connected-accounts/{account}",
+      "path_params": [
+        "company",
+        "account"
+      ],
+      "command": "factuarea stripe-autoinvoicing accounts update"
+    },
+    {
+      "operation_id": "public-api.v1.stripe_autoinvoicing.accounts.disconnect",
+      "method": "DELETE",
+      "path": "/companies/{company}/connected-accounts/{account}",
+      "path_params": [
+        "company",
+        "account"
+      ],
+      "command": "factuarea stripe-autoinvoicing accounts disconnect"
+    },
+    {
+      "operation_id": "public-api.v1.stores.show",
+      "method": "GET",
+      "path": "/companies/{company}/stores/{store}",
+      "path_params": [
+        "company",
+        "store"
+      ],
+      "command": "factuarea stores show"
+    },
+    {
+      "operation_id": "public-api.v1.stores.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/stores/{store}",
+      "path_params": [
+        "company",
+        "store"
+      ],
+      "command": "factuarea stores update"
+    },
+    {
+      "operation_id": "public-api.v1.stores.disconnect",
+      "method": "DELETE",
+      "path": "/companies/{company}/stores/{store}",
+      "path_params": [
+        "company",
+        "store"
+      ],
+      "command": "factuarea stores disconnect"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.import_template",
+      "method": "GET",
+      "path": "/companies/{company}/contacts/import/template",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts import-template"
+    },
+    {
+      "operation_id": "public-api.v1.monthly_time_record_closes.export",
+      "method": "GET",
+      "path": "/companies/{company}/monthly-time-record-closes/{monthly_time_record_close}/export",
+      "path_params": [
+        "company",
+        "monthly_time_record_close"
+      ],
+      "command": "factuarea monthly-time-record-closes export"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.pdf",
+      "method": "GET",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}/pdf",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes pdf"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.facturae",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/facturae",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices facturae"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.pdf",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/pdf",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices pdf"
+    },
+    {
+      "operation_id": "public-api.v1.monthly_time_record_closes.payroll_export",
+      "method": "GET",
+      "path": "/companies/{company}/monthly-time-record-closes/{monthly_time_record_close}/payroll-export",
+      "path_params": [
+        "company",
+        "monthly_time_record_close"
+      ],
+      "command": "factuarea monthly-time-record-closes payroll-export"
+    },
+    {
+      "operation_id": "public-api.v1.products.gallery.download",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}/gallery/{index}/download",
+      "path_params": [
+        "company",
+        "product",
+        "index"
+      ],
+      "command": "factuarea products gallery download"
+    },
+    {
+      "operation_id": "public-api.v1.products.video.download",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}/video/download",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products video download"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.pdf",
+      "method": "GET",
+      "path": "/companies/{company}/proformas/{proforma}/pdf",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas pdf"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.payment_receipt",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-invoices/{purchase_invoice}/payment-receipt",
+      "path_params": [
+        "company",
+        "purchase_invoice"
+      ],
+      "command": "factuarea purchase-invoices payment-receipt"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.pdf",
+      "method": "GET",
+      "path": "/companies/{company}/quotes/{quote}/pdf",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes pdf"
+    },
+    {
+      "operation_id": "public-api.v1.tax_reports.download",
+      "method": "GET",
+      "path": "/companies/{company}/tax-reports/{tax_report}/download",
+      "path_params": [
+        "company",
+        "tax_report"
+      ],
+      "command": "factuarea tax-reports download"
+    },
+    {
+      "operation_id": "public-api.v1.automations.rules.dry_run",
+      "method": "POST",
+      "path": "/companies/{company}/automations/rules/{rule}/dry-run",
+      "path_params": [
+        "company",
+        "rule"
+      ],
+      "command": "factuarea automations rules dry-run"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.duplicate",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}/duplicate",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes duplicate"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.duplicate",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/duplicate",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices duplicate"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.duplicate",
+      "method": "POST",
+      "path": "/companies/{company}/proformas/{proforma}/duplicate",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas duplicate"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.duplicate",
+      "method": "POST",
+      "path": "/companies/{company}/quotes/{quote}/duplicate",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes duplicate"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.export_excel",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/export/excel",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices export-excel"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.find_by_external_id",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/find-by-external-id",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts find-by-external-id"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.find_by_tax_id",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/find-by-tax-id",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts find-by-tax-id"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.find_by_external_id",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/find-by-external-id",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea delivery-notes find-by-external-id"
+    },
+    {
+      "operation_id": "public-api.v1.employees.find_by_external_id",
+      "method": "POST",
+      "path": "/companies/{company}/employees/find-by-external-id",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea employees find-by-external-id"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.find_by_external_id",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/find-by-external-id",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices find-by-external-id"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.find_by_number",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/find-by-number",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices find-by-number"
+    },
+    {
+      "operation_id": "public-api.v1.products.find_by_external_id",
+      "method": "POST",
+      "path": "/companies/{company}/products/find-by-external-id",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products find-by-external-id"
+    },
+    {
+      "operation_id": "public-api.v1.products.find_by_sku",
+      "method": "POST",
+      "path": "/companies/{company}/products/find-by-sku",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products find-by-sku"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.find_by_external_id",
+      "method": "POST",
+      "path": "/companies/{company}/proformas/find-by-external-id",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea proformas find-by-external-id"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.find_by_external_id",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-invoices/find-by-external-id",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-invoices find-by-external-id"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.find_by_external_id",
+      "method": "POST",
+      "path": "/companies/{company}/quotes/find-by-external-id",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea quotes find-by-external-id"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.records.find_by_csv",
+      "method": "POST",
+      "path": "/companies/{company}/verifactu/records/find-by-csv",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu records find-by-csv"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.records.find_by_huella",
+      "method": "POST",
+      "path": "/companies/{company}/verifactu/records/find-by-huella",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu records find-by-huella"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.records.find_by_invoice_number",
+      "method": "POST",
+      "path": "/companies/{company}/verifactu/records/find-by-invoice-number",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu records find-by-invoice-number"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.find_by_external_id",
+      "method": "POST",
+      "path": "/companies/{company}/recurring-invoices/find-by-external-id",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea recurring-invoices find-by-external-id"
+    },
+    {
+      "operation_id": "public-api.v1.series.find_by_code",
+      "method": "POST",
+      "path": "/companies/{company}/series/find-by-code",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea series find-by-code"
+    },
+    {
+      "operation_id": "public-api.v1.tax_reports.find_by_period",
+      "method": "POST",
+      "path": "/companies/{company}/tax-reports/find-by-period",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tax-reports find-by-period"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.signature_audits.forget",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/signature-audits/{auditId}/forget",
+      "path_params": [
+        "company",
+        "auditId"
+      ],
+      "command": "factuarea delivery-notes signature-audits forget"
+    },
+    {
+      "operation_id": "public-api.v1.tax_reports.generate_130",
+      "method": "POST",
+      "path": "/companies/{company}/tax-reports/130",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tax-reports generate-130"
+    },
+    {
+      "operation_id": "public-api.v1.tax_reports.generate_303",
+      "method": "POST",
+      "path": "/companies/{company}/tax-reports/303",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tax-reports generate-303"
+    },
+    {
+      "operation_id": "public-api.v1.tax_reports.generate_347",
+      "method": "POST",
+      "path": "/companies/{company}/tax-reports/347",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tax-reports generate-347"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.generate",
+      "method": "POST",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}/generate",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices generate"
+    },
+    {
+      "operation_id": "public-api.v1.account.billing",
+      "method": "GET",
+      "path": "/companies/{company}/billing",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea account billing"
+    },
+    {
+      "operation_id": "public-api.v1.account.members.module_access.show",
+      "method": "GET",
+      "path": "/accounts/{account}/members/{member}/module-access",
+      "path_params": [
+        "account",
+        "member"
+      ],
+      "command": "factuarea account members module-access show"
+    },
+    {
+      "operation_id": "public-api.v1.account.members.module_access.update",
+      "method": "PATCH",
+      "path": "/accounts/{account}/members/{member}/module-access",
+      "path_params": [
+        "account",
+        "member"
+      ],
+      "command": "factuarea account members module-access update"
+    },
+    {
+      "operation_id": "public-api.v1.account.usage",
+      "method": "GET",
+      "path": "/accounts/{account}/usage",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account usage"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.certificates.active",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/certificates/active",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu certificates active"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.active",
+      "method": "GET",
+      "path": "/companies/{company}/taxes/active",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea taxes active"
+    },
+    {
+      "operation_id": "public-api.v1.automations.catalog.show",
+      "method": "GET",
+      "path": "/companies/{company}/automations/catalog",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea automations catalog show"
+    },
+    {
+      "operation_id": "public-api.v1.automations.catalog.trigger_fields",
+      "method": "GET",
+      "path": "/companies/{company}/automations/catalog/triggers/{trigger}/fields",
+      "path_params": [
+        "company",
+        "trigger"
+      ],
+      "command": "factuarea automations catalog trigger-fields"
+    },
+    {
+      "operation_id": "public-api.v1.automations.usage.show",
+      "method": "GET",
+      "path": "/companies/{company}/automations/usage",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea automations usage show"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.activities",
+      "method": "GET",
+      "path": "/companies/{company}/contacts/{contact}/activities",
+      "path_params": [
+        "company",
+        "contact"
+      ],
+      "command": "factuarea contacts activities"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.options",
+      "method": "GET",
+      "path": "/companies/{company}/contacts/options",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts options"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.stats",
+      "method": "GET",
+      "path": "/companies/{company}/contacts/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts stats"
+    },
+    {
+      "operation_id": "public-api.v1.companies.creation_status",
+      "method": "GET",
+      "path": "/accounts/{account}/companies/{company}/creation-status",
+      "path_params": [
+        "account",
+        "company"
+      ],
+      "command": "factuarea companies creation-status"
+    },
+    {
+      "operation_id": "public-api.v1.gestoria.workforce_summary",
+      "method": "GET",
+      "path": "/accounts/{account}/gestoria/workforce-summary",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea gestoria workforce-summary"
+    },
+    {
+      "operation_id": "public-api.v1.time_entries.current",
+      "method": "GET",
+      "path": "/companies/{company}/time-entries/current",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-entries current"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.declaracion.history",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/declaracion-responsable/history",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu declaracion history"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.declaracion.current",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/declaracion-responsable",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu declaracion current"
+    },
+    {
+      "operation_id": "public-api.v1.series.default",
+      "method": "GET",
+      "path": "/companies/{company}/series/default",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea series default"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.public_link.get",
+      "method": "GET",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}/public-link",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes public-link get"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.public_link.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}/public-link",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes public-link update"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.stats",
+      "method": "GET",
+      "path": "/companies/{company}/delivery-notes/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea delivery-notes stats"
+    },
+    {
+      "operation_id": "public-api.v1.emails.indicators",
+      "method": "GET",
+      "path": "/companies/{company}/emails/indicators",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea emails indicators"
+    },
+    {
+      "operation_id": "public-api.v1.presence.show",
+      "method": "GET",
+      "path": "/companies/{company}/presence/{employee}",
+      "path_params": [
+        "company",
+        "employee"
+      ],
+      "command": "factuarea presence show"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.employee_schedule",
+      "method": "GET",
+      "path": "/companies/{company}/work-schedules/employee/{employee}",
+      "path_params": [
+        "company",
+        "employee"
+      ],
+      "command": "factuarea work-schedules employee-schedule"
+    },
+    {
+      "operation_id": "public-api.v1.employee-seats.status",
+      "method": "GET",
+      "path": "/accounts/{account}/employee-seats",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea employee-seats status"
+    },
+    {
+      "operation_id": "public-api.v1.employee-seats.preview",
+      "method": "GET",
+      "path": "/accounts/{account}/employee-seats/preview",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea employee-seats preview"
+    },
+    {
+      "operation_id": "public-api.v1.employees.stats",
+      "method": "GET",
+      "path": "/companies/{company}/employees/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea employees stats"
+    },
+    {
+      "operation_id": "public-api.v1.time_balances.employee",
+      "method": "GET",
+      "path": "/companies/{company}/time-balances/employee/{employee}",
+      "path_params": [
+        "company",
+        "employee"
+      ],
+      "command": "factuarea time-balances employee"
+    },
+    {
+      "operation_id": "public-api.v1.face_submissions.show",
+      "method": "GET",
+      "path": "/companies/{company}/face-submissions/{faceSubmission}",
+      "path_params": [
+        "company",
+        "faceSubmission"
+      ],
+      "command": "factuarea face-submissions show"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.pdf_link",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/pdf-link",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices pdf-link"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.public_link_get",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/public-link",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices public-link-get"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.public_link_update",
+      "method": "PATCH",
+      "path": "/companies/{company}/invoices/{invoice}/public-link",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices public-link-update"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.stats",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices stats"
+    },
+    {
+      "operation_id": "public-api.v1.companies.issuing_readiness",
+      "method": "GET",
+      "path": "/accounts/{account}/companies/{company}/issuing-readiness",
+      "path_params": [
+        "account",
+        "company"
+      ],
+      "command": "factuarea companies issuing-readiness"
+    },
+    {
+      "operation_id": "public-api.v1.presence.live",
+      "method": "GET",
+      "path": "/companies/{company}/presence",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea presence live"
+    },
+    {
+      "operation_id": "public-api.v1.products.low_stock_report",
+      "method": "GET",
+      "path": "/companies/{company}/products/low-stock-report",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products low-stock-report"
+    },
+    {
+      "operation_id": "public-api.v1.account.show",
+      "method": "GET",
+      "path": "/me",
+      "path_params": [],
+      "command": "factuarea account show"
+    },
+    {
+      "operation_id": "public-api.v1.monthly_time_record_closes.report",
+      "method": "GET",
+      "path": "/companies/{company}/monthly-time-record-closes/{monthly_time_record_close}/report",
+      "path_params": [
+        "company",
+        "monthly_time_record_close"
+      ],
+      "command": "factuarea monthly-time-record-closes report"
+    },
+    {
+      "operation_id": "public-api.v1.time_balances.monthly_sheet",
+      "method": "GET",
+      "path": "/companies/{company}/time-balances/monthly-sheet",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-balances monthly-sheet"
+    },
+    {
+      "operation_id": "public-api.v1.payouts.show",
+      "method": "GET",
+      "path": "/companies/{company}/payouts/{payout}",
+      "path_params": [
+        "company",
+        "payout"
+      ],
+      "command": "factuarea payouts show"
+    },
+    {
+      "operation_id": "public-api.v1.products.activities",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}/activities",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products activities"
+    },
+    {
+      "operation_id": "public-api.v1.products.sales_analytics",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}/sales-analytics",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products sales-analytics"
+    },
+    {
+      "operation_id": "public-api.v1.products.stats",
+      "method": "GET",
+      "path": "/companies/{company}/products/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products stats"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.public_link_get",
+      "method": "GET",
+      "path": "/companies/{company}/proformas/{proforma}/public-link",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas public-link-get"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.public_link_update",
+      "method": "PATCH",
+      "path": "/companies/{company}/proformas/{proforma}/public-link",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas public-link-update"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.stats",
+      "method": "GET",
+      "path": "/companies/{company}/proformas/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea proformas stats"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.stats",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-invoices/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-invoices stats"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.public_link_get",
+      "method": "GET",
+      "path": "/companies/{company}/quotes/{quote}/public-link",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes public-link-get"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.public_link_update",
+      "method": "PATCH",
+      "path": "/companies/{company}/quotes/{quote}/public-link",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes public-link-update"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.stats",
+      "method": "GET",
+      "path": "/companies/{company}/quotes/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea quotes stats"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.stats",
+      "method": "GET",
+      "path": "/companies/{company}/recurring-invoices/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea recurring-invoices stats"
+    },
+    {
+      "operation_id": "public-api.v1.companies.seat_charge_preview",
+      "method": "GET",
+      "path": "/accounts/{account}/companies/seat-charge-preview",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea companies seat-charge-preview"
+    },
+    {
+      "operation_id": "public-api.v1.series.activities",
+      "method": "GET",
+      "path": "/companies/{company}/series/{series}/activities",
+      "path_params": [
+        "company",
+        "series"
+      ],
+      "command": "factuarea series activities"
+    },
+    {
+      "operation_id": "public-api.v1.series.stats",
+      "method": "GET",
+      "path": "/companies/{company}/series/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea series stats"
+    },
+    {
+      "operation_id": "public-api.v1.stripe_autoinvoicing.config.show",
+      "method": "GET",
+      "path": "/companies/{company}/stripe-autoinvoicing/config",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea stripe-autoinvoicing config show"
+    },
+    {
+      "operation_id": "public-api.v1.stripe_autoinvoicing.config.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/stripe-autoinvoicing/config",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea stripe-autoinvoicing config update"
+    },
+    {
+      "operation_id": "public-api.v1.tax-catalog.show",
+      "method": "GET",
+      "path": "/tax-catalog",
+      "path_params": [],
+      "command": "factuarea tax-catalog show"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.defaults",
+      "method": "GET",
+      "path": "/companies/{company}/taxes/defaults/{docType}",
+      "path_params": [
+        "company",
+        "docType"
+      ],
+      "command": "factuarea taxes defaults"
+    },
+    {
+      "operation_id": "public-api.v1.tax_reports.activities",
+      "method": "GET",
+      "path": "/companies/{company}/tax-reports/{tax_report}/activities",
+      "path_params": [
+        "company",
+        "tax_report"
+      ],
+      "command": "factuarea tax-reports activities"
+    },
+    {
+      "operation_id": "public-api.v1.tax_reports.stats",
+      "method": "GET",
+      "path": "/companies/{company}/tax-reports/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tax-reports stats"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.stats",
+      "method": "GET",
+      "path": "/companies/{company}/taxes/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea taxes stats"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.by_type",
+      "method": "GET",
+      "path": "/companies/{company}/taxes/by-type",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea taxes by-type"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.for_purchases",
+      "method": "GET",
+      "path": "/companies/{company}/taxes/for-purchases",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea taxes for-purchases"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.for_sales",
+      "method": "GET",
+      "path": "/companies/{company}/taxes/for-sales",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea taxes for-sales"
+    },
+    {
+      "operation_id": "public-api.v1.absence-calendar.show",
+      "method": "GET",
+      "path": "/companies/{company}/absence-calendar",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea absence-calendar show"
+    },
+    {
+      "operation_id": "public-api.v1.time_balances.team_summary",
+      "method": "GET",
+      "path": "/companies/{company}/time-balances/team-summary",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-balances team-summary"
+    },
+    {
+      "operation_id": "public-api.v1.time_tracking_settings.show",
+      "method": "GET",
+      "path": "/companies/{company}/time-tracking-settings",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-tracking-settings show"
+    },
+    {
+      "operation_id": "public-api.v1.time_tracking_settings.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/time-tracking-settings",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-tracking-settings update"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.records.activities",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/records/{record}/activities",
+      "path_params": [
+        "company",
+        "record"
+      ],
+      "command": "factuarea verifactu records activities"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.config",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/config",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu config"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.events.summary",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/events/summary",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu events summary"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.stats",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu stats"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.stats",
+      "method": "GET",
+      "path": "/companies/{company}/work-schedules/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea work-schedules stats"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.import",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/import",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts import"
+    },
+    {
+      "operation_id": "public-api.v1.account.invitations.list",
+      "method": "GET",
+      "path": "/accounts/{account}/invitations",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account invitations list"
+    },
+    {
+      "operation_id": "public-api.v1.account.invitations.create",
+      "method": "POST",
+      "path": "/accounts/{account}/invitations",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account invitations create"
+    },
+    {
+      "operation_id": "public-api.v1.absence-balances.list",
+      "method": "GET",
+      "path": "/companies/{company}/absence-balances",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea absence-balances list"
+    },
+    {
+      "operation_id": "public-api.v1.absence-policies.assignments",
+      "method": "GET",
+      "path": "/companies/{company}/absence-policies/{absence_policy}/assignments",
+      "path_params": [
+        "company",
+        "absence_policy"
+      ],
+      "command": "factuarea absence-policies assignments"
+    },
+    {
+      "operation_id": "public-api.v1.account.personalization.templates",
+      "method": "GET",
+      "path": "/companies/{company}/personalization/templates",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea account personalization templates"
+    },
+    {
+      "operation_id": "public-api.v1.series.active",
+      "method": "GET",
+      "path": "/companies/{company}/series/active",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea series active"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.aeat_access.list",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/aeat-access/records",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu aeat-access list"
+    },
+    {
+      "operation_id": "public-api.v1.developers.request_logs.list",
+      "method": "GET",
+      "path": "/companies/{company}/request-logs",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea developers request-logs list"
+    },
+    {
+      "operation_id": "public-api.v1.automations.rules.versions.list",
+      "method": "GET",
+      "path": "/companies/{company}/automations/rules/{rule}/versions",
+      "path_params": [
+        "company",
+        "rule"
+      ],
+      "command": "factuarea automations rules versions list"
+    },
+    {
+      "operation_id": "public-api.v1.automations.runs.steps.list",
+      "method": "GET",
+      "path": "/companies/{company}/automations/runs/{run}/steps",
+      "path_params": [
+        "company",
+        "run"
+      ],
+      "command": "factuarea automations runs steps list"
+    },
+    {
+      "operation_id": "public-api.v1.automations.runs.list",
+      "method": "GET",
+      "path": "/companies/{company}/automations/runs",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea automations runs list"
+    },
+    {
+      "operation_id": "public-api.v1.companies.list",
+      "method": "GET",
+      "path": "/accounts/{account}/companies",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea companies list"
+    },
+    {
+      "operation_id": "public-api.v1.companies.create",
+      "method": "POST",
+      "path": "/accounts/{account}/companies",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea companies create"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.certificates.list",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/certificates",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu certificates list"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.certificates.upload",
+      "method": "POST",
+      "path": "/companies/{company}/verifactu/certificates",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu certificates upload"
+    },
+    {
+      "operation_id": "public-api.v1.stripe_autoinvoicing.accounts.list",
+      "method": "GET",
+      "path": "/companies/{company}/connected-accounts",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea stripe-autoinvoicing accounts list"
+    },
+    {
+      "operation_id": "public-api.v1.presence.daily",
+      "method": "GET",
+      "path": "/companies/{company}/presence/daily",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea presence daily"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.statuses",
+      "method": "GET",
+      "path": "/companies/{company}/delivery-notes/statuses",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea delivery-notes statuses"
+    },
+    {
+      "operation_id": "public-api.v1.emails.list",
+      "method": "GET",
+      "path": "/companies/{company}/emails",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea emails list"
+    },
+    {
+      "operation_id": "public-api.v1.employee-invitations.list",
+      "method": "GET",
+      "path": "/companies/{company}/employee-invitations",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea employee-invitations list"
+    },
+    {
+      "operation_id": "public-api.v1.employee-invitations.send",
+      "method": "POST",
+      "path": "/companies/{company}/employee-invitations",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea employee-invitations send"
+    },
+    {
+      "operation_id": "public-api.v1.event_catalog.list",
+      "method": "GET",
+      "path": "/event-catalog",
+      "path_params": [],
+      "command": "factuarea event-catalog list"
+    },
+    {
+      "operation_id": "public-api.v1.events.list",
+      "method": "GET",
+      "path": "/companies/{company}/events",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea events list"
+    },
+    {
+      "operation_id": "public-api.v1.holidays.list",
+      "method": "GET",
+      "path": "/companies/{company}/holidays",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea holidays list"
+    },
+    {
+      "operation_id": "public-api.v1.integrations.events.list",
+      "method": "GET",
+      "path": "/companies/{company}/integrations/events",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea integrations events list"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.activities",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/activities",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices activities"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.correctives",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/correctives",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices correctives"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.face_submissions.list",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/face-submissions",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices face-submissions list"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.face_submissions.submit",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/face-submissions",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices face-submissions submit"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.payments_list",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/payments",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices payments-list"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.payments_create",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/payments",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices payments-create"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.statuses",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/statuses",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices statuses"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.overdue",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-invoices/overdue",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-invoices overdue"
+    },
+    {
+      "operation_id": "public-api.v1.payment_methods.list",
+      "method": "GET",
+      "path": "/payment-methods",
+      "path_params": [],
+      "command": "factuarea payment-methods list"
+    },
+    {
+      "operation_id": "public-api.v1.payouts.list",
+      "method": "GET",
+      "path": "/companies/{company}/payouts",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea payouts list"
+    },
+    {
+      "operation_id": "public-api.v1.payroll_export_formats.list",
+      "method": "GET",
+      "path": "/payroll-export-formats",
+      "path_params": [],
+      "command": "factuarea payroll-export-formats list"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.pending",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-invoices/pending",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-invoices pending"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.items.list",
+      "method": "GET",
+      "path": "/companies/{company}/price-lists/{priceList}/items",
+      "path_params": [
+        "company",
+        "priceList"
+      ],
+      "command": "factuarea price-lists items list"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.items.upsert",
+      "method": "POST",
+      "path": "/companies/{company}/price-lists/{priceList}/items",
+      "path_params": [
+        "company",
+        "priceList"
+      ],
+      "command": "factuarea price-lists items upsert"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.options",
+      "method": "GET",
+      "path": "/companies/{company}/price-lists/options",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea price-lists options"
+    },
+    {
+      "operation_id": "public-api.v1.products.configurations.list",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}/configurations",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products configurations list"
+    },
+    {
+      "operation_id": "public-api.v1.products.options.list",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}/options",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products options list"
+    },
+    {
+      "operation_id": "public-api.v1.products.stock_movements.list",
+      "method": "GET",
+      "path": "/companies/{company}/products/{product}/stock-movements",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products stock-movements list"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.statuses",
+      "method": "GET",
+      "path": "/companies/{company}/proformas/statuses",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea proformas statuses"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.list_payments",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-invoices/{purchase_invoice}/payments",
+      "path_params": [
+        "company",
+        "purchase_invoice"
+      ],
+      "command": "factuarea purchase-invoices list-payments"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.register_payment",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-invoices/{purchase_invoice}/payments",
+      "path_params": [
+        "company",
+        "purchase_invoice"
+      ],
+      "command": "factuarea purchase-invoices register-payment"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.quarterly.available",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/quarterly/available-quarters",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices quarterly available"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.statuses",
+      "method": "GET",
+      "path": "/companies/{company}/quotes/statuses",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea quotes statuses"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.activities",
+      "method": "GET",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}/activities",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices activities"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.logs",
+      "method": "GET",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}/logs",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices logs"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.assignments",
+      "method": "GET",
+      "path": "/companies/{company}/work-schedules/{schedule}/assignments",
+      "path_params": [
+        "company",
+        "schedule"
+      ],
+      "command": "factuarea work-schedules assignments"
+    },
+    {
+      "operation_id": "public-api.v1.stripe_autoinvoicing.correctives.list",
+      "method": "GET",
+      "path": "/companies/{company}/stripe-autoinvoicing/correctives",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea stripe-autoinvoicing correctives list"
+    },
+    {
+      "operation_id": "public-api.v1.stripe_autoinvoicing.payments.list",
+      "method": "GET",
+      "path": "/companies/{company}/stripe-autoinvoicing/payments",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea stripe-autoinvoicing payments list"
+    },
+    {
+      "operation_id": "public-api.v1.tax_reports.history",
+      "method": "GET",
+      "path": "/companies/{company}/tax-reports/history",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tax-reports history"
+    },
+    {
+      "operation_id": "public-api.v1.time_corrections.list",
+      "method": "GET",
+      "path": "/companies/{company}/time-corrections",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-corrections list"
+    },
+    {
+      "operation_id": "public-api.v1.time_corrections.create",
+      "method": "POST",
+      "path": "/companies/{company}/time-corrections",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-corrections create"
+    },
+    {
+      "operation_id": "public-api.v1.time_entries.list",
+      "method": "GET",
+      "path": "/companies/{company}/time-entries",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-entries list"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.events.list",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/events",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu events list"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.records.list",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/records",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu records list"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.deliveries.list",
+      "method": "GET",
+      "path": "/companies/{company}/webhook-endpoints/{webhook_endpoint}/deliveries",
+      "path_params": [
+        "company",
+        "webhook_endpoint"
+      ],
+      "command": "factuarea webhook-endpoints deliveries list"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.mark_delivered",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}/mark-delivered",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes mark-delivered"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.mark_paid",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/mark-paid",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices mark-paid"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.mark_sent",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/mark-sent",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices mark-sent"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_invoices.mark_paid",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-invoices/{purchase_invoice}/mark-paid",
+      "path_params": [
+        "company",
+        "purchase_invoice"
+      ],
+      "command": "factuarea purchase-invoices mark-paid"
+    },
+    {
+      "operation_id": "public-api.v1.series.set_default",
+      "method": "POST",
+      "path": "/companies/{company}/series/{series}/default",
+      "path_params": [
+        "company",
+        "series"
+      ],
+      "command": "factuarea series set-default"
+    },
+    {
+      "operation_id": "public-api.v1.series.show",
+      "method": "GET",
+      "path": "/companies/{company}/series/{series}",
+      "path_params": [
+        "company",
+        "series"
+      ],
+      "command": "factuarea series show"
+    },
+    {
+      "operation_id": "public-api.v1.automations.rules.pause",
+      "method": "POST",
+      "path": "/companies/{company}/automations/rules/{rule}/pause",
+      "path_params": [
+        "company",
+        "rule"
+      ],
+      "command": "factuarea automations rules pause"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.pause",
+      "method": "POST",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}/pause",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices pause"
+    },
+    {
+      "operation_id": "public-api.v1.time_entries.pause",
+      "method": "POST",
+      "path": "/companies/{company}/time-entries/pause",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-entries pause"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.ping",
+      "method": "POST",
+      "path": "/companies/{company}/webhook-endpoints/{webhook_endpoint}/ping",
+      "path_params": [
+        "company",
+        "webhook_endpoint"
+      ],
+      "command": "factuarea webhook-endpoints ping"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.preview_import",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/import/preview",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts preview-import"
+    },
+    {
+      "operation_id": "public-api.v1.products.configurations.impact_preview",
+      "method": "POST",
+      "path": "/companies/{company}/products/{product}/configurations/impact-preview",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products configurations impact-preview"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.pdf_preview",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/pdf/preview",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices pdf-preview"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.reminder_preview",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/reminder-preview",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices reminder-preview"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.payment_receipt",
+      "method": "GET",
+      "path": "/companies/{company}/invoices/{invoice}/payment-receipt",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices payment-receipt"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.preview",
+      "method": "GET",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}/preview",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices preview"
+    },
+    {
+      "operation_id": "public-api.v1.tax_reports.preview",
+      "method": "POST",
+      "path": "/companies/{company}/tax-reports/preview",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tax-reports preview"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.items.purge_retired",
+      "method": "POST",
+      "path": "/companies/{company}/price-lists/{priceList}/items/{item}/purge",
+      "path_params": [
+        "company",
+        "priceList",
+        "item"
+      ],
+      "command": "factuarea price-lists items purge-retired"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.quarterly.download_zip",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/quarterly/download-zip",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices quarterly download-zip"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.quarterly.send_email",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/quarterly/send-email",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices quarterly send-email"
+    },
+    {
+      "operation_id": "public-api.v1.employees.reactivate",
+      "method": "POST",
+      "path": "/companies/{company}/employees/{employee}/reactivate",
+      "path_params": [
+        "company",
+        "employee"
+      ],
+      "command": "factuarea employees reactivate"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.items.reassign_retired",
+      "method": "POST",
+      "path": "/companies/{company}/price-lists/{priceList}/items/{item}/reassign",
+      "path_params": [
+        "company",
+        "priceList",
+        "item"
+      ],
+      "command": "factuarea price-lists items reassign-retired"
+    },
+    {
+      "operation_id": "public-api.v1.time_entries.manual",
+      "method": "POST",
+      "path": "/companies/{company}/time-entries/manual",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-entries manual"
+    },
+    {
+      "operation_id": "public-api.v1.absence-requests.reject",
+      "method": "POST",
+      "path": "/companies/{company}/absence-requests/{absence_request}/reject",
+      "path_params": [
+        "company",
+        "absence_request"
+      ],
+      "command": "factuarea absence-requests reject"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.reject",
+      "method": "POST",
+      "path": "/companies/{company}/proformas/{proforma}/reject",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas reject"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.reject",
+      "method": "POST",
+      "path": "/companies/{company}/quotes/{quote}/reject",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes reject"
+    },
+    {
+      "operation_id": "public-api.v1.time_corrections.reject",
+      "method": "POST",
+      "path": "/companies/{company}/time-corrections/{time_correction}/reject",
+      "path_params": [
+        "company",
+        "time_correction"
+      ],
+      "command": "factuarea time-corrections reject"
+    },
+    {
+      "operation_id": "public-api.v1.monthly_time_record_closes.reopen",
+      "method": "POST",
+      "path": "/companies/{company}/monthly-time-record-closes/{monthly_time_record_close}/reopen",
+      "path_params": [
+        "company",
+        "monthly_time_record_close"
+      ],
+      "command": "factuarea monthly-time-record-closes reopen"
+    },
+    {
+      "operation_id": "public-api.v1.automations.runs.replay",
+      "method": "POST",
+      "path": "/companies/{company}/automations/runs/{run}/replay",
+      "path_params": [
+        "company",
+        "run"
+      ],
+      "command": "factuarea automations runs replay"
+    },
+    {
+      "operation_id": "public-api.v1.automations.runs.steps.replay",
+      "method": "POST",
+      "path": "/companies/{company}/automations/runs/{run}/steps/{step_index}/replay",
+      "path_params": [
+        "company",
+        "run",
+        "step_index"
+      ],
+      "command": "factuarea automations runs steps replay"
+    },
+    {
+      "operation_id": "public-api.v1.integrations.events.replay",
+      "method": "POST",
+      "path": "/companies/{company}/integrations/events/{event}/replay",
+      "path_params": [
+        "company",
+        "event"
+      ],
+      "command": "factuarea integrations events replay"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.deliveries.replay",
+      "method": "POST",
+      "path": "/companies/{company}/webhook-endpoints/{webhook_endpoint}/deliveries/{delivery}/replay",
+      "path_params": [
+        "company",
+        "webhook_endpoint",
+        "delivery"
+      ],
+      "command": "factuarea webhook-endpoints deliveries replay"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.reschedule",
+      "method": "PATCH",
+      "path": "/companies/{company}/invoices/{invoice}/reschedule",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices reschedule"
+    },
+    {
+      "operation_id": "public-api.v1.account.invitations.resend",
+      "method": "POST",
+      "path": "/accounts/{account}/invitations/{invitation}/resend",
+      "path_params": [
+        "account",
+        "invitation"
+      ],
+      "command": "factuarea account invitations resend"
+    },
+    {
+      "operation_id": "public-api.v1.employee-invitations.resend",
+      "method": "POST",
+      "path": "/companies/{company}/employee-invitations/{invitation}/resend",
+      "path_params": [
+        "company",
+        "invitation"
+      ],
+      "command": "factuarea employee-invitations resend"
+    },
+    {
+      "operation_id": "public-api.v1.holidays.resolve",
+      "method": "GET",
+      "path": "/companies/{company}/holidays/resolve",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea holidays resolve"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.resolve",
+      "method": "POST",
+      "path": "/companies/{company}/price-lists/resolve",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea price-lists resolve"
+    },
+    {
+      "operation_id": "public-api.v1.products.resolve_selection",
+      "method": "POST",
+      "path": "/companies/{company}/products/{product}/resolve-selection",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products resolve-selection"
+    },
+    {
+      "operation_id": "public-api.v1.price-lists.resolve_many",
+      "method": "POST",
+      "path": "/companies/{company}/price-lists/resolve-many",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea price-lists resolve-many"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.restore",
+      "method": "PATCH",
+      "path": "/companies/{company}/contacts/{contact}/restore",
+      "path_params": [
+        "company",
+        "contact"
+      ],
+      "command": "factuarea contacts restore"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.resume",
+      "method": "POST",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}/resume",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices resume"
+    },
+    {
+      "operation_id": "public-api.v1.time_entries.resume",
+      "method": "POST",
+      "path": "/companies/{company}/time-entries/resume",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-entries resume"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.events.retry",
+      "method": "POST",
+      "path": "/companies/{company}/verifactu/events/{event}/retry",
+      "path_params": [
+        "company",
+        "event"
+      ],
+      "command": "factuarea verifactu events retry"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.records.retry",
+      "method": "POST",
+      "path": "/companies/{company}/verifactu/records/{record}/retry",
+      "path_params": [
+        "company",
+        "record"
+      ],
+      "command": "factuarea verifactu records retry"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.payments_revert",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/payments/{payment}/reversal",
+      "path_params": [
+        "company",
+        "invoice",
+        "payment"
+      ],
+      "command": "factuarea invoices payments-revert"
+    },
+    {
+      "operation_id": "public-api.v1.account.api_keys.revoke",
+      "method": "POST",
+      "path": "/accounts/{account}/api-keys/{api_key}/revoke",
+      "path_params": [
+        "account",
+        "api_key"
+      ],
+      "command": "factuarea account api-keys revoke"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.certificates.revoke",
+      "method": "DELETE",
+      "path": "/companies/{company}/verifactu/certificates/{certificate}",
+      "path_params": [
+        "company",
+        "certificate"
+      ],
+      "command": "factuarea verifactu certificates revoke"
+    },
+    {
+      "operation_id": "public-api.v1.account.api_keys.rotate_secret",
+      "method": "POST",
+      "path": "/accounts/{account}/api-keys/{api_key}/rotate-secret",
+      "path_params": [
+        "account",
+        "api_key"
+      ],
+      "command": "factuarea account api-keys rotate-secret"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.rotate_secret",
+      "method": "POST",
+      "path": "/companies/{company}/webhook-endpoints/{webhook_endpoint}/rotate-secret",
+      "path_params": [
+        "company",
+        "webhook_endpoint"
+      ],
+      "command": "factuarea webhook-endpoints rotate-secret"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.schedule",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/schedule",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices schedule"
+    },
+    {
+      "operation_id": "public-api.v1.monthly_time_record_closes.seal_show",
+      "method": "GET",
+      "path": "/companies/{company}/monthly-time-record-closes/{monthly_time_record_close}/seal",
+      "path_params": [
+        "company",
+        "monthly_time_record_close"
+      ],
+      "command": "factuarea monthly-time-record-closes seal-show"
+    },
+    {
+      "operation_id": "public-api.v1.monthly_time_record_closes.seal",
+      "method": "POST",
+      "path": "/companies/{company}/monthly-time-record-closes/{monthly_time_record_close}/seal",
+      "path_params": [
+        "company",
+        "monthly_time_record_close"
+      ],
+      "command": "factuarea monthly-time-record-closes seal"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.search",
+      "method": "GET",
+      "path": "/companies/{company}/contacts/search",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts search"
+    },
+    {
+      "operation_id": "public-api.v1.products.search",
+      "method": "GET",
+      "path": "/companies/{company}/products/search",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products search"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.send",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}/send",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes send"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.send",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/send",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices send"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.send_reminder",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/send-reminder",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices send-reminder"
+    },
+    {
+      "operation_id": "public-api.v1.proformas.send",
+      "method": "POST",
+      "path": "/companies/{company}/proformas/{proforma}/send",
+      "path_params": [
+        "company",
+        "proforma"
+      ],
+      "command": "factuarea proformas send"
+    },
+    {
+      "operation_id": "public-api.v1.quotes.send",
+      "method": "POST",
+      "path": "/companies/{company}/quotes/{quote}/send",
+      "path_params": [
+        "company",
+        "quote"
+      ],
+      "command": "factuarea quotes send"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.test_event",
+      "method": "POST",
+      "path": "/companies/{company}/webhook-endpoints/{webhook_endpoint}/test-event",
+      "path_params": [
+        "company",
+        "webhook_endpoint"
+      ],
+      "command": "factuarea webhook-endpoints test-event"
+    },
+    {
+      "operation_id": "public-api.v1.products.supplier-offers.preferred",
+      "method": "POST",
+      "path": "/companies/{company}/products/{product}/supplier-offers/{offer}/preferred",
+      "path_params": [
+        "company",
+        "product",
+        "offer"
+      ],
+      "command": "factuarea products supplier-offers preferred"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.set_default",
+      "method": "POST",
+      "path": "/companies/{company}/taxes/{tax}/set-default",
+      "path_params": [
+        "company",
+        "tax"
+      ],
+      "command": "factuarea taxes set-default"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.set_default_for_document",
+      "method": "PATCH",
+      "path": "/companies/{company}/taxes/{tax}/set-default/{docType}",
+      "path_params": [
+        "company",
+        "tax",
+        "docType"
+      ],
+      "command": "factuarea taxes set-default-for-document"
+    },
+    {
+      "operation_id": "public-api.v1.absence-balances.show",
+      "method": "GET",
+      "path": "/companies/{company}/absence-balances/{absence_balance}",
+      "path_params": [
+        "company",
+        "absence_balance"
+      ],
+      "command": "factuarea absence-balances show"
+    },
+    {
+      "operation_id": "public-api.v1.absence-policies.show",
+      "method": "GET",
+      "path": "/companies/{company}/absence-policies/{absence_policy}",
+      "path_params": [
+        "company",
+        "absence_policy"
+      ],
+      "command": "factuarea absence-policies show"
+    },
+    {
+      "operation_id": "public-api.v1.absence-policies.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/absence-policies/{absence_policy}",
+      "path_params": [
+        "company",
+        "absence_policy"
+      ],
+      "command": "factuarea absence-policies update"
+    },
+    {
+      "operation_id": "public-api.v1.absence-requests.show",
+      "method": "GET",
+      "path": "/companies/{company}/absence-requests/{absence_request}",
+      "path_params": [
+        "company",
+        "absence_request"
+      ],
+      "command": "factuarea absence-requests show"
+    },
+    {
+      "operation_id": "public-api.v1.absence-types.show",
+      "method": "GET",
+      "path": "/companies/{company}/absence-types/{absence_type}",
+      "path_params": [
+        "company",
+        "absence_type"
+      ],
+      "command": "factuarea absence-types show"
+    },
+    {
+      "operation_id": "public-api.v1.absence-types.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/absence-types/{absence_type}",
+      "path_params": [
+        "company",
+        "absence_type"
+      ],
+      "command": "factuarea absence-types update"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.aeat_access.show",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/aeat-access/records/{record}",
+      "path_params": [
+        "company",
+        "record"
+      ],
+      "command": "factuarea verifactu aeat-access show"
+    },
+    {
+      "operation_id": "public-api.v1.account.api_keys.show",
+      "method": "GET",
+      "path": "/accounts/{account}/api-keys/{api_key}",
+      "path_params": [
+        "account",
+        "api_key"
+      ],
+      "command": "factuarea account api-keys show"
+    },
+    {
+      "operation_id": "public-api.v1.developers.request_logs.show",
+      "method": "GET",
+      "path": "/companies/{company}/request-logs/{request_id}",
+      "path_params": [
+        "company",
+        "request_id"
+      ],
+      "command": "factuarea developers request-logs show"
+    },
+    {
+      "operation_id": "public-api.v1.automations.rules.versions.show",
+      "method": "GET",
+      "path": "/companies/{company}/automations/rules/{rule}/versions/{version}",
+      "path_params": [
+        "company",
+        "rule",
+        "version"
+      ],
+      "command": "factuarea automations rules versions show"
+    },
+    {
+      "operation_id": "public-api.v1.automations.runs.show",
+      "method": "GET",
+      "path": "/companies/{company}/automations/runs/{run}",
+      "path_params": [
+        "company",
+        "run"
+      ],
+      "command": "factuarea automations runs show"
+    },
+    {
+      "operation_id": "public-api.v1.emails.show",
+      "method": "GET",
+      "path": "/companies/{company}/emails/{email}",
+      "path_params": [
+        "company",
+        "email"
+      ],
+      "command": "factuarea emails show"
+    },
+    {
+      "operation_id": "public-api.v1.employees.show",
+      "method": "GET",
+      "path": "/companies/{company}/employees/{employee}",
+      "path_params": [
+        "company",
+        "employee"
+      ],
+      "command": "factuarea employees show"
+    },
+    {
+      "operation_id": "public-api.v1.employees.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/employees/{employee}",
+      "path_params": [
+        "company",
+        "employee"
+      ],
+      "command": "factuarea employees update"
+    },
+    {
+      "operation_id": "public-api.v1.events.show",
+      "method": "GET",
+      "path": "/companies/{company}/events/{event}",
+      "path_params": [
+        "company",
+        "event"
+      ],
+      "command": "factuarea events show"
+    },
+    {
+      "operation_id": "public-api.v1.holidays.show",
+      "method": "GET",
+      "path": "/companies/{company}/holidays/{holiday}",
+      "path_params": [
+        "company",
+        "holiday"
+      ],
+      "command": "factuarea holidays show"
+    },
+    {
+      "operation_id": "public-api.v1.integrations.events.show",
+      "method": "GET",
+      "path": "/companies/{company}/integrations/events/{event}",
+      "path_params": [
+        "company",
+        "event"
+      ],
+      "command": "factuarea integrations events show"
+    },
+    {
+      "operation_id": "public-api.v1.monthly_time_record_closes.show",
+      "method": "GET",
+      "path": "/companies/{company}/monthly-time-record-closes/{monthly_time_record_close}",
+      "path_params": [
+        "company",
+        "monthly_time_record_close"
+      ],
+      "command": "factuarea monthly-time-record-closes show"
+    },
+    {
+      "operation_id": "public-api.v1.time_corrections.show",
+      "method": "GET",
+      "path": "/companies/{company}/time-corrections/{time_correction}",
+      "path_params": [
+        "company",
+        "time_correction"
+      ],
+      "command": "factuarea time-corrections show"
+    },
+    {
+      "operation_id": "public-api.v1.time_entries.show",
+      "method": "GET",
+      "path": "/companies/{company}/time-entries/{time_entry}",
+      "path_params": [
+        "company",
+        "time_entry"
+      ],
+      "command": "factuarea time-entries show"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.events.show",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/events/{event}",
+      "path_params": [
+        "company",
+        "event"
+      ],
+      "command": "factuarea verifactu events show"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.records.show",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/records/{record}",
+      "path_params": [
+        "company",
+        "record"
+      ],
+      "command": "factuarea verifactu records show"
+    },
+    {
+      "operation_id": "public-api.v1.webhook_endpoints.deliveries.show",
+      "method": "GET",
+      "path": "/companies/{company}/webhook-endpoints/{webhook_endpoint}/deliveries/{delivery}",
+      "path_params": [
+        "company",
+        "webhook_endpoint",
+        "delivery"
+      ],
+      "command": "factuarea webhook-endpoints deliveries show"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.show",
+      "method": "GET",
+      "path": "/companies/{company}/work-schedules/{schedule}",
+      "path_params": [
+        "company",
+        "schedule"
+      ],
+      "command": "factuarea work-schedules show"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/work-schedules/{schedule}",
+      "path_params": [
+        "company",
+        "schedule"
+      ],
+      "command": "factuarea work-schedules update"
+    },
+    {
+      "operation_id": "public-api.v1.delivery_notes.sign",
+      "method": "POST",
+      "path": "/companies/{company}/delivery-notes/{delivery_note}/sign",
+      "path_params": [
+        "company",
+        "delivery_note"
+      ],
+      "command": "factuarea delivery-notes sign"
+    },
+    {
+      "operation_id": "public-api.v1.recurring_invoices.skip",
+      "method": "POST",
+      "path": "/companies/{company}/recurring-invoices/{recurring_invoice}/skip",
+      "path_params": [
+        "company",
+        "recurring_invoice"
+      ],
+      "command": "factuarea recurring-invoices skip"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.records.subsanar",
+      "method": "POST",
+      "path": "/companies/{company}/verifactu/records/{record}/subsanar",
+      "path_params": [
+        "company",
+        "record"
+      ],
+      "command": "factuarea verifactu records subsanar"
+    },
+    {
+      "operation_id": "public-api.v1.employee-seats.subscribe",
+      "method": "POST",
+      "path": "/accounts/{account}/employee-seats/subscribe",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea employee-seats subscribe"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.substitute_simplified",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/substitute-simplified",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea invoices substitute-simplified"
+    },
+    {
+      "operation_id": "public-api.v1.shopify.stores.connection_test",
+      "method": "POST",
+      "path": "/companies/{company}/shopify/stores/{store}/connection-test",
+      "path_params": [
+        "company",
+        "store"
+      ],
+      "command": "factuarea shopify stores connection-test"
+    },
+    {
+      "operation_id": "public-api.v1.woocommerce.stores.connection_test",
+      "method": "POST",
+      "path": "/companies/{company}/woocommerce/stores/{store}/connection-test",
+      "path_params": [
+        "company",
+        "store"
+      ],
+      "command": "factuarea woocommerce stores connection-test"
+    },
+    {
+      "operation_id": "public-api.v1.products.toggle_active",
+      "method": "POST",
+      "path": "/companies/{company}/products/{product}/toggle-active",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products toggle-active"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.toggle",
+      "method": "POST",
+      "path": "/companies/{company}/taxes/{tax}/toggle",
+      "path_params": [
+        "company",
+        "tax"
+      ],
+      "command": "factuarea taxes toggle"
+    },
+    {
+      "operation_id": "public-api.v1.account.owner.transfer",
+      "method": "PATCH",
+      "path": "/accounts/{account}/owner",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account owner transfer"
+    },
+    {
+      "operation_id": "public-api.v1.absence-policies.unarchive",
+      "method": "POST",
+      "path": "/companies/{company}/absence-policies/{absence_policy}/unarchive",
+      "path_params": [
+        "company",
+        "absence_policy"
+      ],
+      "command": "factuarea absence-policies unarchive"
+    },
+    {
+      "operation_id": "public-api.v1.absence-types.unarchive",
+      "method": "POST",
+      "path": "/companies/{company}/absence-types/{absence_type}/unarchive",
+      "path_params": [
+        "company",
+        "absence_type"
+      ],
+      "command": "factuarea absence-types unarchive"
+    },
+    {
+      "operation_id": "public-api.v1.series.unarchive",
+      "method": "POST",
+      "path": "/companies/{company}/series/{series}/unarchive",
+      "path_params": [
+        "company",
+        "series"
+      ],
+      "command": "factuarea series unarchive"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.unarchive",
+      "method": "POST",
+      "path": "/companies/{company}/work-schedules/{schedule}/unarchive",
+      "path_params": [
+        "company",
+        "schedule"
+      ],
+      "command": "factuarea work-schedules unarchive"
+    },
+    {
+      "operation_id": "public-api.v1.absence-policies.unassign",
+      "method": "POST",
+      "path": "/companies/{company}/absence-policies/{absence_policy}/unassign",
+      "path_params": [
+        "company",
+        "absence_policy"
+      ],
+      "command": "factuarea absence-policies unassign"
+    },
+    {
+      "operation_id": "public-api.v1.work_schedules.unassign",
+      "method": "POST",
+      "path": "/companies/{company}/work-schedules/{schedule}/unassign",
+      "path_params": [
+        "company",
+        "schedule"
+      ],
+      "command": "factuarea work-schedules unassign"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.unschedule",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/unschedule",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices unschedule"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.unsend",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/unsend",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices unsend"
+    },
+    {
+      "operation_id": "public-api.v1.account.personalization.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/personalization",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea account personalization update"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.update_bank_accounts",
+      "method": "PATCH",
+      "path": "/companies/{company}/contacts/{contact}/bank-accounts",
+      "path_params": [
+        "company",
+        "contact"
+      ],
+      "command": "factuarea contacts update-bank-accounts"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.update_customer_profile",
+      "method": "PATCH",
+      "path": "/companies/{company}/contacts/{contact}/customer-profile",
+      "path_params": [
+        "company",
+        "contact"
+      ],
+      "command": "factuarea contacts update-customer-profile"
+    },
+    {
+      "operation_id": "public-api.v1.products.update_stock",
+      "method": "PATCH",
+      "path": "/companies/{company}/products/{product}/stock",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products update-stock"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.update_supplier_profile",
+      "method": "PATCH",
+      "path": "/companies/{company}/contacts/{contact}/supplier-profile",
+      "path_params": [
+        "company",
+        "contact"
+      ],
+      "command": "factuarea contacts update-supplier-profile"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.settings.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/verifactu/settings",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu settings update"
+    },
+    {
+      "operation_id": "public-api.v1.products.gallery.upload",
+      "method": "POST",
+      "path": "/companies/{company}/products/{product}/gallery",
+      "path_params": [
+        "company",
+        "product"
+      ],
+      "command": "factuarea products gallery upload"
+    },
+    {
+      "operation_id": "public-api.v1.time_entries.chain.validate",
+      "method": "GET",
+      "path": "/companies/{company}/time-entries/chain/validate",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea time-entries chain validate"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.chain.validate",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/chain/validate",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu chain validate"
+    },
+    {
+      "operation_id": "public-api.v1.account.verify_census",
+      "method": "POST",
+      "path": "/companies/{company}/census-verification",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea account verify-census"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.verify_census",
+      "method": "POST",
+      "path": "/companies/{company}/contacts/census-verification",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea contacts verify-census"
+    },
+    {
+      "operation_id": "public-api.v1.companies.verify_creation",
+      "method": "POST",
+      "path": "/accounts/{account}/companies/{company}/verify-creation",
+      "path_params": [
+        "account",
+        "company"
+      ],
+      "command": "factuarea companies verify-creation"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.void",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/void",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices void"
+    }
+  ]
+}

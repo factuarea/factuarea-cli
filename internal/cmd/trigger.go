@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -41,7 +40,13 @@ func newTriggerCmd() *cobra.Command {
 			if err := safety.RequireSandbox(cc.res.Environment); err != nil {
 				return err
 			}
-			if err := trigger.Run(context.Background(), cc.client, args[0], ov); err != nil {
+			// El devloop escribe recursos REALES de una empresa, así que pasa por
+			// la misma cadena de precedencia que el árbol generado.
+			company, err := resolveCompany(cmd.Context(), g, "")
+			if err != nil {
+				return err
+			}
+			if err := trigger.Run(cmd.Context(), cc.client, companyBasePath(company), args[0], ov); err != nil {
 				return err
 			}
 			if asJSON {

@@ -23,6 +23,9 @@ func runCmd(t *testing.T, baseURL string, args ...string) (string, error) {
 	root.SetOut(&out)
 	root.SetErr(&out)
 	root.SetArgs(args)
+	// Mismo motivo que en `runRoot`: el memo del eje es POR PROCESO.
+	resetCompanyResolution()
+	t.Cleanup(resetCompanyResolution)
 	err := root.Execute()
 	return out.String(), err
 }
@@ -37,7 +40,7 @@ func TestTypedFlagsBuildBodyWithTypes(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check",
+	_, err := runCmd(t, srv.URL, "contacts", "create", "--company", "acme_co", "--skip-scope-check",
 		"--name", "ACME SL", "--kind", "company", "--roles", "customer", "--tax-id", "B12345678",
 		"--customer-profile.payment-terms-days", "30", "--address.city", "Madrid",
 		"--billing-emails", "a@x.com,b@x.com", "--metadata", "erp=CLI-1", "--json")
@@ -82,7 +85,7 @@ func TestTypedFlagsZeroVsOmitted(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check",
+	_, err := runCmd(t, srv.URL, "contacts", "create", "--company", "acme_co", "--skip-scope-check",
 		"--name", "X", "--kind", "person", "--roles", "customer", "--json")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
@@ -92,7 +95,7 @@ func TestTypedFlagsZeroVsOmitted(t *testing.T) {
 	}
 
 	got = nil
-	_, err = runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check",
+	_, err = runCmd(t, srv.URL, "contacts", "create", "--company", "acme_co", "--skip-scope-check",
 		"--name", "X", "--kind", "person", "--roles", "customer", "--customer-profile.discount", "0", "--json")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
@@ -112,7 +115,7 @@ func TestMixingFlagsAndRawDataRejected(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := runCmd(t, srv.URL, "contacts", "create", "--name", "X", "-d", `{"name":"Y"}`)
+	_, err := runCmd(t, srv.URL, "contacts", "create", "--company", "acme_co", "--name", "X", "-d", `{"name":"Y"}`)
 	if err == nil || !strings.Contains(err.Error(), "no mezcles") {
 		t.Fatalf("esperaba error de uso por mezcla, got %v", err)
 	}
@@ -138,7 +141,7 @@ func TestDataFromStdin(t *testing.T) {
 	root.SetOut(&out)
 	root.SetErr(&out)
 	root.SetIn(strings.NewReader(`{"name":"PIPED"}`))
-	root.SetArgs([]string{"contacts", "create", "--skip-scope-check", "-d", "-", "--json"})
+	root.SetArgs([]string{"contacts", "create", "--company", "acme_co", "--skip-scope-check", "-d", "-", "--json"})
 	if err := root.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
 	}

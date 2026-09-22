@@ -42,6 +42,13 @@ func newListenCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			// El feed de eventos cuelga del EJE DE EMPRESA (`/v1/companies/{company}/events`):
+			// se resuelve por la misma cadena de precedencia que el árbol generado.
+			company, err := resolveCompany(cmd.Context(), g, "")
+			if err != nil {
+				return err
+			}
+			base := companyBasePath(company)
 			secret := webhook.GenerateSecret()
 			fmt.Fprintf(cmd.ErrOrStderr(), "Reenviando eventos a %s\nSecret de firma (configúralo en tu verificador): %s\n", forwardTo, secret)
 
@@ -56,7 +63,7 @@ func newListenCmd() *cobra.Command {
 				defer cancel()
 			}
 
-			watermark, err := latestEventID(ctx, cc)
+			watermark, err := latestEventID(ctx, cc, base)
 			if err != nil {
 				if ctx.Err() != nil {
 					return nil
@@ -72,7 +79,7 @@ func newListenCmd() *cobra.Command {
 				case <-ctx.Done():
 					return nil
 				case <-ticker.C:
-					watermark, err = drainNewEvents(ctx, cc, fwd, watermark, filter, secret, forwardTo, printJSON, asJSON, cmd)
+					watermark, err = drainNewEvents(ctx, cc, base, fwd, watermark, filter, secret, forwardTo, printJSON, asJSON, cmd)
 					if err != nil && ctx.Err() == nil {
 						fmt.Fprintf(cmd.ErrOrStderr(), "aviso: %v\n", err)
 					}
@@ -144,13 +151,13 @@ type eventsPage struct {
 	HasMore bool              `json:"has_more"`
 }
 
-func fetchEventsPage(ctx context.Context, cc *cliContext, after string) (*eventsPage, error) {
+func fetchEventsPage(ctx context.Context, cc *cliContext, base, after string) (*eventsPage, error) {
 	q := url.Values{}
 	q.Set("limit", "100")
 	if after != "" {
 		q.Set("starting_after", after)
 	}
-	resp, err := cc.client.Do(ctx, http.MethodGet, "/v1/events?"+q.Encode(), nil, nil)
+	resp, err := cc.client.Do(ctx, http.MethodGet, base+"/events?"+q.Encode(), nil, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -171,11 +178,11 @@ func lastEventID(raw json.RawMessage) (string, error) {
 	return env.ID, nil
 }
 
-func latestEventID(ctx context.Context, cc *cliContext) (string, error) {
+func latestEventID(ctx context.Context, cc *cliContext, base string) (string, error) {
 	cursor := ""
 	last := ""
 	for {
-		page, err := fetchEventsPage(ctx, cc, cursor)
+		page, err := fetchEventsPage(ctx, cc, base, cursor)
 		if err != nil {
 			return "", err
 		}
@@ -197,9 +204,9 @@ func latestEventID(ctx context.Context, cc *cliContext) (string, error) {
 	}
 }
 
-func drainNewEvents(ctx context.Context, cc *cliContext, fwd *http.Client, watermark string, filter map[string]bool, secret, forwardTo string, printJSON, asJSON bool, cmd *cobra.Command) (string, error) {
+func drainNewEvents(ctx context.Context, cc *cliContext, base string, fwd *http.Client, watermark string, filter map[string]bool, secret, forwardTo string, printJSON, asJSON bool, cmd *cobra.Command) (string, error) {
 	for {
-		page, err := fetchEventsPage(ctx, cc, watermark)
+		page, err := fetchEventsPage(ctx, cc, base, watermark)
 		if err != nil {
 			return watermark, err
 		}

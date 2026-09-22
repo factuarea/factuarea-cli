@@ -10,14 +10,15 @@ import (
 )
 
 var (
-	reAcceptsArgs   = regexp.MustCompile(`accepts (\d+) arg\(s\), received (\d+)`)
-	reAcceptsAtMost = regexp.MustCompile(`accepts at most (\d+) arg\(s\), received (\d+)`)
-	reInvalidArg    = regexp.MustCompile(`invalid argument "([^"]*)" for "([^"]*)" flag: (.*)`)
-	reRequiredFlag  = regexp.MustCompile(`^required flag\(s\) (.*) not set$`)
-	reUnknownFlag   = regexp.MustCompile(`unknown flag: (.*)`)
-	reUnknownShort  = regexp.MustCompile(`unknown shorthand flag: (.*)`)
-	reNeedsArg      = regexp.MustCompile(`flag needs an argument: (.*)`)
-	reUnknownCmd    = regexp.MustCompile(`(?s)^unknown command "([^"]*)" for "([^"]*)"(.*)$`)
+	reAcceptsArgs    = regexp.MustCompile(`accepts (\d+) arg\(s\), received (\d+)`)
+	reAcceptsAtMost  = regexp.MustCompile(`accepts at most (\d+) arg\(s\), received (\d+)`)
+	reAcceptsBetween = regexp.MustCompile(`accepts between (\d+) and (\d+) arg\(s\), received (\d+)`)
+	reInvalidArg     = regexp.MustCompile(`invalid argument "([^"]*)" for "([^"]*)" flag: (.*)`)
+	reRequiredFlag   = regexp.MustCompile(`^required flag\(s\) (.*) not set$`)
+	reUnknownFlag    = regexp.MustCompile(`unknown flag: (.*)`)
+	reUnknownShort   = regexp.MustCompile(`unknown shorthand flag: (.*)`)
+	reNeedsArg       = regexp.MustCompile(`flag needs an argument: (.*)`)
+	reUnknownCmd     = regexp.MustCompile(`(?s)^unknown command "([^"]*)" for "([^"]*)"(.*)$`)
 )
 
 func translateCobraError(msg string) string {
@@ -36,6 +37,11 @@ func translateCobraError(msg string) string {
 	}
 	if m := reAcceptsAtMost.FindStringSubmatch(msg); m != nil {
 		return fmt.Sprintf("este comando acepta como máximo %s argumento(s), recibió %s", m[1], m[2])
+	}
+	// `cobra.RangeArgs` es la aridad de toda operación con un posicional
+	// opcional, que es justo donde la ayuda recomienda la forma corta.
+	if m := reAcceptsBetween.FindStringSubmatch(msg); m != nil {
+		return fmt.Sprintf("este comando acepta entre %s y %s argumento(s), recibió %s", m[1], m[2], m[3])
 	}
 	if m := reInvalidArg.FindStringSubmatch(msg); m != nil {
 		return fmt.Sprintf("valor inválido %q para %s: %s", m[1], m[2], translateParseError(m[3]))
