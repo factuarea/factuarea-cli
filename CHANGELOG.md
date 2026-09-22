@@ -11,7 +11,7 @@ anteriores (hasta `v0.4.0`) no tienen entrada aquí.
 
 ## [Unreleased]
 
-El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spec/openapi.json` embebe el documento de **481 operaciones** en **396 paths** (digest canónico `6848ec75f3d3b295aa5bfa630cf69e3f9d35a5db4f085f49fe01d9f48d1175a6`) y `internal/cmd/resources_gen.go` se ha regenerado entero desde él.
+El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spec/openapi.json` embebe el documento de **481 operaciones** en **396 paths** (digest canónico `e34a48dd5dd7f3cfc6a878ac06cb7f86f93c207641962fd72b98426f588fcf71`) y `internal/cmd/resources_gen.go` se ha regenerado entero desde él.
 
 ### Cambiado — rotura
 
