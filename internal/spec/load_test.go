@@ -35,9 +35,15 @@ func TestLoadParsesRealSpec(t *testing.T) {
 		t.Error("invoices.list debe detectarse como paginado (starting_after)")
 	}
 
+	// Con el EJE DE EMPRESA, toda operación de un recurso de empresa declara DOS
+	// parámetros de ruta: el eje delante (`/companies/{company}/…`) y el recurso
+	// detrás. El orden importa: es el que el CLI convierte en posicionales.
 	get := by["public-api.v1.invoices.show"]
-	if len(get.PathParams) != 1 || get.PathParams[0].Name == "" {
-		t.Errorf("invoices.show debe tener 1 path param: %+v", get.PathParams)
+	if len(get.PathParams) != 2 {
+		t.Fatalf("invoices.show debe tener 2 path params (eje + recurso): %+v", get.PathParams)
+	}
+	if get.PathParams[0].Name != "company" || get.PathParams[1].Name == "" {
+		t.Errorf("invoices.show debe declarar company delante: %+v", get.PathParams)
 	}
 
 	pdf := by["public-api.v1.invoices.pdf"]

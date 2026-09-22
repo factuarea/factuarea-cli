@@ -16,6 +16,11 @@ type GlobalFlags struct {
 	Verbose                bool
 	Quiet                  bool
 	AllowInsecureTransport bool
+	// Company es el eje de empresa del contrato v1. Es ADITIVO: sólo lo
+	// consumen las operaciones cuyo path declara el parámetro `company`, y
+	// cuando está vacío el binario se comporta exactamente como antes (el
+	// valor se sigue pasando como argumento posicional).
+	Company string
 }
 
 func NewRootCmd() *cobra.Command {
@@ -41,6 +46,10 @@ func NewRootCmd() *cobra.Command {
 	pf.BoolVarP(&g.Verbose, "verbose", "v", false, "salida detallada")
 	pf.BoolVarP(&g.Quiet, "quiet", "q", false, "silencia mensajes informativos")
 	pf.BoolVar(&g.AllowInsecureTransport, "allow-insecure-transport", false, "permite enviar la API key sobre http:// a hosts no-loopback (inseguro)")
+	// Sin enlace a entorno ni a `config.toml`: ese eslabón no existe en esta CLI.
+	// Cuando la flag no se pasa, la cadena de `company.go` resuelve el valor
+	// desde el ámbito de la credencial si alcanza un solo NIF.
+	pf.StringVar(&g.Company, "company", "", "empresa sobre la que operar; rellena el parámetro de ruta {company} y hace opcional su argumento posicional. Si tu credencial alcanza una sola empresa, se deduce sola")
 
 	root.PersistentPreRun = func(cmd *cobra.Command, _ []string) {
 		ctx := context.WithValue(cmd.Context(), globalsKey{}, g)

@@ -20,7 +20,9 @@ func newWhoamiCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			resp, err := cc.client.Do(context.Background(), "GET", "/v1/account", nil, nil)
+			// `identityPath` (en `company.go`): la operación de identidad conserva
+			// su `operationId` entre contratos, pero NO su path.
+			resp, err := cc.client.Do(context.Background(), "GET", identityPath(), nil, nil)
 			if err != nil {
 				output.PrintError(cmd.ErrOrStderr(), err, cc.errorFormat)
 				return &AlreadyReported{Err: err}

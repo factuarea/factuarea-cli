@@ -21,20 +21,26 @@ type manifestField struct {
 }
 
 type manifestEntry struct {
-	Command        string          `json:"command"`
-	Summary        string          `json:"summary"`
-	Args           []string        `json:"args"`
-	Flags          []flagInfo      `json:"flags"`
-	Mutating       bool            `json:"mutating"`
-	Deprecated     bool            `json:"deprecated"`
-	Binary         bool            `json:"binary"`
-	Paginated      bool            `json:"paginated"`
-	Irreversible   bool            `json:"irreversible"`
-	RequiredScope  string          `json:"required_scope,omitempty"`
-	Example        string          `json:"example,omitempty"`
-	BodyFields     []manifestField `json:"body_fields,omitempty"`
-	BodyHasObjects bool            `json:"body_has_object_array,omitempty"`
-	FullReplace    bool            `json:"full_replace,omitempty"`
+	Command string   `json:"command"`
+	Summary string   `json:"summary"`
+	Args    []string `json:"args"`
+	// OptionalArgs enumera los argumentos posicionales que pueden OMITIRSE
+	// porque una flag persistente aporta su valor, mapeando cada uno a la flag
+	// que lo rellena (hoy sólo `company` → `--company`). Va aparte de `Args`
+	// para que el orden y los nombres de los posicionales que un agente ya
+	// consume no cambien; un comando sin eje de empresa no lleva la clave.
+	OptionalArgs   map[string]string `json:"optional_args,omitempty"`
+	Flags          []flagInfo        `json:"flags"`
+	Mutating       bool              `json:"mutating"`
+	Deprecated     bool              `json:"deprecated"`
+	Binary         bool              `json:"binary"`
+	Paginated      bool              `json:"paginated"`
+	Irreversible   bool              `json:"irreversible"`
+	RequiredScope  string            `json:"required_scope,omitempty"`
+	Example        string            `json:"example,omitempty"`
+	BodyFields     []manifestField   `json:"body_fields,omitempty"`
+	BodyHasObjects bool              `json:"body_has_object_array,omitempty"`
+	FullReplace    bool              `json:"full_replace,omitempty"`
 }
 
 func newCommandsCmd() *cobra.Command {
@@ -60,6 +66,9 @@ func newCommandsCmd() *cobra.Command {
 				}
 				for _, p := range op.PathParams {
 					e.Args = append(e.Args, p.Name)
+				}
+				if idx := op.companyPathParamIndex(); idx >= 0 {
+					e.OptionalArgs = map[string]string{op.PathParams[idx].Name: "--company"}
 				}
 				for _, p := range op.QueryParams {
 					e.Flags = append(e.Flags, flagInfo{Name: p.Name, Type: p.Type})

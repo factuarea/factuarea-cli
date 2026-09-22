@@ -8,7 +8,10 @@ import (
 	"github.com/factuarea/factuarea-cli/internal/client"
 )
 
-type fixture func(ctx context.Context, c *client.Client, ov map[string]string) error
+// fixture produce un evento real. `base` es el prefijo del EJE DE EMPRESA
+// (`/v1/companies/<id>`) que resuelve quien invoca: desde el eje, ninguna
+// escritura de la v1 cuelga de una ruta plana.
+type fixture func(ctx context.Context, c *client.Client, base string, ov map[string]string) error
 
 var registry = map[string]fixture{}
 
@@ -21,10 +24,10 @@ func Supported() []string {
 	return out
 }
 
-func Run(ctx context.Context, c *client.Client, event string, ov map[string]string) error {
+func Run(ctx context.Context, c *client.Client, base, event string, ov map[string]string) error {
 	fx, ok := registry[event]
 	if !ok {
 		return fmt.Errorf("evento %q no soportado por trigger. Soportados: %v", event, Supported())
 	}
-	return fx(ctx, c, ov)
+	return fx(ctx, c, base, ov)
 }

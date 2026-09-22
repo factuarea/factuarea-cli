@@ -44,7 +44,7 @@ func newLoginCmd() *cobra.Command {
 				return err
 			}
 			c := client.New(key, opts...)
-			if _, err := c.Do(context.Background(), "GET", "/v1/account", nil, nil); err != nil {
+			if _, err := c.Do(context.Background(), "GET", identityPath(), nil, nil); err != nil {
 				return fmt.Errorf("la key no validó contra la API: %w", err)
 			}
 			store, fallback := config.NewStore()

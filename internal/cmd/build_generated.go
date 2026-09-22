@@ -23,8 +23,17 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	var dryRun, skeleton bool
 	fileFlags := map[string]*string{}
 
+	// `companyFillIndex` —no `companyPathParamIndex`— es lo que manda aquí.
+	companyIdx := op.companyFillIndex()
 	use := op.Action
-	for _, p := range op.PathParams {
+	for i, p := range op.PathParams {
+		// El eje de empresa se declara OPCIONAL en el uso porque la flag
+		// persistente `--company` puede aportarlo; el resto sigue siendo
+		// obligatorio exactamente como antes.
+		if i == companyIdx {
+			use += " [" + p.Name + "]"
+			continue
+		}
 		use += " <" + p.Name + ">"
 	}
 	long := op.Summary
@@ -39,11 +48,42 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 
 	posField, hasPosField := singlePositionalField(op)
 	nPath := len(op.PathParams)
-	argsRule := cobra.ExactArgs(nPath)
+	// La aridad deja de ser exacta en cuanto uno de los posicionales es
+	// opcional: el eje quita uno por abajo y el atajo del campo único de cuerpo
+	// añade uno por arriba. Si algún día coincidieran, `len(args) == nPath`
+	// tendría DOS lecturas y la invocación se RECHAZA nombrando las dos, nunca
+	// se desambigua por la FORMA del argumento. Hoy el universo es vacío:
+	// `singlePositionalField` exige cero parámetros de ruta.
+	minArgs, maxArgs := nPath, nPath
+	if companyIdx >= 0 {
+		minArgs--
+		long += "\n\nPuedes fijar la empresa con la flag persistente --company en vez de" +
+			" pasarla como argumento posicional. Aportarla por las dos vías a la vez es un error de uso." +
+			"\n\nForma canónica:  factuarea " + strings.Join(op.Groups, " ") + " " + use +
+			"\nForma corta:     factuarea " + strings.Join(op.Groups, " ") + " " + shortUsage(op, use, companyIdx) +
+			" --company <" + op.PathParams[companyIdx].Name + ">" +
+			"\nSi tu credencial alcanza una sola empresa, ni siquiera hace falta --company: se resuelve sola."
+	}
 	if hasPosField {
-		argsRule = cobra.RangeArgs(nPath, nPath+1)
+		maxArgs++
 		use += " [" + posField.flagName + "]"
 		long += "\n\nPuedes pasar " + posField.flagName + " como argumento posicional en vez de --" + posField.flagName + "."
+	}
+	var argsRule cobra.PositionalArgs = cobra.ExactArgs(minArgs)
+	if maxArgs != minArgs {
+		argsRule = cobra.RangeArgs(minArgs, maxArgs)
+	}
+	if op.requiresExplicitCompany() {
+		// La aridad exacta ya obliga a escribir el eje; lo que falta es DECIR por
+		// qué, porque el usuario que viene de otra operación del eje espera que
+		// `--company` se lo rellene.
+		base := argsRule
+		argsRule = func(cmd *cobra.Command, args []string) error {
+			if len(args) < nPath {
+				return op.explicitCompanyError()
+			}
+			return base(cmd, args)
+		}
 	}
 
 	c := &cobra.Command{
@@ -53,11 +93,27 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		Args:       UsageArgs(argsRule),
 		Deprecated: deprecatedMsg(op),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if hasPosField && len(args) > nPath {
+			// `--skeleton` y `--dry-run` prometen en su propia ayuda imprimir «sin
+			// llamar a la API».
+			printsOnly := skeleton || (dryRun && op.typedBody())
+			var extra []string
+			if printsOnly {
+				extra = op.extraPositionals(args)
+			} else {
+				// La lista de argumentos se NORMALIZA antes de que nadie la lea.
+				company, err := op.resolveCompanyForArgs(cmd.Context(), globalsFrom(cmd), args)
+				if err != nil {
+					return err
+				}
+				if _, extra, err = op.splitPositionals(args, company); err != nil {
+					return err
+				}
+			}
+			if hasPosField && len(extra) > 0 {
 				if cmd.Flags().Changed(posField.flagName) {
 					return apierr.Usagef("no pases %s como argumento posicional y como --%s a la vez", posField.flagName, posField.flagName)
 				}
-				if err := cmd.Flags().Set(posField.flagName, args[nPath]); err != nil {
+				if err := cmd.Flags().Set(posField.flagName, extra[0]); err != nil {
 					return apierr.Usagef("valor inválido para %s: %v", posField.flagName, err)
 				}
 			}
@@ -82,9 +138,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := validateResourceArgs(op, args); err != nil {
-				return err
-			}
+			// Mismo corte que en `PreRunE`, y por el mismo motivo: la plantilla se
+			// deriva del contrato de la operación, no de la invocación, así que no
+			// necesita empresa, ni path compuesto, ni red.
 			if skeleton && op.typedBody() {
 				out, err := skeletonBody(op)
 				if err != nil {
@@ -92,6 +148,24 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				}
 				fmt.Fprintln(cmd.OutOrStdout(), string(out))
 				return nil
+			}
+			g := globalsFrom(cmd)
+			// Mismo gateo que en `PreRunE`: `--dry-run` imprime el cuerpo compilado y
+			// vuelve, así que no hay path que componer ni empresa que resolver.
+			var pathValues []string
+			if !(dryRun && op.typedBody()) {
+				company, err := op.resolveCompanyForArgs(cmd.Context(), g, args)
+				if err != nil {
+					return err
+				}
+				values, _, serr := op.splitPositionals(args, company)
+				if serr != nil {
+					return serr
+				}
+				if verr := validateResourceArgs(op, values); verr != nil {
+					return verr
+				}
+				pathValues = values
 			}
 			var typedBody []byte
 			if op.typedBody() {
@@ -112,7 +186,6 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					return nil
 				}
 			}
-			g := globalsFrom(cmd)
 			cc, err := newCLIContext(g, "")
 			if err != nil {
 				return err
@@ -133,7 +206,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				}
 			}
 			if op.Irreversible {
-				resourceID := op.confirmResourceID(args)
+				resourceID := op.confirmResourceID(pathValues)
 				if err := safety.Confirm(resourceID, confirmFlag, output.IsTTY(os.Stdin), g.NoInput, func(p string) (string, error) {
 					fmt.Fprint(cmd.ErrOrStderr(), p)
 					line, rerr := bufio.NewReader(cmd.InOrStdin()).ReadString('\n')
@@ -142,7 +215,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					return err
 				}
 			}
-			path := op.buildPath(args)
+			path := op.buildPath(pathValues)
 			q := url.Values{}
 			for _, p := range op.QueryParams {
 				if strings.HasSuffix(p.Name, "[]") {
@@ -205,9 +278,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			}
 			if op.isMutating() && len(bytesTrim(resp.Body)) == 0 {
 				if op.Method == "DELETE" {
-					return writeDeleteConfirmation(cmd, op, args, cc.format)
+					return writeDeleteConfirmation(cmd, op, pathValues, cc.format)
 				}
-				return writeMutationConfirmation(cmd, op, args, cc.format)
+				return writeMutationConfirmation(cmd, op, pathValues, cc.format)
 			}
 			return output.PrintBody(cmd.OutOrStdout(), resp.Body, cc.format)
 		},
@@ -287,4 +360,14 @@ func deprecatedMsg(op genOp) string {
 		return "esta operación está deprecada en la API"
 	}
 	return ""
+}
+
+// shortUsage compone el literal del uso SIN el slot de eje, para enseñar en
+// la ayuda larga la forma corta junto a la canónica.
+func shortUsage(op genOp, use string, companyIdx int) string {
+	if companyIdx < 0 {
+		return use
+	}
+	slot := " [" + op.PathParams[companyIdx].Name + "]"
+	return strings.Replace(use, slot, "", 1)
 }

@@ -22,6 +22,10 @@ func runRoot(t *testing.T, in string, args ...string) (string, error) {
 		root.SetIn(strings.NewReader(in))
 	}
 	root.SetArgs(args)
+	// La resolución automática del eje memoiza POR PROCESO: sin vaciarla, el
+	// ámbito leído por un test se le aplicaría al siguiente.
+	resetCompanyResolution()
+	t.Cleanup(resetCompanyResolution)
 	return out.String(), root.Execute()
 }
 
@@ -125,7 +129,7 @@ func TestInvalidJSONBodyRejectedClientSide(t *testing.T) {
 	t.Cleanup(srv.Close)
 	t.Setenv("FACTUAREA_API_KEY", "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa")
 	t.Setenv("FACTUAREA_BASE_URL", srv.URL)
-	_, err := runRoot(t, "", "contacts", "create", "--skip-scope-check", "-d", "{not json}")
+	_, err := runRoot(t, "", "contacts", "create", "--company", "acme_co", "--skip-scope-check", "-d", "{not json}")
 	if err == nil || !strings.Contains(err.Error(), "JSON inválido") {
 		t.Fatalf("esperaba error de JSON inválido, got %v", err)
 	}
@@ -141,7 +145,7 @@ func TestNonObjectJSONBodyRejected(t *testing.T) {
 	t.Cleanup(srv.Close)
 	t.Setenv("FACTUAREA_API_KEY", "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa")
 	t.Setenv("FACTUAREA_BASE_URL", srv.URL)
-	_, err := runRoot(t, "", "contacts", "create", "--skip-scope-check", "-d", `["a","b"]`)
+	_, err := runRoot(t, "", "contacts", "create", "--company", "acme_co", "--skip-scope-check", "-d", `["a","b"]`)
 	if err == nil || !strings.Contains(err.Error(), "objeto JSON") {
 		t.Fatalf("esperaba rechazo de array, got %v", err)
 	}
@@ -152,7 +156,7 @@ func TestNonObjectJSONBodyRejected(t *testing.T) {
 
 func TestInvalidJSONRejectedInDryRun(t *testing.T) {
 	t.Setenv("FACTUAREA_API_KEY", "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa")
-	_, err := runRoot(t, "", "contacts", "create", "-d", `{"a":1} trailing`, "--dry-run")
+	_, err := runRoot(t, "", "contacts", "create", "--company", "acme_co", "-d", `{"a":1} trailing`, "--dry-run")
 	if err == nil || !strings.Contains(err.Error(), "JSON inválido") {
 		t.Fatalf("--dry-run debe validar el JSON, got %v", err)
 	}
@@ -165,7 +169,7 @@ func TestEmptyResourceIDRejectedClientSide(t *testing.T) {
 	t.Cleanup(srv.Close)
 	t.Setenv("FACTUAREA_API_KEY", "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa")
 	t.Setenv("FACTUAREA_BASE_URL", srv.URL)
-	_, err := runRoot(t, "", "invoices", "show", "   ")
+	_, err := runRoot(t, "", "invoices", "show", "--company", "acme_co", "   ")
 	if err == nil || !strings.Contains(err.Error(), "id del recurso") {
 		t.Fatalf("esperaba rechazo de id vacío, got %v", err)
 	}
@@ -229,7 +233,7 @@ func TestAPIRejectsInvalidMethod(t *testing.T) {
 func TestQuotesPDFWritesToOutputFile(t *testing.T) {
 	pdf := []byte("%PDF-1.7\nfake")
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/v1/account" {
+		if r.URL.Path == identityPath() {
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"data":{"api_key":{"scopes":["*"]}}}`))
 			return
@@ -242,7 +246,7 @@ func TestQuotesPDFWritesToOutputFile(t *testing.T) {
 	t.Setenv("FACTUAREA_BASE_URL", srv.URL)
 
 	dst := filepath.Join(t.TempDir(), "quote.pdf")
-	out, err := runRoot(t, "", "quotes", "pdf", "qt_1", "-o", dst)
+	out, err := runRoot(t, "", "quotes", "pdf", "--company", "acme_co", "qt_1", "-o", dst)
 	if err != nil {
 		t.Fatalf("execute: %v", err)
 	}
@@ -261,7 +265,7 @@ func TestQuotesPDFWritesToOutputFile(t *testing.T) {
 func TestSeriesDefaultExposesDocumentType(t *testing.T) {
 	var gotQuery string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/v1/account" {
+		if r.URL.Path == identityPath() {
 			w.Header().Set("Content-Type", "application/json")
 			_, _ = w.Write([]byte(`{"data":{"api_key":{"scopes":["*"]}}}`))
 			return
@@ -273,7 +277,7 @@ func TestSeriesDefaultExposesDocumentType(t *testing.T) {
 	t.Cleanup(srv.Close)
 	t.Setenv("FACTUAREA_API_KEY", "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa")
 	t.Setenv("FACTUAREA_BASE_URL", srv.URL)
-	if _, err := runRoot(t, "", "series", "default", "--document_type", "invoice", "--json"); err != nil {
+	if _, err := runRoot(t, "", "series", "default", "--company", "acme_co", "--document_type", "invoice", "--json"); err != nil {
 		t.Fatalf("series default debe ser invocable: %v", err)
 	}
 	if !strings.Contains(gotQuery, "document_type=invoice") {
