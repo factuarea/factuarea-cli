@@ -1,7 +1,7 @@
 {
   "$meta": {
-    "source_digest": "95b30ff071c9e3aaf89d603d9c5c6e1075ff13e9d1a7819559c72fbc0a89dcf8",
-    "measured_commit": "93c79ea650",
+    "source_digest": "6848ec75f3d3b295aa5bfa630cf69e3f9d35a5db4f085f49fe01d9f48d1175a6",
+    "measured_commit": "58c6310df4",
     "generated_by": "desde la raiz del repo (factuarea), con el documento congelado en backend/api.json:  python3 -c 'import json;O=\"backend/docs/api/v1-command-tree-manifest.json\";m=json.load(open(O))[\"$meta\"];d=json.load(open(\"backend/api.json\"));M=[\"get\",\"post\",\"put\",\"patch\",\"delete\"];ops=[{\"operation_id\":o[\"operationId\"],\"method\":x.upper(),\"path\":p,\"path_params\":[q[\"name\"] for q in o.get(\"parameters\",[]) if q.get(\"in\")==\"path\"],\"command\":\" \".join([\"factuarea\"]+[s.replace(\"_\",\"-\") for s in o[\"operationId\"].removeprefix(\"public-api.v1.\").split(\".\")])} for p,it in d[\"paths\"].items() for x in M if it.get(x) for o in [it[x]]];m[\"operations\"]=len(ops);m[\"paths\"]=len(d[\"paths\"]);json.dump({\"$meta\":m,\"operations\":ops},open(O,\"w\"),indent=2,ensure_ascii=False);open(O,\"a\").write(\"\\n\")'  -- el programa RECONSTRUYE operations[] desde backend/api.json y CONSERVA literalmente $meta.source_digest, $meta.measured_commit y $meta.generated_by del fichero existente, asi que regenerarlo es idempotente. source_digest es el sha256 CANONICO del documento (parsear -> ordenar claves recursivamente -> descartar x-codeSamples -> serializar sin espacios -> sha256; `canonicalize` de ../factuarea-node/scripts/spec-sync.mjs), NUNCA el sha256 crudo del fichero, que para el mismo contrato cambia con el sangrado. NO EDITAR A MANO: el gate ../factuarea-cli/internal/cmd/axis_tree_test.go compara este manifiesto contra el arbol de comandos de la CLI y re-deriva cada `command` desde su `operation_id`.",
     "operations": 481,
     "paths": 396
