@@ -106,8 +106,29 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 	o.BinaryResponse = buildBinaryResponse(op)
 	o.RequiredScope = stringExt(op.Extensions, "x-required-scope")
 	o.Irreversible = boolExt(op.Extensions, "x-irreversible")
+	o.IdempotencyRequired = idempotencyRequired(op)
 	applyOverrides(&o)
 	return o
+}
+
+// idempotencyRequired detecta el parámetro `in: header`, `name: Idempotency-Key`
+// (sin distinguir mayúsculas) y `required: true`. Es solo informativo: el
+// cliente (`internal/client/client.go`) ya autogenera la cabecera en todo
+// verbo mutador (POST/PUT/PATCH/DELETE), un superconjunto seguro de lo que
+// exige el spec — ver `design.md` D6 y el hallazgo de `anchors/contract.md`.
+func idempotencyRequired(op *v3.Operation) bool {
+	for _, p := range op.Parameters {
+		if p == nil || p.In != "header" {
+			continue
+		}
+		if !strings.EqualFold(p.Name, "Idempotency-Key") {
+			continue
+		}
+		if p.Required != nil && *p.Required {
+			return true
+		}
+	}
+	return false
 }
 
 // Ya no hay lista de correcciones binarias a mano: el spec declara el
@@ -246,7 +267,13 @@ func binaryFields(sc *base.Schema, multiple bool) []string {
 				s = arrayItemSchema(s)
 			}
 			if s != nil && s.Format == "binary" {
-				fields = append(fields, prop.Key())
+				// El backend nombra la propiedad multipart de array con el
+				// sufijo `[]` ya incluido en la clave (p. ej. `files[]`, el
+				// nombre de la PARTE HTTP real, ver `anchors/contract.md`
+				// §1.4). Aquí se guarda el campo pelado: quien construye la
+				// petición (`genop_helpers.go`) es quien vuelve a añadir el
+				// sufijo al formar el nombre de la parte.
+				fields = append(fields, strings.TrimSuffix(prop.Key(), "[]"))
 			}
 		}
 	}

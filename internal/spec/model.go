@@ -14,6 +14,9 @@ type Operation struct {
 	BinaryResponse *BinaryResponse
 	RequiredScope  string // x-required-scope ("" si ausente)
 	Irreversible   bool   // x-irreversible (false si ausente)
+	// IdempotencyRequired: cabecera `Idempotency-Key` requerida por el spec
+	// (parámetro `in: header`, `name: Idempotency-Key`, `required: true`).
+	IdempotencyRequired bool
 }
 
 type Param struct {

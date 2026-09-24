@@ -132,6 +132,122 @@ func TestNonConformingOperationsAreBaseline(t *testing.T) {
 	}
 }
 
+// TestPurchaseScanUploadDeclaresFileArray cubre D5 (`design.md`) para la
+// subida del escáner: el nombre de campo congelado en `anchors/contract.md`
+// §1.4 es `files[]` en la parte HTTP, pero el checkout YA implementaba el
+// array de binarios con una lista separada (`FileArrayFields`, sin el sufijo
+// `[]` en el propio nombre) en vez del sufijo `[]` sobre `FileFields` que
+// describía `design.md` D5 literal (ver `anchors/factuarea-cli.md` "Hallazgo
+// principal"). Este test mide el comportamiento YA shippeado, que sigue
+// siendo D5-compatible (multipart de N ficheros bajo el mismo campo): no lo
+// reescribe a la forma literal del diseño.
+func TestPurchaseScanUploadDeclaresFileArray(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	create := by["public-api.v1.purchase_scans.create"]
+	if create.Body == nil || create.Body.Kind != "multipart" {
+		t.Fatalf("purchase_scans.create debe ser multipart: %+v", create.Body)
+	}
+	if !contains(create.Body.FileArrayFields, "files") {
+		t.Errorf("purchase_scans.create debe declarar FileArrayFields con el campo congelado en anchors/contract.md §1.4 (files, sin el sufijo []): %v", create.Body.FileArrayFields)
+	}
+}
+
+// TestIdempotencyRequiredFromSpec cubre D6 (`design.md`): `IdempotencyRequired`
+// se deriva del parámetro `in: header`, `name: Idempotency-Key`, `required:
+// true`. Es solo informativo — `internal/client/client.go` ya autogenera la
+// cabecera en todo verbo mutador — pero debe reflejar fielmente lo que
+// declara el spec, congelado en `anchors/contract.md` §1.5.
+func TestIdempotencyRequiredFromSpec(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	for _, id := range []string{
+		"public-api.v1.purchase_scans.archive",
+		"public-api.v1.purchase_scans.create",
+		"public-api.v1.purchase_scans.retry",
+		"public-api.v1.purchase_scans.duplicate_resolution",
+		"public-api.v1.purchase_scans.convert",
+		"public-api.v1.purchase_scans.restore",
+		// DELETE ajeno al escáner: la lista completa vive en anchors/contract.md §1.5.
+		"public-api.v1.invoices.delete",
+	} {
+		if op, ok := by[id]; !ok || !op.IdempotencyRequired {
+			t.Errorf("%s debe tener IdempotencyRequired=true", id)
+		}
+	}
+
+	if op := by["public-api.v1.purchase_scans.list"]; op.IdempotencyRequired {
+		t.Error("purchase_scans.list (GET) NO debe tener IdempotencyRequired")
+	}
+	if op := by["public-api.v1.purchase_scans.review"]; op.IdempotencyRequired {
+		t.Error("purchase_scans.review NO debe tener IdempotencyRequired (medido no-requerida en anchors/contract.md §1.5)")
+	}
+}
+
+// TestPurchaseScanOperationsResolve comprueba que las 13 operaciones del
+// escáner resuelven a los grupos y a la acción de la tabla CLI de
+// `design.md` (misma regla que `internal/spec/namespace.go`).
+func TestPurchaseScanOperationsResolve(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	cases := []struct {
+		id     string
+		groups []string
+		action string
+	}{
+		{"public-api.v1.purchase_scans.list", []string{"purchase-scans"}, "list"},
+		{"public-api.v1.purchase_scans.create", []string{"purchase-scans"}, "create"},
+		{"public-api.v1.purchase_scans.stats", []string{"purchase-scans"}, "stats"},
+		{"public-api.v1.purchase_scans.show", []string{"purchase-scans"}, "show"},
+		{"public-api.v1.purchase_scans.source", []string{"purchase-scans"}, "source"},
+		{"public-api.v1.purchase_scans.retry", []string{"purchase-scans"}, "retry"},
+		{"public-api.v1.purchase_scans.review", []string{"purchase-scans"}, "review"},
+		{"public-api.v1.purchase_scans.duplicate_resolution", []string{"purchase-scans"}, "duplicate-resolution"},
+		{"public-api.v1.purchase_scans.convert", []string{"purchase-scans"}, "convert"},
+		{"public-api.v1.purchase_scans.archive", []string{"purchase-scans"}, "archive"},
+		{"public-api.v1.purchase_scans.restore", []string{"purchase-scans"}, "restore"},
+		{"public-api.v1.purchase_scan_emails.list", []string{"purchase-scan-emails"}, "list"},
+		{"public-api.v1.purchase_invoices.expense_categories", []string{"purchase-invoices"}, "expense-categories"},
+	}
+	if len(cases) != 13 {
+		t.Fatalf("tabla de prueba incompleta: %d casos, want 13", len(cases))
+	}
+	for _, c := range cases {
+		op, ok := by[c.id]
+		if !ok {
+			t.Errorf("%s ausente de Load()", c.id)
+			continue
+		}
+		if !reflect.DeepEqual(op.Groups, c.groups) {
+			t.Errorf("%s: Groups = %v, want %v", c.id, op.Groups, c.groups)
+		}
+		if op.Action != c.action {
+			t.Errorf("%s: Action = %q, want %q", c.id, op.Action, c.action)
+		}
+	}
+}
+
 func TestLoadParsesOperationMetadata(t *testing.T) {
 	ops, _, err := Load()
 	if err != nil {
@@ -203,9 +319,13 @@ func TestBodyFieldsScalarEnumNested(t *testing.T) {
 		by[o.OperationID] = o
 	}
 
-	create := by["public-api.v1.clients.create"]
+	// `clients`/`suppliers` se retiran del spec pineado (re-pin desde el
+	// export de `scanner-sdk-cli-spec-sync`, decisión del propietario
+	// 2026-09-24, ver `anchors/contract.md` "Hallazgo crítico"): sustituidos
+	// por `contacts`, que es lo que mide este test desde ahora.
+	create := by["public-api.v1.contacts.create"]
 	if create.Body == nil || len(create.Body.Fields) == 0 {
-		t.Fatalf("clients.create debe tener Body.Fields: %+v", create.Body)
+		t.Fatalf("contacts.create debe tener Body.Fields: %+v", create.Body)
 	}
 	fields := indexFields(create.Body.Fields)
 
@@ -217,17 +337,17 @@ func TestBodyFieldsScalarEnumNested(t *testing.T) {
 		t.Errorf("name no es nullable: %+v", name)
 	}
 
-	terms := fields["payment_terms_days"]
-	if terms == nil || terms.Kind != "scalar" || terms.Type != "integer" || !terms.Nullable {
-		t.Errorf("payment_terms_days debe ser scalar/integer/nullable: %+v", terms)
+	taxID := fields["tax_id"]
+	if taxID == nil || taxID.Kind != "scalar" || taxID.Type != "string" || !taxID.Nullable {
+		t.Errorf("tax_id debe ser scalar/string/nullable: %+v", taxID)
 	}
 
-	pm := fields["payment_method"]
-	if pm == nil || len(pm.Enum) == 0 {
-		t.Fatalf("payment_method debe traer enum: %+v", pm)
+	altIDType := fields["alternative_id_type"]
+	if altIDType == nil || len(altIDType.Enum) == 0 {
+		t.Fatalf("alternative_id_type debe traer enum: %+v", altIDType)
 	}
-	if !contains(pm.Enum, "direct_debit") {
-		t.Errorf("payment_method enum debe incluir direct_debit: %v", pm.Enum)
+	if !contains(altIDType.Enum, "passport") {
+		t.Errorf("alternative_id_type enum debe incluir passport: %v", altIDType.Enum)
 	}
 
 	addr := fields["address"]
@@ -250,8 +370,9 @@ func TestBodyFieldsArraysAndMap(t *testing.T) {
 		by[o.OperationID] = o
 	}
 
-	client := by["public-api.v1.clients.create"]
-	cf := indexFields(client.Body.Fields)
+	// Ver la nota de `TestBodyFieldsScalarEnumNested`: `clients` → `contacts`.
+	contact := by["public-api.v1.contacts.create"]
+	cf := indexFields(contact.Body.Fields)
 
 	emails := cf["billing_emails"]
 	if emails == nil || emails.Kind != "scalar_array" || emails.Type != "string" {

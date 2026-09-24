@@ -2,6 +2,8 @@ package client
 
 import (
 	"context"
+	"mime"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -31,6 +33,51 @@ func TestMultipartBodyMissingFileFails(t *testing.T) {
 	_, _, err := MultipartBody(nil, map[string]string{"certificate_file": "/no/existe/cert.p12"})
 	if err == nil {
 		t.Fatal("esperaba error al abrir fichero inexistente")
+	}
+}
+
+// TestMultipartBodyRepeatedFileField cubre el caso del escáner de compras
+// (`purchase_scans.create`): un array de ficheros se envía como varias partes
+// bajo el MISMO nombre de campo (`files[]`), una por fichero, en el orden
+// recibido (`design.md` D5).
+func TestMultipartBodyRepeatedFileField(t *testing.T) {
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a.pdf")
+	b := filepath.Join(dir, "b.png")
+	_ = os.WriteFile(a, []byte("PDF-BYTES"), 0o600)
+	_ = os.WriteFile(b, []byte("PNG-BYTES"), 0o600)
+
+	body, ct, err := MultipartBody(nil, nil, map[string][]string{"files[]": {a, b}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, params, err := mime.ParseMediaType(ct)
+	if err != nil {
+		t.Fatalf("Content-Type inválido: %v", err)
+	}
+	mr := multipart.NewReader(strings.NewReader(string(body)), params["boundary"])
+
+	var names, filenames []string
+	for {
+		part, err := mr.NextPart()
+		if err != nil {
+			break
+		}
+		names = append(names, part.FormName())
+		filenames = append(filenames, part.FileName())
+	}
+
+	if len(names) != 2 {
+		t.Fatalf("esperaba 2 partes, got %d (%v)", len(names), names)
+	}
+	for _, n := range names {
+		if n != "files[]" {
+			t.Errorf("nombre de campo = %q, want files[] en las 2 partes: %v", n, names)
+		}
+	}
+	if filenames[0] != "a.pdf" || filenames[1] != "b.png" {
+		t.Errorf("filenames = %v, want [a.pdf b.png] (orden recibido)", filenames)
 	}
 }
 

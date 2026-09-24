@@ -62,6 +62,7 @@ type genOp struct {
 	Deprecated                                 bool
 	Irreversible                               bool
 	RequiredScope                              string
+	IdempotencyRequired                        bool
 	Groups                                     []string
 	PathParams, QueryParams                    []genParam
 	Body                                       *genBody
@@ -75,6 +76,7 @@ func generatedOps() []genOp {
 			OperationID: {{q .OperationID}}, Method: {{q .Method}}, Path: {{q .Path}},
 			Action: {{q .Action}}, Summary: {{q .Summary}}, Deprecated: {{.Deprecated}},
 			Irreversible: {{.Irreversible}}, RequiredScope: {{q .RequiredScope}},
+			IdempotencyRequired: {{.IdempotencyRequired}},
 			Groups: []string{ {{range .Groups}}{{q .}}, {{end}} },
 			PathParams: []genParam{ {{range .PathParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },
 			QueryParams: []genParam{ {{range .QueryParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },

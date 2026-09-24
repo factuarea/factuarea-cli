@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/factuarea/factuarea-cli/internal/apierr"
+	"github.com/factuarea/factuarea-cli/internal/client"
 	"github.com/factuarea/factuarea-cli/internal/output"
 	"github.com/factuarea/factuarea-cli/internal/safety"
 	"github.com/spf13/cobra"
@@ -199,6 +200,20 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					headers = map[string]string{}
 				}
 				headers["Idempotency-Key"] = idempotencyKey
+			}
+			// El spec exige `Idempotency-Key` en esta operación y el método no
+			// es POST: `client.Do` ya la autogenera para todo verbo mutador
+			// (POST/PUT/PATCH/DELETE, ver `design.md` D6 y el hallazgo de
+			// `anchors/contract.md`), así que esto es aditivo y nunca pisa una
+			// cabecera ya presente (ni la del flag de arriba, ni una explícita
+			// de `--data`/multipart).
+			if op.IdempotencyRequired && op.Method != "POST" {
+				if headers == nil {
+					headers = map[string]string{}
+				}
+				if _, present := headers["Idempotency-Key"]; !present {
+					headers["Idempotency-Key"] = client.NewIdempotencyKey()
+				}
 			}
 			resp, err := cc.client.Do(context.Background(), op.Method, full, body, headers)
 			if err != nil {
