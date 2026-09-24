@@ -44,11 +44,11 @@ func TestTriggerListShowsSupported(t *testing.T) {
 func TestTriggerClientCreatedHitsAPI(t *testing.T) {
 	var posted bool
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/v1/clients") {
+		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/v1/contacts") {
 			posted = true
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"id":"cli_1"}}`))
+		_, _ = w.Write([]byte(`{"data":{"id":"cnt_1"}}`))
 	}))
 	t.Cleanup(srv.Close)
 
@@ -64,6 +64,6 @@ func TestTriggerClientCreatedHitsAPI(t *testing.T) {
 		t.Fatalf("execute: %v", err)
 	}
 	if !posted {
-		t.Fatal("trigger client.created debe hacer POST /v1/clients")
+		t.Fatal("trigger client.created debe hacer POST /v1/contacts")
 	}
 }

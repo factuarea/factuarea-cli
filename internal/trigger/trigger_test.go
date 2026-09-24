@@ -15,11 +15,11 @@ import (
 func TestRunClientCreated(t *testing.T) {
 	var posted bool
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/v1/clients") {
+		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/v1/contacts") {
 			posted = true
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"id":"cli_1"}}`))
+		_, _ = w.Write([]byte(`{"data":{"id":"cnt_1"}}`))
 	}))
 	defer srv.Close()
 	c := client.New("fact_test_aaaaaaaaaaaaaaaaaaaaaaaa", client.WithBaseURL(srv.URL), client.WithSleep(func(time.Duration) {}))
@@ -27,7 +27,7 @@ func TestRunClientCreated(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !posted {
-		t.Fatal("client.created debe hacer POST /v1/clients")
+		t.Fatal("client.created debe hacer POST /v1/contacts")
 	}
 }
 
@@ -48,8 +48,8 @@ func TestRunInvoicePaidOrchestration(t *testing.T) {
 		calls = append(calls, r.Method+" "+r.URL.Path)
 		w.Header().Set("Content-Type", "application/json")
 		switch {
-		case r.Method == http.MethodGet && r.URL.Path == "/v1/clients":
-			_, _ = w.Write([]byte(`{"data":[{"id":"cli_1"}]}`))
+		case r.Method == http.MethodGet && r.URL.Path == "/v1/contacts":
+			_, _ = w.Write([]byte(`{"data":[{"id":"cnt_1"}]}`))
 		case r.Method == http.MethodGet && r.URL.Path == "/v1/series":
 			_, _ = w.Write([]byte(`{"data":[{"id":"ser_1","is_default":false},{"id":"ser_2","is_default":true}]}`))
 		case r.Method == http.MethodGet && r.URL.Path == "/v1/taxes/active":
@@ -86,7 +86,7 @@ func TestRunInvoicePaidOrchestration(t *testing.T) {
 	if !(createIdx < sentIdx && sentIdx < payIdx) {
 		t.Fatalf("orden esperado crear < mark-sent < mark-paid; calls=%v", calls)
 	}
-	for _, dep := range []string{"GET /v1/clients", "GET /v1/series", "GET /v1/taxes/active"} {
+	for _, dep := range []string{"GET /v1/contacts", "GET /v1/series", "GET /v1/taxes/active"} {
 		idx := indexOf(calls, dep)
 		if idx < 0 || idx > createIdx {
 			t.Fatalf("la dependencia %q debe resolverse antes de crear la factura; calls=%v", dep, calls)

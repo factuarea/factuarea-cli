@@ -57,7 +57,7 @@ func TestRequiredBodyFlagEnforced(t *testing.T) {
 		}
 	}))
 	t.Cleanup(srv.Close)
-	_, err := runCmd(t, srv.URL, "clients", "create", "--skip-scope-check", "--tax-id", "B1")
+	_, err := runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check", "--tax-id", "B1")
 	if err == nil || !strings.Contains(err.Error(), "--name") {
 		t.Fatalf("esperaba campo requerido --name, got %v", err)
 	}
@@ -67,8 +67,8 @@ func TestRequiredBodyFlagEnforced(t *testing.T) {
 }
 
 func TestRequiredBodyFlagSatisfiedByRawData(t *testing.T) {
-	srv := scopedServer(t, []byte(`{"data":{"id":"cli_1"}}`), 200)
-	if _, err := runCmd(t, srv.URL, "clients", "create", "--skip-scope-check", "-d", `{"name":"X"}`, "--json"); err != nil {
+	srv := scopedServer(t, []byte(`{"data":{"id":"cnt_1"}}`), 200)
+	if _, err := runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check", "-d", `{"name":"X"}`, "--json"); err != nil {
 		t.Fatalf("-d con el cuerpo completo debe satisfacer requeridos: %v", err)
 	}
 }
@@ -96,7 +96,7 @@ func TestDataAndDataFileRejected(t *testing.T) {
 		}
 	}))
 	t.Cleanup(srv.Close)
-	_, err := runCmd(t, srv.URL, "clients", "create", "--skip-scope-check", "-d", `{"name":"X"}`, "--data-file", "/tmp/x.json")
+	_, err := runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check", "-d", `{"name":"X"}`, "--data-file", "/tmp/x.json")
 	if err == nil || !strings.Contains(err.Error(), "--data-file") {
 		t.Fatalf("esperaba rechazo de doble fuente de cuerpo, got %v", err)
 	}
@@ -142,7 +142,7 @@ func TestFindByPositionalAndFlagConflict(t *testing.T) {
 
 func TestDeleteEmitsConfirmationJSON(t *testing.T) {
 	srv := scopedServer(t, nil, 204)
-	out, err := runCmd(t, srv.URL, "clients", "delete", "cli_42", "--confirm", "cli_42", "--json")
+	out, err := runCmd(t, srv.URL, "contacts", "delete", "cnt_42", "--confirm", "cnt_42", "--json")
 	if err != nil {
 		t.Fatalf("delete: %v", err)
 	}
@@ -150,7 +150,7 @@ func TestDeleteEmitsConfirmationJSON(t *testing.T) {
 	if jerr := json.Unmarshal([]byte(strings.TrimSpace(out)), &payload); jerr != nil {
 		t.Fatalf("delete --json debe emitir JSON: %q (%v)", out, jerr)
 	}
-	if payload["deleted"] != true || payload["id"] != "cli_42" {
+	if payload["deleted"] != true || payload["id"] != "cnt_42" {
 		t.Fatalf("delete --json debe confirmar {deleted,id}: %v", payload)
 	}
 }
@@ -169,7 +169,7 @@ func TestMutatingDerivedFromScope(t *testing.T) {
 		mutByCmd[e["command"].(string)] = e["mutating"] == true
 	}
 	for _, read := range []string{
-		"factuarea clients find-by-tax-id",
+		"factuarea contacts find-by-tax-id",
 		"factuarea products find-by-sku",
 		"factuarea taxes calculate",
 	} {
@@ -177,13 +177,13 @@ func TestMutatingDerivedFromScope(t *testing.T) {
 			t.Errorf("%q es una lectura (:read), mutating debe ser false", read)
 		}
 	}
-	if !mutByCmd["factuarea clients create"] {
-		t.Error("clients create debe ser mutating")
+	if !mutByCmd["factuarea contacts create"] {
+		t.Error("contacts create debe ser mutating")
 	}
 }
 
 func TestCobraArgErrorTranslated(t *testing.T) {
-	_, err := runCmd(t, "", "clients", "show")
+	_, err := runCmd(t, "", "contacts", "show")
 	if err == nil {
 		t.Fatal("esperaba error de argumentos")
 	}
@@ -205,7 +205,7 @@ func TestNonJSONErrorBodyNormalized(t *testing.T) {
 		_, _ = w.Write([]byte("<html><body>Bad Request: malformed input</body></html>"))
 	}))
 	t.Cleanup(srv.Close)
-	_, err := runCmd(t, srv.URL, "clients", "show", "cli_1")
+	_, err := runCmd(t, srv.URL, "contacts", "show", "cnt_1")
 	if err == nil {
 		t.Fatal("una respuesta de error no-JSON debe producir error")
 	}
@@ -253,7 +253,7 @@ func TestLogoutJSON(t *testing.T) {
 }
 
 func TestPlainFlagRemoved(t *testing.T) {
-	_, err := runCmd(t, "", "clients", "list", "--plain")
+	_, err := runCmd(t, "", "contacts", "list", "--plain")
 	if err == nil || !strings.Contains(err.Error(), "flag desconocido") {
 		t.Fatalf("--plain debe estar retirado (flag desconocido), got %v", err)
 	}

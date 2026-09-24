@@ -125,7 +125,7 @@ func TestInvalidJSONBodyRejectedClientSide(t *testing.T) {
 	t.Cleanup(srv.Close)
 	t.Setenv("FACTUAREA_API_KEY", "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa")
 	t.Setenv("FACTUAREA_BASE_URL", srv.URL)
-	_, err := runRoot(t, "", "clients", "create", "--skip-scope-check", "-d", "{not json}")
+	_, err := runRoot(t, "", "contacts", "create", "--skip-scope-check", "-d", "{not json}")
 	if err == nil || !strings.Contains(err.Error(), "JSON inválido") {
 		t.Fatalf("esperaba error de JSON inválido, got %v", err)
 	}
@@ -141,7 +141,7 @@ func TestNonObjectJSONBodyRejected(t *testing.T) {
 	t.Cleanup(srv.Close)
 	t.Setenv("FACTUAREA_API_KEY", "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa")
 	t.Setenv("FACTUAREA_BASE_URL", srv.URL)
-	_, err := runRoot(t, "", "clients", "create", "--skip-scope-check", "-d", `["a","b"]`)
+	_, err := runRoot(t, "", "contacts", "create", "--skip-scope-check", "-d", `["a","b"]`)
 	if err == nil || !strings.Contains(err.Error(), "objeto JSON") {
 		t.Fatalf("esperaba rechazo de array, got %v", err)
 	}
@@ -152,7 +152,7 @@ func TestNonObjectJSONBodyRejected(t *testing.T) {
 
 func TestInvalidJSONRejectedInDryRun(t *testing.T) {
 	t.Setenv("FACTUAREA_API_KEY", "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa")
-	_, err := runRoot(t, "", "clients", "create", "-d", `{"a":1} trailing`, "--dry-run")
+	_, err := runRoot(t, "", "contacts", "create", "-d", `{"a":1} trailing`, "--dry-run")
 	if err == nil || !strings.Contains(err.Error(), "JSON inválido") {
 		t.Fatalf("--dry-run debe validar el JSON, got %v", err)
 	}

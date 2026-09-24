@@ -13,8 +13,10 @@ import (
 
 func init() {
 	registry["client.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		_, err := c.Do(ctx, http.MethodPost, "/v1/clients", mustJSON(map[string]any{
+		_, err := c.Do(ctx, http.MethodPost, "/v1/contacts", mustJSON(map[string]any{
 			"name":   orDefault(ov, "name", "Cliente de prueba (trigger)"),
+			"kind":   "company",
+			"roles":  []string{"customer"},
 			"tax_id": orDefault(ov, "tax_id", "12345678Z"),
 		}), nil)
 		return err
@@ -132,15 +134,17 @@ func createQuote(ctx context.Context, c *client.Client, ov map[string]string) (s
 }
 
 func ensureClientID(ctx context.Context, c *client.Client) (string, error) {
-	resp, err := c.Do(ctx, http.MethodGet, "/v1/clients?"+url.Values{"limit": {"1"}}.Encode(), nil, nil)
+	resp, err := c.Do(ctx, http.MethodGet, "/v1/contacts?"+url.Values{"limit": {"1"}}.Encode(), nil, nil)
 	if err != nil {
 		return "", err
 	}
 	if id := firstListID(resp.Body); id != "" {
 		return id, nil
 	}
-	created, err := c.Do(ctx, http.MethodPost, "/v1/clients", mustJSON(map[string]any{
+	created, err := c.Do(ctx, http.MethodPost, "/v1/contacts", mustJSON(map[string]any{
 		"name":   "Cliente de prueba (trigger)",
+		"kind":   "company",
+		"roles":  []string{"customer"},
 		"tax_id": "12345678Z",
 	}), nil)
 	if err != nil {

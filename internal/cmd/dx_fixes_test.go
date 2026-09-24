@@ -14,7 +14,7 @@ import (
 func TestFileNotFoundTranslatedAndUsageExit(t *testing.T) {
 	cases := [][]string{{"-d", "@/no/existe.json"}, {"--data-file", "/no/existe.json"}}
 	for _, c := range cases {
-		args := append([]string{"clients", "create"}, c...)
+		args := append([]string{"contacts", "create"}, c...)
 		_, err := runCmd(t, "", args...)
 		if err == nil {
 			t.Fatalf("%v con fichero inexistente debe fallar", c)
@@ -43,7 +43,7 @@ func TestWriteOutputFileTranslatedAndUsageExit(t *testing.T) {
 
 func TestDataFileIsDirectoryTranslated(t *testing.T) {
 	dir := t.TempDir()
-	_, err := runCmd(t, "", "clients", "create", "--data-file", dir)
+	_, err := runCmd(t, "", "contacts", "create", "--data-file", dir)
 	if err == nil || !strings.Contains(err.Error(), "es un directorio") {
 		t.Fatalf("directorio como fichero debe avisar, got %v", err)
 	}
@@ -60,7 +60,7 @@ func TestUnknownCommandTranslatedAtRoot(t *testing.T) {
 }
 
 func TestUnknownSubcommandSuggestsSibling(t *testing.T) {
-	_, err := runCmd(t, "", "clients", "lst")
+	_, err := runCmd(t, "", "contacts", "lst")
 	if err == nil {
 		t.Fatal("subcomando desconocido debe fallar")
 	}
@@ -70,7 +70,7 @@ func TestUnknownSubcommandSuggestsSibling(t *testing.T) {
 }
 
 func TestKeyValueParseErrorTranslated(t *testing.T) {
-	_, err := runCmd(t, "", "clients", "create", "--metadata", "sinformato", "--name", "x", "--dry-run")
+	_, err := runCmd(t, "", "contacts", "create", "--metadata", "sinformato", "--name", "x", "--dry-run")
 	if err == nil || !strings.Contains(err.Error(), "clave=valor") {
 		t.Fatalf("error de map mal formado debe traducirse, got %v", err)
 	}
@@ -106,7 +106,7 @@ func TestNonJSONErrorBodyDoesNotLeakServerHeader(t *testing.T) {
 		_, _ = w.Write([]byte("<html>nginx/1.25.3</html>"))
 	}))
 	t.Cleanup(srv.Close)
-	_, err := runCmd(t, srv.URL, "clients", "show", "cli_1")
+	_, err := runCmd(t, srv.URL, "contacts", "show", "cnt_1")
 	if err == nil || !strings.Contains(err.Error(), "respuesta no-JSON") {
 		t.Fatalf("error no-JSON debe normalizarse, got %v", err)
 	}
