@@ -4129,7 +4129,7 @@
         "/time-corrections/{time_correction}/approve": {
             "post": {
                 "operationId": "public-api.v1.time_corrections.approve",
-                "description": "Approve a pending correction request by its `id` (UUID v7), appending the resolving `correction_entry` linked to the original time entry. An optional `note` from the approver may be supplied. A request that is not pending returns 422 (already resolved), and approving your own request returns 422 (self-approval is forbidden). Returns 200 with the resolved correction.",
+                "description": "Approve a pending correction request by its `id` (UUID v7), appending the resolving `correction_entry` linked to the original time entry. An optional `note` from the approver may be supplied. A request that is not pending returns 422 (already resolved), and approving your own request returns 422 (self-approval is forbidden). Approval checks the employment period again: if the corrected entry falls outside it (for example because `hire_date` was changed after the request), it returns 422 `business_rule_violation` with subcode `clocking_outside_employment_period`, the request stays pending and the ledger is unchanged. Returns 200 with the resolved correction.",
                 "summary": "Approve a time entry correction",
                 "tags": [
                     "Time Corrections"
@@ -4463,7 +4463,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed. The `error.param` field identifies which input is invalid.",
+                        "description": "Validation failed, or the clock entry breaks a time tracking rule. Domain rejections share the code `business_rule_violation` and are told apart by `error.subcode`: `clocking_outside_employment_period` (the resulting entry falls before the employee\u2019s `hire_date` or after their `termination_date`; `error.param` is `occurred_at` and the message names the date that is breached \u2014 nothing is written) or a workday transition that is not allowed, such as `already_clocked_in`. The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -4480,6 +4480,20 @@
                                                 "param": "Idempotency-Key",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_format",
                                                 "request_id": "req_41396d75f05e54b936f804f5e7"
+                                            }
+                                        }
+                                    },
+                                    "clocking_outside_employment_period": {
+                                        "summary": "POST /v1/time-corrections/{time_correction}/approve \u00b7 422 clocking_outside_employment_period",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "business_rule_violation",
+                                                "subcode": "clocking_outside_employment_period",
+                                                "message": "No se puede fichar el 04/05/2026: el empleado est\u00e1 de alta desde el 11/05/2026.",
+                                                "param": "occurred_at",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#business_rule_violation",
+                                                "request_id": "req_800f48e9fb0285135a640885d0"
                                             }
                                         }
                                     }
@@ -5627,6 +5641,8 @@
                                                 ],
                                                 "purchase_invoice_id": null,
                                                 "last_error": null,
+                                                "deferred_until": null,
+                                                "deferred_reason": null,
                                                 "file_revision": 1,
                                                 "extraction_revision": 1,
                                                 "bytes": 48231,
@@ -6086,7 +6102,9 @@
                                                 "issues": [],
                                                 "duplicate": null,
                                                 "attempts": [],
+                                                "attempts_total": 0,
                                                 "audit": [],
+                                                "audit_total": 0,
                                                 "linked_purchase_invoice": null,
                                                 "can_save_review": false,
                                                 "can_convert": false,
@@ -6244,6 +6262,21 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "forbidden_action": {
+                                        "summary": "DELETE /v1/purchase_scans/{purchase_scan} \u00b7 403 forbidden_action",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "forbidden_action",
+                                                "message": "No tienes permiso para realizar esta acci\u00f3n.",
+                                                "doc_url": "https://docs.factuarea.com/errors/forbidden_action",
+                                                "request_id": "req_scanner_example",
+                                                "param": "purchase_scan"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -6360,6 +6393,8 @@
                                                 ],
                                                 "purchase_invoice_id": null,
                                                 "last_error": null,
+                                                "deferred_until": null,
+                                                "deferred_reason": null,
                                                 "file_revision": 1,
                                                 "extraction_revision": 1,
                                                 "bytes": 48231,
@@ -6819,7 +6854,9 @@
                                                 "issues": [],
                                                 "duplicate": null,
                                                 "attempts": [],
+                                                "attempts_total": 0,
                                                 "audit": [],
+                                                "audit_total": 0,
                                                 "linked_purchase_invoice": null,
                                                 "can_save_review": true,
                                                 "can_convert": true,
@@ -9206,7 +9243,7 @@
         "/work-schedules/{schedule}/assign": {
             "post": {
                 "operationId": "public-api.v1.work_schedules.assign",
-                "description": "Assign the work schedule to an employee with an effective start date. `employee_id` (UUID v7, must belong to your company) and `effective_from` (`Y-m-d`) are required. Assigning closes the employee\u2019s previously open assignment and opens the new one (an employee has at most one open assignment; history is preserved). An unknown employee returns 422 `assigned_employee_not_found`; an unknown schedule returns 404. Returns the created assignment.",
+                "description": "Assign the work schedule to an employee with an effective start date. `employee_id` (UUID v7, must belong to your company) and `effective_from` (`Y-m-d`) are required. Assigning closes the employee\u2019s previously open assignment and opens the new one (an employee has at most one open assignment; history is preserved). If that previous assignment has not started yet and the new `effective_from` is on or before its start, it is cancelled instead: it is closed as an empty span (`effective_to` = its `effective_from`), kept in the history and never in effect. Moving back the start of an assignment that is already in effect still returns 422. An unknown employee returns 422 `assigned_employee_not_found`; an unknown schedule returns 404. Returns the created assignment.",
                 "summary": "Assign a schedule to an employee",
                 "tags": [
                     "Work Schedules"
@@ -26005,7 +26042,7 @@
         "/time-entries/clock-in": {
             "post": {
                 "operationId": "public-api.v1.time_entries.clock_in",
-                "description": "Clock the start of an employee\u2019s workday, opening a new work span. `employee_id` (UUID v7) and `source` (`web`/`mobile`) are required; `occurred_at` defaults to the server time. Valid only when the employee is not already clocked in; an invalid transition returns 422 in Spanish. Returns 201 with the created `clock_in` entry.",
+                "description": "Clock the start of an employee\u2019s workday, opening a new work span. `employee_id` (UUID v7) and `source` (`web`/`mobile`) are required; `occurred_at` defaults to the server time. Valid only when the employee is not already clocked in; an invalid transition returns 422 in Spanish. `occurred_at` must fall within the employee\u2019s employment period (from `hire_date` to `termination_date`, both inclusive, compared on the calendar date of `occurred_at` in its own UTC offset); otherwise it returns 422 `business_rule_violation` with subcode `clocking_outside_employment_period` (param `occurred_at`) and a Spanish message naming the hire or termination date, and nothing is written. Pausing, resuming and clocking out of a span that is already open are never blocked by this rule. Returns 201 with the created `clock_in` entry.",
                 "summary": "Clock in an employee",
                 "tags": [
                     "Time Entries"
@@ -26295,7 +26332,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed. The `error.param` field identifies which input is invalid.",
+                        "description": "Validation failed, or the clock entry breaks a time tracking rule. Domain rejections share the code `business_rule_violation` and are told apart by `error.subcode`: `clocking_outside_employment_period` (the resulting entry falls before the employee\u2019s `hire_date` or after their `termination_date`; `error.param` is `occurred_at` and the message names the date that is breached \u2014 nothing is written) or a workday transition that is not allowed, such as `already_clocked_in`. The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -26319,6 +26356,33 @@
                                                 ],
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_value",
                                                 "request_id": "req_cee477cde416d62dc780fe4ecb"
+                                            }
+                                        }
+                                    },
+                                    "clocking_outside_employment_period": {
+                                        "summary": "POST /v1/time-entries/clock-in \u00b7 422 clocking_outside_employment_period",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "business_rule_violation",
+                                                "subcode": "clocking_outside_employment_period",
+                                                "message": "No se puede fichar el 04/05/2026: el empleado est\u00e1 de alta desde el 11/05/2026.",
+                                                "param": "occurred_at",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#business_rule_violation",
+                                                "request_id": "req_209714de530a8e58600cae3c45"
+                                            }
+                                        }
+                                    },
+                                    "already_clocked_in": {
+                                        "summary": "POST /v1/time-entries/clock-in \u00b7 422 already_clocked_in",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "business_rule_violation",
+                                                "subcode": "already_clocked_in",
+                                                "message": "Ya has fichado la entrada.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#business_rule_violation",
+                                                "request_id": "req_64299e2ed8bf4fa8fe6eb856c0"
                                             }
                                         }
                                     }
@@ -26775,7 +26839,7 @@
         "/monthly-time-record-closes": {
             "post": {
                 "operationId": "public-api.v1.monthly_time_record_closes.create",
-                "description": "Freeze the immutable monthly close of the time record register for a finished `(year, month)`: it snapshots each active employee\u2019s balance totals and absence breakdown/balances (reusing the balance contract, never recomputing) and locks the period against retroactive entries and corrections. `year` and `month` (1-12) are required. A month that has not ended yet returns 422 in Spanish; a period already closed returns 409. Reopening a previously reopened period re-closes it, keeping its original `id`. Returns 201 with the created close and a `Location` header.",
+                "description": "Freeze the immutable monthly close of the time record register for a finished `(year, month)`: it snapshots, for every employee whose employment period overlaps the month (hired on or before its last day and not terminated before its first day, whatever their current status), the balance totals and absence breakdown/balances (reusing the balance contract, never recomputing) and locks the period against retroactive entries and corrections. `year` and `month` (1-12) are required. A month that has not ended yet returns 422 in Spanish; a period already closed returns 409. Reopening a previously reopened period re-closes it, keeping its original `id`. Returns 201 with the created close and a `Location` header.",
                 "summary": "Close a monthly time record",
                 "tags": [
                     "Monthly Register Closes"
@@ -29864,6 +29928,8 @@
                                                 ],
                                                 "purchase_invoice_id": "019e0000-0000-7000-8000-000000000050",
                                                 "last_error": null,
+                                                "deferred_until": null,
+                                                "deferred_reason": null,
                                                 "file_revision": 1,
                                                 "extraction_revision": 1,
                                                 "bytes": 48231,
@@ -30323,7 +30389,9 @@
                                                 "issues": [],
                                                 "duplicate": null,
                                                 "attempts": [],
+                                                "attempts_total": 0,
                                                 "audit": [],
+                                                "audit_total": 0,
                                                 "linked_purchase_invoice": {
                                                     "id": "019e0000-0000-7000-8000-000000000050"
                                                 },
@@ -30483,6 +30551,21 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "forbidden_action": {
+                                        "summary": "POST /v1/purchase_scans/{purchase_scan}/convert \u00b7 403 forbidden_action",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "forbidden_action",
+                                                "message": "No tienes permiso para realizar esta acci\u00f3n.",
+                                                "doc_url": "https://docs.factuarea.com/errors/forbidden_action",
+                                                "request_id": "req_scanner_example",
+                                                "param": "purchase_scan"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -55744,6 +55827,20 @@
                                                 "param": "Idempotency-Key",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_format",
                                                 "request_id": "req_008d0bab6f8304807abd926c50"
+                                            }
+                                        }
+                                    },
+                                    "invalid_hire_date": {
+                                        "summary": "POST /v1/employees/{employee}/deactivate \u00b7 422 invalid_hire_date",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "parameter_invalid_value",
+                                                "subcode": "invalid_hire_date",
+                                                "message": "La fecha de baja no puede ser anterior a la fecha de alta.",
+                                                "param": "termination_date",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#parameter_invalid_value",
+                                                "request_id": "req_8e3f41d0b6a27c95e1d4f3a8c2"
                                             }
                                         }
                                     }
@@ -81256,6 +81353,21 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "forbidden_action": {
+                                        "summary": "GET /v1/purchase_scans/{purchase_scan}/source \u00b7 403 forbidden_action",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "forbidden_action",
+                                                "message": "No tienes permiso para realizar esta acci\u00f3n.",
+                                                "doc_url": "https://docs.factuarea.com/errors/forbidden_action",
+                                                "request_id": "req_scanner_example",
+                                                "param": "purchase_scan"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -99769,8 +99881,8 @@
         "/work-schedules/employee/{employee}": {
             "get": {
                 "operationId": "public-api.v1.work_schedules.employee_schedule",
-                "description": "Resolve the work schedule currently in effect (today) for an employee by its `id` (UUID v7). Returns 404 `schedule_assignment_not_found` when the employee has no schedule in effect (or belongs to another company). The result is the resolved schedule (`id` = UUID v7 of the schedule), not the assignment.",
-                "summary": "Get an employee\u2019s current schedule",
+                "description": "Resolve the work schedule in effect for an employee by its `id` (UUID v7) on a given day. The optional `date` query parameter (`Y-m-d`) sets that day and defaults to today, so you can read a schedule that starts in the future, such as the one assigned from a pending hire date. Returns 404 `schedule_assignment_not_found` when the employee has no schedule in effect on that day (or belongs to another company), and 422 when `date` is not a valid `Y-m-d` date. The result is the resolved schedule (`id` = UUID v7 of the schedule), not the assignment.",
+                "summary": "Get an employee\u2019s schedule on a date",
                 "tags": [
                     "Work Schedules"
                 ],
@@ -99782,6 +99894,19 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "description": "Date (Y-m-d) on which the employee's effective schedule is resolved; defaults to today when omitted.",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date"
+                        },
+                        "example": "2026-10-16"
                     },
                     {
                         "$ref": "#/components/parameters/FactuareaVersion"
@@ -100091,6 +100216,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
                     }
                 },
                 "x-speakeasy-group": "workSchedules",
@@ -101059,7 +101187,7 @@
         "/time-balances/employee/{employee}": {
             "get": {
                 "operationId": "public-api.v1.time_balances.employee",
-                "description": "Return the time balance of an arbitrary period of an employee: expected vs worked minutes, the balance and overtime per day, and the period totals. The employee is the `{employee}` (UUID v7) in the path; `from` and `to` (`YYYY-MM-DD`) are required. This is the same contract the monthly close reuses over closed periods. A range where `to` is before `from` returns 422. Totals are in minutes. A computed resource: it exposes `employee_id`, never an `id`.",
+                "description": "Return the time balance of an arbitrary period of an employee: expected vs worked minutes, the balance and overtime per day, and the period totals. The employee is the `{employee}` (UUID v7) in the path; `from` and `to` (`YYYY-MM-DD`) are required. This is the same contract the monthly close reuses over closed periods. Each day carries `is_unscheduled` (within the employment period but with no schedule in effect) and `is_outside_employment` (before `hire_date` or after `termination_date`); on both, expected, balance and overtime are 0 and worked minutes are the minutes actually clocked, so the period balance is the sum of the daily balances. A range where `to` is before `from` returns 422. Totals are in minutes. A computed resource: it exposes `employee_id`, never an `id`.",
                 "summary": "Retrieve an employee\u2019s time balance for a period",
                 "tags": [
                     "Time Balances"
@@ -101131,6 +101259,18 @@
                                                 "total_overtime_minutes": 90,
                                                 "days": [
                                                     {
+                                                        "date": "2026-05-01",
+                                                        "expected_minutes": 0,
+                                                        "worked_minutes": 0,
+                                                        "balance_minutes": 0,
+                                                        "overtime_minutes": 0,
+                                                        "is_holiday": true,
+                                                        "is_approved_absence": false,
+                                                        "is_rest_day": false,
+                                                        "is_unscheduled": false,
+                                                        "is_outside_employment": false
+                                                    },
+                                                    {
                                                         "date": "2026-05-04",
                                                         "expected_minutes": 480,
                                                         "worked_minutes": 510,
@@ -101138,7 +101278,9 @@
                                                         "overtime_minutes": 15,
                                                         "is_holiday": false,
                                                         "is_approved_absence": false,
-                                                        "is_rest_day": false
+                                                        "is_rest_day": false,
+                                                        "is_unscheduled": false,
+                                                        "is_outside_employment": false
                                                     }
                                                 ]
                                             }
@@ -101784,7 +101926,7 @@
         "/invoices/{invoice}/pdf-link": {
             "get": {
                 "operationId": "public-api.v1.invoices.pdf_link",
-                "description": "Returns a temporary URL to the invoice PDF instead of streaming the bytes. Convenient for embedding in emails or messaging apps. Dual contract: 200 with the URL when the PDF is already materialized; 202 with `status: pendiente` when generation was enqueued (the PDF renders on the `pdf` queue) \u2014 retry until you get the 200.",
+                "description": "Returns a temporary signed URL to the invoice PDF instead of streaming the bytes. Convenient for embedding in emails or messaging apps. The URL is signed, needs no API key, only opens this invoice and stops working at `expires_at` (24 h) with 403 \u2014 or earlier with 404 if the invoice or the company branding changes after the PDF was generated: request a new link instead of storing it. Dual contract: 200 with the URL when the PDF is already materialized; 202 with `status: pendiente` when generation was enqueued (the PDF renders on the `pdf` queue) \u2014 retry until you get the 200. The `pdf_url` of the 202 is also signed and answers 404 until the PDF is ready.",
                 "summary": "Generate temporary PDF link",
                 "tags": [
                     "Invoices"
@@ -101807,7 +101949,7 @@
                 ],
                 "responses": {
                     "202": {
-                        "description": "The PDF has not been generated yet: its generation is enqueued and the response reports the `pendiente` status. Retry shortly to obtain the link (200).",
+                        "description": "The PDF has not been generated yet: its generation is enqueued and the response reports the `pendiente` status and a signed `pdf_url` that answers 404 until the PDF is ready. Retry shortly to obtain the link (200).",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -101854,8 +101996,8 @@
                                             "data": {
                                                 "status": "pendiente",
                                                 "document_uuid": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
-                                                "pdf_path": "invoices/01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42.pdf",
-                                                "pdf_url": "https://files.factuarea.com/invoices/01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42.pdf"
+                                                "pdf_path": "pdf-cache/invoice_01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42.pdf",
+                                                "pdf_url": "https://app.factuarea.com/api/pdf/materialized?company=01931b3e-1111-7a2e-9a8b-3c5d6e7f8a01&expires=1773569100&type=invoice&uuid=01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42&signature=3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e1f3b5d7c9a1e3f5b7d9c1a3e5f7b9d1c3a"
                                             },
                                             "message": "La generaci\u00f3n del PDF est\u00e1 en curso. El enlace estar\u00e1 disponible en unos segundos."
                                         }
@@ -101902,7 +102044,7 @@
                         }
                     },
                     "200": {
-                        "description": "The PDF is already materialized: returns a temporary `url` to download it, its `filename` and the `expires_at` of the link.",
+                        "description": "The PDF is already materialized: returns a signed temporary `url` to download it without an API key, its `filename` and the `expires_at` after which the URL answers 403.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -101937,9 +102079,9 @@
                                         "summary": "GET /v1/invoices/{invoice}/pdf-link \u00b7 200",
                                         "value": {
                                             "data": {
-                                                "url": "https://files.factuarea.com/invoices/01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42.pdf",
-                                                "filename": "FAC-2026-00042.pdf",
-                                                "expires_at": "2026-03-15T10:05:00Z"
+                                                "url": "https://app.factuarea.com/api/pdf/materialized?company=01931b3e-1111-7a2e-9a8b-3c5d6e7f8a01&expires=1773569100&type=invoice&uuid=01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42&signature=3f1c9a7e5b2d4c6a8e0f1b3d5c7a9e1f3b5d7c9a1e3f5b7d9c1a3e5f7b9d1c3a",
+                                                "filename": "factura_FAC-2026-00042.pdf",
+                                                "expires_at": "2026-03-15T10:05:00+00:00"
                                             }
                                         }
                                     }
@@ -104408,7 +104550,7 @@
         "/time-balances/monthly-sheet": {
             "get": {
                 "operationId": "public-api.v1.time_balances.monthly_sheet",
-                "description": "Return the live monthly time sheet of an employee for the open (in-progress) period: expected vs worked minutes, the balance and overtime per day, and the monthly totals. `employee_id` (UUID v7) is required; `month` (`YYYY-MM`) defaults to the current month. The sheet is recomputed on every request from the immutable ledger, so a just-recorded clock entry is reflected without closing the month. Expected minutes discount public holidays and approved absences. Totals are in minutes. A computed resource: it exposes `employee_id`, never an `id`.",
+                "description": "Return the live monthly time sheet of an employee for the open (in-progress) period: expected vs worked minutes, the balance and overtime per day, and the monthly totals. `employee_id` (UUID v7) is required; `month` (`YYYY-MM`) defaults to the current month. The sheet is recomputed on every request from the immutable ledger, so a just-recorded clock entry is reflected without closing the month. Expected minutes discount public holidays and approved absences. Each day carries `is_unscheduled` (within the employment period but with no schedule in effect: the minutes actually clocked count as worked, while expected, balance and overtime are 0) and `is_outside_employment` (before `hire_date` or after `termination_date`: expected 0 even if a schedule covers the day). The `total_*` fields cover the whole month, so in the current month they are a projection that already subtracts the expected minutes of today and of the remaining days; `to_date` holds the actual accumulation of the closed days (every day before today) with `through_date`, and is `through_date: null` with zeros when no day has closed yet. Totals are in minutes. A computed resource: it exposes `employee_id`, never an `id`.",
                 "summary": "Retrieve an employee\u2019s monthly time sheet",
                 "tags": [
                     "Time Balances"
@@ -104468,10 +104610,29 @@
                                                 "employee_id": "01933a1f-8c21-7b3d-9e4f-1a2b3c4d5e01",
                                                 "month": "2026-05",
                                                 "total_expected_minutes": 9600,
-                                                "total_worked_minutes": 9720,
-                                                "total_balance_minutes": 120,
-                                                "total_overtime_minutes": 90,
+                                                "total_worked_minutes": 7290,
+                                                "total_balance_minutes": -2310,
+                                                "total_overtime_minutes": 60,
+                                                "to_date": {
+                                                    "through_date": "2026-05-24",
+                                                    "expected_minutes": 7200,
+                                                    "worked_minutes": 7290,
+                                                    "balance_minutes": 90,
+                                                    "overtime_minutes": 60
+                                                },
                                                 "days": [
+                                                    {
+                                                        "date": "2026-05-01",
+                                                        "expected_minutes": 0,
+                                                        "worked_minutes": 0,
+                                                        "balance_minutes": 0,
+                                                        "overtime_minutes": 0,
+                                                        "is_holiday": true,
+                                                        "is_approved_absence": false,
+                                                        "is_rest_day": false,
+                                                        "is_unscheduled": false,
+                                                        "is_outside_employment": false
+                                                    },
                                                     {
                                                         "date": "2026-05-04",
                                                         "expected_minutes": 480,
@@ -104480,7 +104641,21 @@
                                                         "overtime_minutes": 15,
                                                         "is_holiday": false,
                                                         "is_approved_absence": false,
-                                                        "is_rest_day": false
+                                                        "is_rest_day": false,
+                                                        "is_unscheduled": false,
+                                                        "is_outside_employment": false
+                                                    },
+                                                    {
+                                                        "date": "2026-05-25",
+                                                        "expected_minutes": 480,
+                                                        "worked_minutes": 0,
+                                                        "balance_minutes": -480,
+                                                        "overtime_minutes": 0,
+                                                        "is_holiday": false,
+                                                        "is_approved_absence": false,
+                                                        "is_rest_day": false,
+                                                        "is_unscheduled": false,
+                                                        "is_outside_employment": false
                                                     }
                                                 ]
                                             }
@@ -107534,7 +107709,50 @@
                                                 "received": 0,
                                                 "queued": 1,
                                                 "failed": 0,
-                                                "duplicate": 0
+                                                "duplicate": 0,
+                                                "facets": {
+                                                    "by_status": {
+                                                        "received": 0,
+                                                        "queued": 1,
+                                                        "processing": 1,
+                                                        "needs_review": 1,
+                                                        "duplicate": 0,
+                                                        "failed": 0,
+                                                        "auto_created": 0,
+                                                        "created": 0,
+                                                        "archived": 0
+                                                    },
+                                                    "by_source": {
+                                                        "upload": 2,
+                                                        "email": 1,
+                                                        "api": 0
+                                                    },
+                                                    "by_document_kind": {
+                                                        "invoice": 2,
+                                                        "simplified_qualified": 0,
+                                                        "ticket": 1,
+                                                        "delivery_note": 0,
+                                                        "other": 0,
+                                                        "undetermined": 0
+                                                    },
+                                                    "by_file_kind": {
+                                                        "pdf": 2,
+                                                        "image": 1
+                                                    },
+                                                    "by_supplier_link_state": {
+                                                        "linked": 1,
+                                                        "pending_link": 1,
+                                                        "unidentified": 1
+                                                    },
+                                                    "by_supplier": [
+                                                        {
+                                                            "id": "0192f0c4-8d3b-7a61-9b2e-5c4d3e2f1a10",
+                                                            "name": "Suministros Ejemplo SL",
+                                                            "count": 1
+                                                        }
+                                                    ],
+                                                    "with_issues": 1
+                                                }
                                             }
                                         }
                                     }
@@ -107592,11 +107810,60 @@
                         "$ref": "#/components/responses/InternalServerError"
                     },
                     "422": {
-                        "description": "The request could not be validated. Possible `error.code` values: `validation_failed` \u2014 a query parameter is invalid, or a `supplier_id` (or, on the SPA-only surfaces, an uploader) does not belong to the company; `error.param` identifies which one.",
+                        "description": "The request could not be validated. Possible `error.code` values: `invalid_param_value` \u2014 a recognized query parameter has an invalid value.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "invalid_param_value": {
+                                        "summary": "GET /v1/purchase_scans/stats \u00b7 422 invalid_param_value",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "invalid_param_value",
+                                                "message": "El valor del par\u00e1metro de consulta no es v\u00e1lido.",
+                                                "doc_url": "https://docs.factuarea.com/errors/invalid_param_value",
+                                                "request_id": "req_scanner_example",
+                                                "param": "filter[status]"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The operation failed. Possible `error.code` values: `parameter_unknown` \u2014 the query contains a parameter this operation does not accept.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "parameter_unknown": {
+                                        "summary": "GET /v1/purchase_scans/stats \u00b7 400 parameter_unknown",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "parameter_unknown",
+                                                "message": "La consulta incluye un par\u00e1metro no admitido.",
+                                                "doc_url": "https://docs.factuarea.com/errors/parameter_unknown",
+                                                "request_id": "req_scanner_example",
+                                                "param": "filter[unknown]"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -113804,7 +114071,7 @@
         "/time-balances/team-summary": {
             "get": {
                 "operationId": "public-api.v1.time_balances.team_summary",
-                "description": "Return the team time balance summary (manager view) for a month: one row per active employee with their expected, worked, balance and overtime minutes. `month` (`YYYY-MM`) defaults to the current month. Only active employees with a schedule are included. Totals are in minutes. A computed resource with no `id`.",
+                "description": "Return the team time balance summary (manager view) for a month: one row per active employee with their expected, worked, balance and overtime minutes. `month` (`YYYY-MM`) defaults to the current month. Only active employees with a schedule are included. The `total_*` fields of each row cover the whole month (a projection in the current month); each row also carries `to_date`, the accumulation of that employee\u2019s closed days (every day before today), with the same content as their monthly sheet. Totals are in minutes. A computed resource with no `id`.",
                 "summary": "Retrieve the team time balance summary",
                 "tags": [
                     "Time Balances"
@@ -113857,9 +114124,31 @@
                                                         "employee_id": "01933a1f-8c21-7b3d-9e4f-1a2b3c4d5e01",
                                                         "employee_name": "Luc\u00eda Fern\u00e1ndez Ruiz",
                                                         "total_expected_minutes": 9600,
-                                                        "total_worked_minutes": 9720,
-                                                        "total_balance_minutes": 120,
-                                                        "total_overtime_minutes": 90
+                                                        "total_worked_minutes": 7290,
+                                                        "total_balance_minutes": -2310,
+                                                        "total_overtime_minutes": 60,
+                                                        "to_date": {
+                                                            "through_date": "2026-05-24",
+                                                            "expected_minutes": 7200,
+                                                            "worked_minutes": 7290,
+                                                            "balance_minutes": 90,
+                                                            "overtime_minutes": 60
+                                                        }
+                                                    },
+                                                    {
+                                                        "employee_id": "01933a1f-8c21-7b3d-9e4f-1a2b3c4d5e03",
+                                                        "employee_name": "Andr\u00e9s Molina Castro",
+                                                        "total_expected_minutes": 4800,
+                                                        "total_worked_minutes": 3540,
+                                                        "total_balance_minutes": -1260,
+                                                        "total_overtime_minutes": 0,
+                                                        "to_date": {
+                                                            "through_date": "2026-05-24",
+                                                            "expected_minutes": 3600,
+                                                            "worked_minutes": 3540,
+                                                            "balance_minutes": -60,
+                                                            "overtime_minutes": 0
+                                                        }
                                                     }
                                                 ]
                                             }
@@ -132502,6 +132791,14 @@
                         }
                     },
                     {
+                        "name": "result",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "description": "Comma-separated list of email results. Allowed values: pending, processed, partially_processed, no_compatible_attachments, parked, rejected, failed."
+                        }
+                    },
+                    {
                         "name": "created[gte]",
                         "in": "query",
                         "schema": {
@@ -132515,14 +132812,6 @@
                         "schema": {
                             "type": "string",
                             "format": "date"
-                        }
-                    },
-                    {
-                        "name": "result",
-                        "in": "query",
-                        "schema": {
-                            "type": "string",
-                            "description": "Comma-separated list of email results. Allowed values: pending, processed, partially_processed, no_compatible_attachments, parked, rejected, failed."
                         }
                     },
                     {
@@ -132649,11 +132938,60 @@
                         "$ref": "#/components/responses/InternalServerError"
                     },
                     "422": {
-                        "description": "The request could not be validated. Possible `error.code` values: `validation_failed` \u2014 a query parameter is invalid, or a `supplier_id` (or, on the SPA-only surfaces, an uploader) does not belong to the company; `error.param` identifies which one.",
+                        "description": "The request could not be validated. Possible `error.code` values: `invalid_param_value` \u2014 a recognized query parameter has an invalid value.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "invalid_param_value": {
+                                        "summary": "GET /v1/purchase_scan_emails \u00b7 422 invalid_param_value",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "invalid_param_value",
+                                                "message": "El valor del par\u00e1metro de consulta no es v\u00e1lido.",
+                                                "doc_url": "https://docs.factuarea.com/errors/invalid_param_value",
+                                                "request_id": "req_scanner_example",
+                                                "param": "filter[status]"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The operation failed. Possible `error.code` values: `parameter_unknown` \u2014 the query contains a parameter this operation does not accept.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "parameter_unknown": {
+                                        "summary": "GET /v1/purchase_scan_emails \u00b7 400 parameter_unknown",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "parameter_unknown",
+                                                "message": "La consulta incluye un par\u00e1metro no admitido.",
+                                                "doc_url": "https://docs.factuarea.com/errors/parameter_unknown",
+                                                "request_id": "req_scanner_example",
+                                                "param": "filter[unknown]"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -135954,7 +136292,7 @@
             },
             "post": {
                 "operationId": "public-api.v1.time_corrections.create",
-                "description": "Request the correction of a time entry (RD-ley 8/2019). `time_entry_id` (UUID v7 of the entry to correct), `kind` (`add_missing_entry`/`adjust_time`/`remove_entry`), a `reason` and the `proposed` values are required. A correction is a new append-only entry that references the original entry without mutating it (analogous to a corrective invoice); the workflow stays `pending` until a manager approves or rejects it. Returns 201 with the created request and a `Location` header.",
+                "description": "Request the correction of a time entry (RD-ley 8/2019). `time_entry_id` (UUID v7 of the entry to correct), `kind` (`add_missing_entry`/`adjust_time`/`remove_entry`), a `reason` and the `proposed` values are required. A correction is a new append-only entry that references the original entry without mutating it (analogous to a corrective invoice); the workflow stays `pending` until a manager approves or rejects it. An `add_missing_entry` or `adjust_time` correction whose proposed time falls outside the employee\u2019s employment period (before `hire_date` or after `termination_date`) returns 422 `business_rule_violation` with subcode `clocking_outside_employment_period` and no request is created; `remove_entry` is never blocked by this rule. Returns 201 with the created request and a `Location` header.",
                 "summary": "Request a time entry correction",
                 "tags": [
                     "Time Corrections"
@@ -136248,7 +136586,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed. The `error.param` field identifies which input is invalid.",
+                        "description": "Validation failed, or the clock entry breaks a time tracking rule. Domain rejections share the code `business_rule_violation` and are told apart by `error.subcode`: `clocking_outside_employment_period` (the resulting entry falls before the employee\u2019s `hire_date` or after their `termination_date`; `error.param` is `occurred_at` and the message names the date that is breached \u2014 nothing is written) or a workday transition that is not allowed, such as `already_clocked_in`. The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -136272,6 +136610,20 @@
                                                 ],
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_value",
                                                 "request_id": "req_9c611c4e69b6066e0aad03ae9c"
+                                            }
+                                        }
+                                    },
+                                    "clocking_outside_employment_period": {
+                                        "summary": "POST /v1/time-corrections \u00b7 422 clocking_outside_employment_period",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "business_rule_violation",
+                                                "subcode": "clocking_outside_employment_period",
+                                                "message": "No se puede fichar el 04/05/2026: el empleado caus\u00f3 baja el 30/04/2026.",
+                                                "param": "occurred_at",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#business_rule_violation",
+                                                "request_id": "req_1e79251d84e6a5c27f8ebcdf32"
                                             }
                                         }
                                     }
@@ -146980,7 +147332,7 @@
         "/time-entries/manual": {
             "post": {
                 "operationId": "public-api.v1.time_entries.manual",
-                "description": "Record a past work span for an employee (a retroactive manual entry). `employee_id` (UUID v7), `started_at`, `ended_at` and a `reason` are required; optional `pauses` add pause intervals. The entries are stored with `is_retroactive: true` and `source: manual`, and one audit log entry is written. `ended_at` before `started_at`, or a missing reason, returns 422 in Spanish. Returns 201 with the created span\u2019s `clock_out` entry.",
+                "description": "Record a past work span for an employee (a retroactive manual entry). `employee_id` (UUID v7), `started_at`, `ended_at` and a `reason` are required; optional `pauses` add pause intervals. The entries are stored with `is_retroactive: true` and `source: manual`, and one audit log entry is written. `ended_at` before `started_at`, or a missing reason, returns 422 in Spanish. A span that starts or ends outside the employee\u2019s employment period (before `hire_date` or after `termination_date`) returns 422 `business_rule_violation` with subcode `clocking_outside_employment_period` and writes nothing. Returns 201 with the created span\u2019s `clock_out` entry.",
                 "summary": "Record a manual retroactive entry",
                 "tags": [
                     "Time Entries"
@@ -147270,7 +147622,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed. The `error.param` field identifies which input is invalid.",
+                        "description": "Validation failed, or the clock entry breaks a time tracking rule. Domain rejections share the code `business_rule_violation` and are told apart by `error.subcode`: `clocking_outside_employment_period` (the resulting entry falls before the employee\u2019s `hire_date` or after their `termination_date`; `error.param` is `occurred_at` and the message names the date that is breached \u2014 nothing is written) or a workday transition that is not allowed, such as `already_clocked_in`. The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -147294,6 +147646,20 @@
                                                 ],
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_value",
                                                 "request_id": "req_a99fd9d1fd1361a176af273353"
+                                            }
+                                        }
+                                    },
+                                    "clocking_outside_employment_period": {
+                                        "summary": "POST /v1/time-entries/manual \u00b7 422 clocking_outside_employment_period",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "business_rule_violation",
+                                                "subcode": "clocking_outside_employment_period",
+                                                "message": "No se puede fichar el 04/05/2026: el empleado est\u00e1 de alta desde el 11/05/2026.",
+                                                "param": "occurred_at",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#business_rule_violation",
+                                                "request_id": "req_a71dc06a61acac9d5dc65ccc4c"
                                             }
                                         }
                                     }
@@ -153487,6 +153853,8 @@
                                                 ],
                                                 "purchase_invoice_id": "019e0000-0000-7000-8000-000000000050",
                                                 "last_error": null,
+                                                "deferred_until": null,
+                                                "deferred_reason": null,
                                                 "file_revision": 1,
                                                 "extraction_revision": 1,
                                                 "bytes": 48231,
@@ -153946,7 +154314,9 @@
                                                 "issues": [],
                                                 "duplicate": null,
                                                 "attempts": [],
+                                                "attempts_total": 0,
                                                 "audit": [],
+                                                "audit_total": 0,
                                                 "linked_purchase_invoice": {
                                                     "id": "019e0000-0000-7000-8000-000000000050"
                                                 },
@@ -154106,6 +154476,21 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "forbidden_action": {
+                                        "summary": "POST /v1/purchase_scans/{purchase_scan}/duplicate_resolution \u00b7 403 forbidden_action",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "forbidden_action",
+                                                "message": "No tienes permiso para realizar esta acci\u00f3n.",
+                                                "doc_url": "https://docs.factuarea.com/errors/forbidden_action",
+                                                "request_id": "req_scanner_example",
+                                                "param": "purchase_scan"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -154395,7 +154780,7 @@
         "/purchase_scans/{purchase_scan}/restore": {
             "post": {
                 "operationId": "public-api.v1.purchase_scans.restore",
-                "description": "Return an archived scan to its previous state. Check `available_actions` before reviewing or converting; restoring does not recover a purged original. Requires `expected_version`. Accepts `Idempotency-Key`.",
+                "description": "Return an archived scan to its previous restorable state; interrupted processing resumes from `queued`, and interrupted automatic conversion returns to `needs_review`. Check `available_actions` before reviewing or converting; restoring does not recover a purged original. Requires `expected_version`. Accepts `Idempotency-Key`.",
                 "summary": "Restore an archived purchase scan",
                 "tags": [
                     "Purchase Scans"
@@ -154482,6 +154867,8 @@
                                                 ],
                                                 "purchase_invoice_id": null,
                                                 "last_error": null,
+                                                "deferred_until": null,
+                                                "deferred_reason": null,
                                                 "file_revision": 1,
                                                 "extraction_revision": 1,
                                                 "bytes": 48231,
@@ -154941,7 +155328,9 @@
                                                 "issues": [],
                                                 "duplicate": null,
                                                 "attempts": [],
+                                                "attempts_total": 0,
                                                 "audit": [],
+                                                "audit_total": 0,
                                                 "linked_purchase_invoice": null,
                                                 "can_save_review": false,
                                                 "can_convert": false,
@@ -155099,6 +155488,21 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "forbidden_action": {
+                                        "summary": "POST /v1/purchase_scans/{purchase_scan}/restore \u00b7 403 forbidden_action",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "forbidden_action",
+                                                "message": "No tienes permiso para realizar esta acci\u00f3n.",
+                                                "doc_url": "https://docs.factuarea.com/errors/forbidden_action",
+                                                "request_id": "req_scanner_example",
+                                                "param": "purchase_scan"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -156090,6 +156494,8 @@
                                                 ],
                                                 "purchase_invoice_id": null,
                                                 "last_error": null,
+                                                "deferred_until": null,
+                                                "deferred_reason": null,
                                                 "file_revision": 1,
                                                 "extraction_revision": 1,
                                                 "bytes": 48231,
@@ -156549,7 +156955,9 @@
                                                 "issues": [],
                                                 "duplicate": null,
                                                 "attempts": [],
+                                                "attempts_total": 0,
                                                 "audit": [],
+                                                "audit_total": 0,
                                                 "linked_purchase_invoice": null,
                                                 "can_save_review": false,
                                                 "can_convert": false,
@@ -156707,6 +157115,21 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "forbidden_action": {
+                                        "summary": "POST /v1/purchase_scans/{purchase_scan}/retry \u00b7 403 forbidden_action",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "forbidden_action",
+                                                "message": "No tienes permiso para realizar esta acci\u00f3n.",
+                                                "doc_url": "https://docs.factuarea.com/errors/forbidden_action",
+                                                "request_id": "req_scanner_example",
+                                                "param": "purchase_scan"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -156726,6 +157149,20 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "ocr_company_quota_exceeded": {
+                                        "summary": "POST /v1/purchase_scans/{purchase_scan}/retry \u00b7 429 ocr_company_quota_exceeded",
+                                        "value": {
+                                            "error": {
+                                                "type": "rate_limit_error",
+                                                "code": "ocr_company_quota_exceeded",
+                                                "message": "La cuota mensual de lectura de documentos est\u00e1 agotada.",
+                                                "doc_url": "https://docs.factuarea.com/errors/ocr_company_quota_exceeded",
+                                                "request_id": "req_scanner_example"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -161037,7 +161474,7 @@
         "/purchase_scans/{purchase_scan}/review": {
             "put": {
                 "operationId": "public-api.v1.purchase_scans.review",
-                "description": "Persist the human corrections of a scan in `needs_review`: supplier, fiscal header, lines and notes, each field marked as verified. Requires `expected_version`; a stale version responds `409` and the latest version must be reloaded. Returns the updated scan.",
+                "description": "Persist the human corrections of a scan in `needs_review`: supplier, fiscal header, lines and notes, each field marked as verified. Requires `expected_version`; a stale version responds `409` and the latest version must be reloaded. Returns the updated scan. Malformed payloads return `422` before version comparison.",
                 "summary": "Save the review of a purchase scan",
                 "tags": [
                     "Purchase Scans"
@@ -161125,6 +161562,8 @@
                                                 ],
                                                 "purchase_invoice_id": null,
                                                 "last_error": null,
+                                                "deferred_until": null,
+                                                "deferred_reason": null,
                                                 "file_revision": 1,
                                                 "extraction_revision": 1,
                                                 "bytes": 48231,
@@ -161584,7 +162023,9 @@
                                                 "issues": [],
                                                 "duplicate": null,
                                                 "attempts": [],
+                                                "attempts_total": 0,
                                                 "audit": [],
+                                                "audit_total": 0,
                                                 "linked_purchase_invoice": null,
                                                 "can_save_review": true,
                                                 "can_convert": true,
@@ -161742,6 +162183,21 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "forbidden_action": {
+                                        "summary": "PUT /v1/purchase_scans/{purchase_scan}/review \u00b7 403 forbidden_action",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "forbidden_action",
+                                                "message": "No tienes permiso para realizar esta acci\u00f3n.",
+                                                "doc_url": "https://docs.factuarea.com/errors/forbidden_action",
+                                                "request_id": "req_scanner_example",
+                                                "param": "purchase_scan"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -163882,7 +164338,7 @@
         "/purchase_scans": {
             "get": {
                 "operationId": "public-api.v1.purchase_scans.list",
-                "description": "List the documents received by the purchase scanner (upload, API or mailbox) with their lifecycle status, extraction issues and `available_actions`. Filter by `status`, `source` and date range; cursor-based pagination.",
+                "description": "List the documents received by the purchase scanner (upload, API or mailbox) with their lifecycle status, extraction issues and `available_actions`. Use `filter[status]`, `filter[source]` and the documented date/range filters; cursor-based pagination.",
                 "summary": "List purchase scans",
                 "tags": [
                     "Purchase Scans"
@@ -164074,42 +164530,6 @@
                         }
                     },
                     {
-                        "name": "filter[created][]",
-                        "in": "query",
-                        "schema": {
-                            "type": "array",
-                            "format": "date",
-                            "items": {
-                                "type": "string",
-                                "format": "date"
-                            }
-                        }
-                    },
-                    {
-                        "name": "filter[issued_on][]",
-                        "in": "query",
-                        "schema": {
-                            "type": "array",
-                            "format": "date",
-                            "items": {
-                                "type": "string",
-                                "format": "date"
-                            }
-                        }
-                    },
-                    {
-                        "name": "filter[total][]",
-                        "in": "query",
-                        "schema": {
-                            "type": "array",
-                            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d{1,4})?$",
-                            "items": {
-                                "type": "string",
-                                "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d{1,4})?$"
-                            }
-                        }
-                    },
-                    {
                         "name": "filter[source]",
                         "in": "query",
                         "schema": {
@@ -164148,6 +164568,126 @@
                             "type": "string",
                             "description": "Comma-separated list of supplier ids (up to 20).",
                             "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "filter[created][eq]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[created][gt]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[created][gte]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[created][lt]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[created][lte]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[issued_on][eq]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[issued_on][gt]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[issued_on][gte]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[issued_on][lt]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[issued_on][lte]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "filter[total][eq]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d{1,4})?$"
+                        }
+                    },
+                    {
+                        "name": "filter[total][gt]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d{1,4})?$"
+                        }
+                    },
+                    {
+                        "name": "filter[total][gte]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d{1,4})?$"
+                        }
+                    },
+                    {
+                        "name": "filter[total][lt]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d{1,4})?$"
+                        }
+                    },
+                    {
+                        "name": "filter[total][lte]",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d{1,4})?$"
                         }
                     },
                     {
@@ -164219,7 +164759,12 @@
                                                         "download_source"
                                                     ],
                                                     "purchase_invoice_id": null,
-                                                    "last_error": null
+                                                    "last_error": null,
+                                                    "deferred_until": null,
+                                                    "deferred_reason": null,
+                                                    "document_kind": "invoice",
+                                                    "file_kind": "pdf",
+                                                    "supplier_link_state": "linked"
                                                 }
                                             ],
                                             "has_more": false,
@@ -164280,11 +164825,60 @@
                         "$ref": "#/components/responses/InternalServerError"
                     },
                     "422": {
-                        "description": "The request could not be validated. Possible `error.code` values: `validation_failed` \u2014 a query parameter is invalid, or a `supplier_id` (or, on the SPA-only surfaces, an uploader) does not belong to the company; `error.param` identifies which one.",
+                        "description": "The request could not be validated. Possible `error.code` values: `invalid_param_value` \u2014 a recognized query parameter has an invalid value.",
                         "content": {
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "invalid_param_value": {
+                                        "summary": "GET /v1/purchase_scans \u00b7 422 invalid_param_value",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "invalid_param_value",
+                                                "message": "El valor del par\u00e1metro de consulta no es v\u00e1lido.",
+                                                "doc_url": "https://docs.factuarea.com/errors/invalid_param_value",
+                                                "request_id": "req_scanner_example",
+                                                "param": "filter[status]"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "The operation failed. Possible `error.code` values: `parameter_unknown` \u2014 the query contains a parameter this operation does not accept.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "parameter_unknown": {
+                                        "summary": "GET /v1/purchase_scans \u00b7 400 parameter_unknown",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "parameter_unknown",
+                                                "message": "La consulta incluye un par\u00e1metro no admitido.",
+                                                "doc_url": "https://docs.factuarea.com/errors/parameter_unknown",
+                                                "request_id": "req_scanner_example",
+                                                "param": "filter[unknown]"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -164400,6 +164994,8 @@
                                                         ],
                                                         "purchase_invoice_id": null,
                                                         "last_error": null,
+                                                        "deferred_until": null,
+                                                        "deferred_reason": null,
                                                         "file_revision": 1,
                                                         "extraction_revision": 1,
                                                         "bytes": 48231,
@@ -164859,7 +165455,9 @@
                                                         "issues": [],
                                                         "duplicate": null,
                                                         "attempts": [],
+                                                        "attempts_total": 0,
                                                         "audit": [],
+                                                        "audit_total": 0,
                                                         "linked_purchase_invoice": null,
                                                         "can_save_review": false,
                                                         "can_convert": false,
@@ -165022,6 +165620,21 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "forbidden_action": {
+                                        "summary": "POST /v1/purchase_scans \u00b7 403 forbidden_action",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "forbidden_action",
+                                                "message": "No tienes permiso para realizar esta acci\u00f3n.",
+                                                "doc_url": "https://docs.factuarea.com/errors/forbidden_action",
+                                                "request_id": "req_scanner_example",
+                                                "param": "purchase_scan"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         },
@@ -173461,7 +174074,7 @@
             },
             "put": {
                 "operationId": "public-api.v1.employees.update",
-                "description": "Update an employee. Partial update: only fields present in the payload are modified; omitted fields keep their value. `hire_date` is immutable. Returns the updated employee.",
+                "description": "Update an employee. Partial update: only fields present in the payload are modified; omitted fields keep their value. `hire_date` (`Y-m-d`) can be corrected: it must not be later than the employee\u2019s `termination_date` (422 `parameter_invalid_value`, subcode `invalid_hire_date`), and changing it keeps existing time entries and schedule assignments \u2014 entries left outside the new employment period stay in the ledger and are flagged with `is_outside_employment` in the time balances. Returns the updated employee.",
                 "summary": "Update an employee",
                 "tags": [
                     "Employees"
@@ -173819,6 +174432,20 @@
                                                 "param": "Idempotency-Key",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_format",
                                                 "request_id": "req_c568eb9122cb1140079c9590d4"
+                                            }
+                                        }
+                                    },
+                                    "invalid_hire_date": {
+                                        "summary": "PUT /v1/employees/{employee} \u00b7 422 invalid_hire_date",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "parameter_invalid_value",
+                                                "subcode": "invalid_hire_date",
+                                                "message": "La fecha de baja no puede ser anterior a la fecha de alta.",
+                                                "param": "termination_date",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#parameter_invalid_value",
+                                                "request_id": "req_5b1e0c7a92d44f18a3c6e2b07d"
                                             }
                                         }
                                     }
@@ -184146,7 +184773,7 @@
         "/work-schedules/{schedule}/unassign": {
             "post": {
                 "operationId": "public-api.v1.work_schedules.unassign",
-                "description": "Close the employee\u2019s open assignment to this schedule. `employee_id` (UUID v7) is required; `effective_to` (`Y-m-d`) is optional and defaults to today. Returns 404 when there is no open assignment. Responds 204 No Content.",
+                "description": "Close the employee\u2019s open assignment to this schedule. `employee_id` (UUID v7) is required; `effective_to` (`Y-m-d`) is optional and defaults to today. An assignment that has not started yet and is unassigned on or before its start (including the default of today) is cancelled: it is closed as an empty span (`effective_to` = its `effective_from`) and kept in the history. Closing an assignment already in effect on a date before its start returns 422. Returns 404 when there is no open assignment. Responds 204 No Content.",
                 "summary": "Unassign a schedule from an employee",
                 "tags": [
                     "Work Schedules"
@@ -204551,7 +205178,7 @@
             },
             "DayBalance": {
                 "type": "object",
-                "description": "The balance of a single day of the period for the Control Horario (time tracking) module: expected vs worked minutes, the resulting balance (worked \u2212 expected) and the day\u2019s overtime minutes, plus the flags that explain why the expected minutes are zero (holiday, approved absence, rest day).",
+                "description": "The balance of a single day of the period for the Control Horario (time tracking) module: expected vs worked minutes, the resulting balance (worked \u2212 expected) and the day\u2019s overtime minutes, plus the flags that explain why the expected minutes are zero (holiday, approved absence, rest day, no schedule in effect, outside the employment period). The live monthly sheet and the period balance always include `is_unscheduled` and `is_outside_employment`; the frozen daily detail of a monthly close report does not.",
                 "properties": {
                     "date": {
                         "type": "string",
@@ -204564,7 +205191,7 @@
                     },
                     "expected_minutes": {
                         "type": "integer",
-                        "description": "Expected working minutes of the day derived from the schedule (0 on holidays, approved absences and rest days).",
+                        "description": "Expected working minutes of the day derived from the schedule (0 on holidays, approved absences, rest days, days without a schedule in effect and days outside the employment period).",
                         "example": 480,
                         "examples": [
                             480
@@ -204572,7 +205199,7 @@
                     },
                     "worked_minutes": {
                         "type": "integer",
-                        "description": "Worked minutes of the day.",
+                        "description": "Worked minutes of the day. Always the minutes actually clocked, also on days without a schedule in effect or outside the employment period, except under a `validated` schedule, where a scheduled day counts its expected minutes.",
                         "example": 510,
                         "examples": [
                             510
@@ -204580,7 +205207,7 @@
                     },
                     "balance_minutes": {
                         "type": "integer",
-                        "description": "Day balance in minutes (worked \u2212 expected); negative when the employee worked less than expected.",
+                        "description": "Day balance in minutes (worked \u2212 expected); negative when the employee worked less than expected. 0 on days without a schedule in effect or outside the employment period (no reference to compare against).",
                         "example": 30,
                         "examples": [
                             30
@@ -204588,7 +205215,7 @@
                     },
                     "overtime_minutes": {
                         "type": "integer",
-                        "description": "Overtime minutes of the day (worked above the configured threshold, with the tolerance applied).",
+                        "description": "Overtime minutes of the day (worked above the configured threshold, with the tolerance applied). 0 on days without a schedule in effect or outside the employment period: minutes clocked on those days never count as overtime.",
                         "example": 15,
                         "examples": [
                             15
@@ -204613,6 +205240,22 @@
                     "is_rest_day": {
                         "type": "boolean",
                         "description": "Whether the day is a rest day (no shift in the schedule).",
+                        "example": false,
+                        "examples": [
+                            false
+                        ]
+                    },
+                    "is_unscheduled": {
+                        "type": "boolean",
+                        "description": "Whether the day falls within the employment period but no work schedule is in effect for it. Expected, balance and overtime minutes are 0; worked minutes are the minutes actually clocked. Never `true` together with `is_outside_employment`. Absent from the daily detail of a monthly close report.",
+                        "example": false,
+                        "examples": [
+                            false
+                        ]
+                    },
+                    "is_outside_employment": {
+                        "type": "boolean",
+                        "description": "Whether the day is before the employee\u2019s `hire_date` or after their `termination_date`. Expected, balance and overtime minutes are 0 even if a schedule assignment covers the day; clock entries recorded before this rule existed still show as worked minutes. Absent from the daily detail of a monthly close report.",
                         "example": false,
                         "examples": [
                             false
@@ -215061,7 +215704,7 @@
             },
             "MonthlyTimeSheet": {
                 "type": "object",
-                "description": "The live monthly time sheet of an employee for the open (in-progress) period of the Control Horario (time tracking) module. A computed resource with no entity identity: it is keyed by employee + month, so it exposes `employee_id` (UUID v7) and never an `id`. Totals are in minutes; `days` is the daily breakdown. It is recomputed on every request, so a just-recorded clock entry is reflected without closing the month.",
+                "description": "The live monthly time sheet of an employee for the open (in-progress) period of the Control Horario (time tracking) module. A computed resource with no entity identity: it is keyed by employee + month, so it exposes `employee_id` (UUID v7) and never an `id`. Totals are in minutes; `days` is the daily breakdown. It is recomputed on every request, so a just-recorded clock entry is reflected without closing the month. The `total_*` fields cover the whole month and, in the current month, are a projection; `to_date` holds the actual accumulation of the closed days (every day before today).",
                 "properties": {
                     "object": {
                         "type": "string",
@@ -215093,7 +215736,7 @@
                     },
                     "total_expected_minutes": {
                         "type": "integer",
-                        "description": "Total expected working minutes of the month (holidays and approved absences already discounted).",
+                        "description": "Total expected working minutes of the whole month, including today and the remaining days (holidays, approved absences, days without a schedule and days outside the employment period already count as 0).",
                         "example": 9600,
                         "examples": [
                             9600
@@ -215101,34 +215744,37 @@
                     },
                     "total_worked_minutes": {
                         "type": "integer",
-                        "description": "Total worked minutes of the month.",
-                        "example": 9720,
+                        "description": "Total worked minutes of the month so far, today included.",
+                        "example": 7290,
                         "examples": [
-                            9720
+                            7290
                         ]
                     },
                     "total_balance_minutes": {
                         "type": "integer",
-                        "description": "Month balance in minutes (worked \u2212 expected).",
-                        "example": 120,
+                        "description": "Month balance in minutes as the sum of the daily balances. In the current month it is a projection that already subtracts the expected minutes of today and of the remaining days; use `to_date.balance_minutes` for the actual balance.",
+                        "example": -2310,
                         "examples": [
-                            120
+                            -2310
                         ]
                     },
                     "total_overtime_minutes": {
                         "type": "integer",
                         "description": "Total overtime minutes of the month.",
-                        "example": 90,
+                        "example": 60,
                         "examples": [
-                            90
+                            60
                         ]
+                    },
+                    "to_date": {
+                        "$ref": "#/components/schemas/TimeBalanceToDate"
                     },
                     "days": {
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/DayBalance"
                         },
-                        "description": "Daily breakdown of the month."
+                        "description": "Daily breakdown of the month. Each day includes `is_unscheduled` and `is_outside_employment`."
                     }
                 },
                 "required": [
@@ -215139,6 +215785,7 @@
                     "total_worked_minutes",
                     "total_balance_minutes",
                     "total_overtime_minutes",
+                    "to_date",
                     "days"
                 ],
                 "title": "MonthlyTimeSheet"
@@ -219418,7 +220065,7 @@
                     "issue_count": {
                         "type": "integer",
                         "minimum": 0,
-                        "description": "Incidencias pendientes de revisar."
+                        "description": "Number of issues still pending review: one per field, supplier identity counted once, 0 before the first extraction."
                     },
                     "available_actions": {
                         "type": "array",
@@ -219481,6 +220128,24 @@
                             "code",
                             "recoverable",
                             "message"
+                        ]
+                    },
+                    "deferred_until": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "When set, the scan is waiting for the company daily OCR quota to reset; it will be retried automatically."
+                    },
+                    "deferred_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "ocr_daily_quota_reached",
+                            null
                         ]
                     },
                     "file_revision": {
@@ -219921,7 +220586,13 @@
                                 "id",
                                 "status"
                             ]
-                        }
+                        },
+                        "description": "The 50 most recent processing attempts, newest first. `attempts_total` holds how many there are in all."
+                    },
+                    "attempts_total": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Total number of processing attempts, including those not listed in `attempts`."
                     },
                     "audit": {
                         "type": "array",
@@ -219955,7 +220626,13 @@
                                 "id",
                                 "action"
                             ]
-                        }
+                        },
+                        "description": "The 50 most recent audit events, newest first. `audit_total` holds how many there are in all."
+                    },
+                    "audit_total": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "description": "Total number of audit events, including those not listed in `audit`."
                     },
                     "linked_purchase_invoice": {
                         "type": [
@@ -220261,6 +220938,8 @@
                     "available_actions",
                     "purchase_invoice_id",
                     "last_error",
+                    "deferred_until",
+                    "deferred_reason",
                     "file_revision",
                     "extraction_revision",
                     "bytes",
@@ -220272,7 +220951,9 @@
                     "issues",
                     "duplicate",
                     "attempts",
+                    "attempts_total",
                     "audit",
+                    "audit_total",
                     "linked_purchase_invoice",
                     "supplier_resolution",
                     "conversion_readiness",
@@ -220836,7 +221517,7 @@
                     "issue_count": {
                         "type": "integer",
                         "minimum": 0,
-                        "description": "Incidencias pendientes de revisar."
+                        "description": "Number of issues still pending review: one per field, supplier identity counted once, 0 before the first extraction."
                     },
                     "available_actions": {
                         "type": "array",
@@ -220897,6 +221578,24 @@
                             "recoverable"
                         ]
                     },
+                    "deferred_until": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "When set, the scan is waiting for the company daily OCR quota to reset; it will be retried automatically."
+                    },
+                    "deferred_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "ocr_daily_quota_reached",
+                            null
+                        ]
+                    },
                     "document_kind": {
                         "type": "string",
                         "enum": [
@@ -220944,6 +221643,8 @@
                     "available_actions",
                     "purchase_invoice_id",
                     "last_error",
+                    "deferred_until",
+                    "deferred_reason",
                     "document_kind",
                     "file_kind",
                     "supplier_link_state"
@@ -221134,6 +221835,32 @@
                                     "unidentified"
                                 ]
                             },
+                            "by_supplier": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "format": "uuid"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "count": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name",
+                                        "count"
+                                    ]
+                                },
+                                "maxItems": 100,
+                                "description": "Suppliers with at least one linked scan in scope, ordered by count desc then name asc, capped at 100."
+                            },
                             "with_issues": {
                                 "type": "integer",
                                 "minimum": 0
@@ -221145,6 +221872,7 @@
                             "by_document_kind",
                             "by_file_kind",
                             "by_supplier_link_state",
+                            "by_supplier",
                             "with_issues"
                         ]
                     }
@@ -225385,7 +226113,14 @@
                                             "string",
                                             "null"
                                         ],
-                                        "maxLength": 255
+                                        "enum": [
+                                            "corriente",
+                                            "bien_inversion",
+                                            "importacion",
+                                            "intracomunitaria",
+                                            "isp",
+                                            null
+                                        ]
                                     },
                                     "issue_codes": {
                                         "type": "array",
@@ -226334,7 +227069,17 @@
                                                                 "string",
                                                                 "null"
                                                             ],
-                                                            "maxLength": 255
+                                                            "enum": [
+                                                                "E1",
+                                                                "E2",
+                                                                "E3",
+                                                                "E4",
+                                                                "E5",
+                                                                "E6",
+                                                                "N1",
+                                                                "N2",
+                                                                null
+                                                            ]
                                                         },
                                                         "issue_codes": {
                                                             "type": "array",
@@ -227286,7 +228031,17 @@
                                                                 "string",
                                                                 "null"
                                                             ],
-                                                            "maxLength": 255
+                                                            "enum": [
+                                                                "E1",
+                                                                "E2",
+                                                                "E3",
+                                                                "E4",
+                                                                "E5",
+                                                                "E6",
+                                                                "N1",
+                                                                "N2",
+                                                                null
+                                                            ]
                                                         },
                                                         "issue_codes": {
                                                             "type": "array",
@@ -228242,7 +228997,17 @@
                                                                 "string",
                                                                 "null"
                                                             ],
-                                                            "maxLength": 255
+                                                            "enum": [
+                                                                "E1",
+                                                                "E2",
+                                                                "E3",
+                                                                "E4",
+                                                                "E5",
+                                                                "E6",
+                                                                "N1",
+                                                                "N2",
+                                                                null
+                                                            ]
                                                         },
                                                         "issue_codes": {
                                                             "type": "array",
@@ -232613,7 +233378,7 @@
             },
             "TeamTimeBalanceRow": {
                 "type": "object",
-                "description": "A single row of the team time balance summary: the monthly totals of one active employee for the Control Horario (time tracking) module.",
+                "description": "A single row of the team time balance summary: the monthly totals of one active employee for the Control Horario (time tracking) module. The `total_*` fields project the whole month; `to_date` holds the accumulation of the closed days.",
                 "properties": {
                     "employee_id": {
                         "type": "string",
@@ -232634,7 +233399,7 @@
                     },
                     "total_expected_minutes": {
                         "type": "integer",
-                        "description": "Total expected working minutes of the month.",
+                        "description": "Total expected working minutes of the whole month, including today and the remaining days (projection).",
                         "example": 9600,
                         "examples": [
                             9600
@@ -232642,27 +233407,30 @@
                     },
                     "total_worked_minutes": {
                         "type": "integer",
-                        "description": "Total worked minutes of the month.",
-                        "example": 9720,
+                        "description": "Total worked minutes of the month so far, today included.",
+                        "example": 7290,
                         "examples": [
-                            9720
+                            7290
                         ]
                     },
                     "total_balance_minutes": {
                         "type": "integer",
-                        "description": "Month balance in minutes (worked \u2212 expected).",
-                        "example": 120,
+                        "description": "Month balance in minutes as the sum of the daily balances. In the current month it is a projection that already subtracts the expected minutes of today and of the remaining days; use `to_date.balance_minutes` for the actual balance.",
+                        "example": -2310,
                         "examples": [
-                            120
+                            -2310
                         ]
                     },
                     "total_overtime_minutes": {
                         "type": "integer",
                         "description": "Total overtime minutes of the month.",
-                        "example": 90,
+                        "example": 60,
                         "examples": [
-                            90
+                            60
                         ]
+                    },
+                    "to_date": {
+                        "$ref": "#/components/schemas/TimeBalanceToDate"
                     }
                 },
                 "required": [
@@ -232671,13 +233439,14 @@
                     "total_expected_minutes",
                     "total_worked_minutes",
                     "total_balance_minutes",
-                    "total_overtime_minutes"
+                    "total_overtime_minutes",
+                    "to_date"
                 ],
                 "title": "TeamTimeBalanceRow"
             },
             "TeamTimeBalanceSummary": {
                 "type": "object",
-                "description": "The team time balance summary (manager view) for a month for the Control Horario (time tracking) module. A computed resource with no entity identity: it is keyed by company + month and holds one row per active employee with their monthly totals. Totals are in minutes.",
+                "description": "The team time balance summary (manager view) for a month for the Control Horario (time tracking) module. A computed resource with no entity identity: it is keyed by company + month and holds one row per active employee with their monthly totals and their accumulation of the closed days (`to_date`). Totals are in minutes.",
                 "properties": {
                     "object": {
                         "type": "string",
@@ -232773,7 +233542,7 @@
                     },
                     "total_balance_minutes": {
                         "type": "integer",
-                        "description": "Period balance in minutes (worked \u2212 expected).",
+                        "description": "Period balance in minutes as the sum of the daily balances. Days without a schedule in effect or outside the employment period add 0, so it can differ from worked \u2212 expected when minutes were clocked on those days.",
                         "example": 120,
                         "examples": [
                             120
@@ -232792,7 +233561,7 @@
                         "items": {
                             "$ref": "#/components/schemas/DayBalance"
                         },
-                        "description": "Daily breakdown of the period."
+                        "description": "Daily breakdown of the period. Each day includes `is_unscheduled` and `is_outside_employment`."
                     }
                 },
                 "required": [
@@ -232807,6 +233576,64 @@
                     "days"
                 ],
                 "title": "TimeBalance"
+            },
+            "TimeBalanceToDate": {
+                "type": "object",
+                "description": "The month-to-date accumulation of the closed days (every day before today) for the Control Horario (time tracking) module. It is computed from the same daily breakdown as the `total_*` fields, which instead cover the whole month and are a projection: in the current month they already subtract the expected minutes of today and of the remaining days. Today is left out because its workday is still in progress. In a finished month it equals the `total_*` fields; when no day of the month has closed yet (its first day, or a future month), `through_date` is `null` and the four figures are 0.",
+                "properties": {
+                    "through_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date",
+                        "description": "Last closed day included in the accumulation (YYYY-MM-DD), normally yesterday; `null` when no day of the month has closed yet.",
+                        "example": "2026-05-24",
+                        "examples": [
+                            "2026-05-24"
+                        ]
+                    },
+                    "expected_minutes": {
+                        "type": "integer",
+                        "description": "Expected working minutes of the closed days.",
+                        "example": 7200,
+                        "examples": [
+                            7200
+                        ]
+                    },
+                    "worked_minutes": {
+                        "type": "integer",
+                        "description": "Worked minutes of the closed days.",
+                        "example": 7290,
+                        "examples": [
+                            7290
+                        ]
+                    },
+                    "balance_minutes": {
+                        "type": "integer",
+                        "description": "Balance of the closed days in minutes: the sum of the daily `balance_minutes`, so days without a schedule or outside the employment period add 0.",
+                        "example": 90,
+                        "examples": [
+                            90
+                        ]
+                    },
+                    "overtime_minutes": {
+                        "type": "integer",
+                        "description": "Overtime minutes of the closed days.",
+                        "example": 60,
+                        "examples": [
+                            60
+                        ]
+                    }
+                },
+                "required": [
+                    "through_date",
+                    "expected_minutes",
+                    "worked_minutes",
+                    "balance_minutes",
+                    "overtime_minutes"
+                ],
+                "title": "TimeBalanceToDate"
             },
             "TimeCorrection": {
                 "type": "object",
@@ -235019,6 +235846,11 @@
                     "contract_hours": {
                         "type": "number",
                         "description": "Weekly contracted hours (greater than 0 and up to 168)."
+                    },
+                    "hire_date": {
+                        "type": "string",
+                        "format": "date",
+                        "description": "Hire date of the employee (`Y-m-d`). Must not be later than the termination date; changing it keeps existing time entries and schedule assignments."
                     },
                     "ccaa": {
                         "type": "string",
@@ -249218,6 +250050,81 @@
                     }
                 }
             },
+            "UnprocessableEntityTimeTracking": {
+                "description": "Validation failed, or the clock entry breaks a time tracking rule. Domain rejections share the code `business_rule_violation` and are told apart by `error.subcode`: `clocking_outside_employment_period` (the resulting entry falls before the employee\u2019s `hire_date` or after their `termination_date`; `error.param` is `occurred_at` and the message names the date that is breached \u2014 nothing is written) or a workday transition that is not allowed, such as `already_clocked_in`. The `error.param` field identifies which input is invalid, if any.",
+                "content": {
+                    "application/json": {
+                        "schema": {
+                            "$ref": "#/components/schemas/Error"
+                        },
+                        "examples": {
+                            "parameter_invalid": {
+                                "summary": "Parameter failed validation",
+                                "value": {
+                                    "error": {
+                                        "type": "invalid_request_error",
+                                        "code": "parameter_invalid",
+                                        "message": "El campo `name` es obligatorio y no puede estar vac\u00edo.",
+                                        "param": "name",
+                                        "doc_url": "https://docs.factuarea.com/guides/errors#parameter_invalid",
+                                        "request_id": "req_01HKQS5NGS8Z3T6Q1D2E7FYVSI"
+                                    }
+                                }
+                            },
+                            "invalid_idempotency_key_format": {
+                                "summary": "Invalid Idempotency-Key format",
+                                "value": {
+                                    "error": {
+                                        "type": "invalid_request_error",
+                                        "code": "invalid_param_format",
+                                        "message": "La Idempotency-Key debe tener entre 1 y 64 caracteres ASCII printable.",
+                                        "param": "Idempotency-Key",
+                                        "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_format",
+                                        "request_id": "req_01HKQS5NIDEMPKEYFORMAT0007"
+                                    }
+                                }
+                            },
+                            "clocking_outside_employment_period": {
+                                "summary": "Clock entry outside the employment period",
+                                "value": {
+                                    "error": {
+                                        "type": "invalid_request_error",
+                                        "code": "business_rule_violation",
+                                        "subcode": "clocking_outside_employment_period",
+                                        "message": "No se puede fichar el 04/05/2026: el empleado est\u00e1 de alta desde el 11/05/2026.",
+                                        "param": "occurred_at",
+                                        "doc_url": "https://docs.factuarea.com/guides/errors#business_rule_violation",
+                                        "request_id": "req_01HKQS5NTIMEOUTSIDEMPLOY01"
+                                    }
+                                }
+                            },
+                            "already_clocked_in": {
+                                "summary": "Employee already clocked in",
+                                "value": {
+                                    "error": {
+                                        "type": "invalid_request_error",
+                                        "code": "business_rule_violation",
+                                        "subcode": "already_clocked_in",
+                                        "message": "Ya has fichado la entrada.",
+                                        "param": null,
+                                        "doc_url": "https://docs.factuarea.com/guides/errors#business_rule_violation",
+                                        "request_id": "req_01HKQS5NTIMEALREADYCLOCK02"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "headers": {
+                    "X-Request-Id": {
+                        "description": "Unique request identifier, propagated for log correlation and support.",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                }
+            },
             "TooManyRequests": {
                 "description": "Rate limit exceeded. Retry after the duration in `Retry-After`.",
                 "content": {
@@ -249848,8 +250755,9 @@
             },
             "employee_update": {
                 "summary": "Update employee (partial)",
-                "description": "Edici\u00f3n parcial (PATCH): solo los campos presentes se modifican. `hire_date` no es editable.",
+                "description": "Actualizaci\u00f3n parcial con `PUT`: solo los campos presentes se modifican. `hire_date` (`Y-m-d`) corrige la fecha de alta; no puede ser posterior a `termination_date` (422 `parameter_invalid_value`, subcode `invalid_hire_date`) y cambiarla no borra fichajes ni asignaciones de horario.",
                 "value": {
+                    "hire_date": "2026-01-12",
                     "job_title": "Analista senior de datos",
                     "contract_hours": 38,
                     "external_id": "EMP-1042",
@@ -250116,7 +251024,7 @@
             },
             "work_schedule_assign": {
                 "summary": "Assign schedule to an employee",
-                "description": "Asigna el horario a un empleado con vigencia efectivo-datada. `employee_id` (UUID v7) y `effective_from` (`Y-m-d`).",
+                "description": "Asigna el horario a un empleado con vigencia efectivo-datada. `employee_id` (UUID v7) y `effective_from` (`Y-m-d`). Si la asignaci\u00f3n abierta previa a\u00fan no ha empezado y la nueva empieza antes o el mismo d\u00eda, la previa se anula en vez de devolver 422.",
                 "value": {
                     "employee_id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b01",
                     "effective_from": "2026-06-01"
@@ -250124,7 +251032,7 @@
             },
             "work_schedule_unassign": {
                 "summary": "Unassign schedule from an employee",
-                "description": "Cierra la asignaci\u00f3n abierta del horario a un empleado. `effective_to` (`Y-m-d`) es opcional; si se omite, la fecha de hoy.",
+                "description": "Cierra la asignaci\u00f3n abierta del horario a un empleado. `effective_to` (`Y-m-d`) es opcional; si se omite, la fecha de hoy. Si la asignaci\u00f3n a\u00fan no ha empezado y `effective_to` es anterior o igual a su inicio, se anula (queda en el historial como tramo vac\u00edo) en vez de devolver 422.",
                 "value": {
                     "employee_id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b01",
                     "effective_to": "2026-06-30"
