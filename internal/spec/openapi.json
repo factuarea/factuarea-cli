@@ -190955,6 +190955,555 @@
                 "x-required-scope": "invoices:void",
                 "x-irreversible": true
             }
+        },
+        "/invoices/{invoice}/issue": {
+            "post": {
+                "operationId": "public-api.v1.invoices.issue",
+                "description": "Issues a draft invoice without sending it: assigns its definitive series number, freezes the issuer and customer snapshots, sets `issued_at`, registers the VeriFactu record when applicable and emits the `invoice.issued` event. No email is sent and the delivery mark is not set (`is_sent` stays `false`); to deliver it use `POST /v1/invoices/{id}/send`, or `POST /v1/invoices/{id}/mark-sent` with `Factuarea-Version: 2026-10-01` when you delivered it through another channel. Only a `draft` can be issued: any other status returns 422 `invalid_status_transition`. Issuing is irreversible and consumes a series number, so send an `Idempotency-Key` to retry safely. Available in every API version; the response follows the effective version (before `2026-10-01` the issued invoice is published as `status: sent`).",
+                "summary": "Issue an invoice",
+                "tags": [
+                    "Invoices"
+                ],
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "description": "Client-generated opaque key (up to 255 characters; UUID v7 recommended) that makes retries safe: the first response is cached and replayed for repeats without re-executing the mutation. Reusing a key with a different body returns `409 idempotency_key_reused`. See the [Idempotency guide](/guides/idempotency). **Required on this operation**: repeating it delivers an effect that cannot be taken back (an email sent, a file generated, a third-party call, a charge), so a request without this header is rejected with `422 idempotency_key_required` before any business logic runs.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255,
+                            "example": "01928f10-7c0e-7c4a-9b7d-2f8a6e3c1d4b"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Invoice"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                },
+                                "examples": {
+                                    "success": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 200",
+                                        "value": {
+                                            "data": {
+                                                "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
+                                                "object": "invoice",
+                                                "number": "FAC-2026-00042",
+                                                "is_number_assigned": true,
+                                                "type": "F1",
+                                                "series": {
+                                                    "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b02",
+                                                    "code": "FAC-2026"
+                                                },
+                                                "client": {
+                                                    "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a01",
+                                                    "name": "Acme Soluciones SL"
+                                                },
+                                                "status": "issued",
+                                                "price_list_id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b10",
+                                                "price_list_name": "Tarifa profesional 2026",
+                                                "issued_on": "2026-03-15",
+                                                "due_on": "2026-04-14",
+                                                "subtotal": 1000,
+                                                "taxes_total": 210,
+                                                "total_vat": 210,
+                                                "total_retention": 0,
+                                                "total_surcharge": 0,
+                                                "total": 1210,
+                                                "total_disbursements": 0,
+                                                "total_to_pay": 1210,
+                                                "currency": "EUR",
+                                                "notes": "Servicios profesionales marzo 2026.",
+                                                "external_id": "ERP-2026-0042",
+                                                "lines": [
+                                                    {
+                                                        "object": "invoice_line",
+                                                        "description": "Consultor\u00eda t\u00e9cnica (10 h)",
+                                                        "additional_description": "Auditor\u00eda inicial e informe de mejoras",
+                                                        "product": {
+                                                            "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b03",
+                                                            "name": "Consultor\u00eda t\u00e9cnica (hora)"
+                                                        },
+                                                        "quantity": 10,
+                                                        "unit_price": 100,
+                                                        "tax_rate": 21,
+                                                        "retention_rate": 0,
+                                                        "surcharge_rate": 0,
+                                                        "discount_percent": 0,
+                                                        "subtotal": 1000,
+                                                        "taxes": 210,
+                                                        "total": 1210,
+                                                        "indirect_tax_regime": "iva",
+                                                        "variant": null,
+                                                        "presentation": null,
+                                                        "item_kind": "service",
+                                                        "commercial_unit_code": "HUR",
+                                                        "base_unit_code": "HUR",
+                                                        "conversion_factor": "1.000000",
+                                                        "base_quantity": "10.0000",
+                                                        "price_list_id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b10",
+                                                        "price_list_name": "Tarifa profesional 2026",
+                                                        "price_source": "price_list",
+                                                        "price_unit_code": "HUR",
+                                                        "configuration": null,
+                                                        "options": [],
+                                                        "price_semantics": "per_commercial_unit",
+                                                        "price_adjustment_total": "0.0000",
+                                                        "option_adjustments_absorbed": false,
+                                                        "regime_key": null,
+                                                        "exemption_reason": null,
+                                                        "aeat_tax_code": "S1",
+                                                        "line_type": "NORMAL",
+                                                        "source_invoice_reference": null,
+                                                        "source_invoice_ids": null,
+                                                        "unit": null,
+                                                        "exemption_reason_text": null
+                                                    }
+                                                ],
+                                                "metadata": {
+                                                    "order_id": "PO-2026-0042"
+                                                },
+                                                "tags": [
+                                                    "consultoria",
+                                                    "cliente-vip"
+                                                ],
+                                                "custom_fields": [
+                                                    {
+                                                        "field": "centro_coste",
+                                                        "value": "CC-2026-001"
+                                                    },
+                                                    {
+                                                        "field": "numero_pedido",
+                                                        "value": "PO-2026-0042"
+                                                    }
+                                                ],
+                                                "operation_regime": "general",
+                                                "exemption_reason": null,
+                                                "legal_mentions": [],
+                                                "exclude_347": false,
+                                                "verifactu_status": "not_applicable",
+                                                "paid_amount": 0,
+                                                "pending_amount": 1210,
+                                                "payments": {
+                                                    "detail": [],
+                                                    "total": 0,
+                                                    "pending": 1210
+                                                },
+                                                "is_corrective": false,
+                                                "corrective": null,
+                                                "payment": null,
+                                                "public_link": {
+                                                    "object": "public_link",
+                                                    "url": "https://app.factuarea.com/d/01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
+                                                    "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
+                                                    "enabled": true,
+                                                    "expires_at": "2026-09-15T23:59:59Z",
+                                                    "max_days": 120
+                                                },
+                                                "substituted_by": null,
+                                                "recurring": null,
+                                                "paid_at": null,
+                                                "paid_on": null,
+                                                "issued_at": "2026-03-15T11:45:00Z",
+                                                "sent_at": null,
+                                                "sent_via": null,
+                                                "is_sent": false,
+                                                "voided_at": null,
+                                                "void_reason": null,
+                                                "scheduled_for": null,
+                                                "scheduled_action": null,
+                                                "channel": null,
+                                                "source_store_id": null,
+                                                "created_at": "2026-03-15T11:30:00Z",
+                                                "updated_at": "2026-03-15T11:45:00Z"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds). Omitted when the API key has no cap (unlimited tier).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            },
+                            "Idempotent-Replayed": {
+                                "description": "Present with value `\"true\"` only when this response was replayed from the idempotency cache for a repeated `Idempotency-Key` (same key, same request fingerprint). Absent on the first, freshly executed request.",
+                                "schema": {
+                                    "type": "string",
+                                    "examples": [
+                                        "true"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "missing_api_key": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 401 missing_api_key",
+                                        "value": {
+                                            "error": {
+                                                "type": "authentication_error",
+                                                "code": "missing_api_key",
+                                                "message": "Falta header Authorization o X-API-Key.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#missing_api_key",
+                                                "request_id": "req_8ab20dc56100cea62cad744353"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The API key lacks the required scope for this operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "insufficient_scope": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 403 insufficient_scope",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "insufficient_scope",
+                                                "message": "Esta operaci\u00f3n requiere el scope 'invoices:write'. Tu API key solo tiene los scopes: ninguno.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#insufficient_scope",
+                                                "request_id": "req_b1b65e5b74360faf5b3d5f4f8f"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded. Retry after the duration in `Retry-After`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "rate_limit_exceeded": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 429 rate_limit_exceeded",
+                                        "value": {
+                                            "error": {
+                                                "type": "rate_limit_error",
+                                                "code": "rate_limit_exceeded",
+                                                "message": "Has excedido el l\u00edmite de requests permitido. Reintenta m\u00e1s tarde.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#rate_limit_exceeded",
+                                                "request_id": "req_25132af59081a0301d5c3e763b"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Number of seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "RateLimit-Limit": {
+                                "description": "Request quota for the current window (RFC 9331).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "RateLimit-Remaining": {
+                                "description": "Remaining requests in the current window (RFC 9331).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "RateLimit-Reset": {
+                                "description": "Seconds until the quota window resets (RFC 9331).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Request quota for the current window (legacy header).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Remaining requests in the current window (legacy header).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Seconds until the quota window resets (legacy header).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "internal_error": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 500 internal_error",
+                                        "value": {
+                                            "error": {
+                                                "type": "api_error",
+                                                "code": "internal_error",
+                                                "message": "Algo se rompi\u00f3 en nuestro lado al procesar la petici\u00f3n. La condici\u00f3n no la provoca tu payload.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#internal_error",
+                                                "request_id": "req_c68f63f42b39f9d6bd4a17d5ec"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The requested resource does not exist or belongs to another company.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "invoice_not_found": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 404 invoice_not_found",
+                                        "value": {
+                                            "error": {
+                                                "type": "not_found_error",
+                                                "code": "invoice_not_found",
+                                                "message": "Factura no encontrada.",
+                                                "param": "invoice_uuid",
+                                                "subcode": "invoice_not_found",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#invoice_not_found",
+                                                "request_id": "req_d918c4160693bfdb8384227243"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed, or the invoice cannot undergo the requested state transition (e.g. marking an already-paid invoice as paid, or editing an issued invoice \u2014 use a corrective instead). The `error.param` field identifies which input is invalid, if any.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "invalid_status_transition": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 422 invalid_status_transition",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "invalid_status_transition",
+                                                "message": "Transici\u00f3n de estado inv\u00e1lida: de 'issued' a 'issued'",
+                                                "subcode": "invoice_invalid_status_transition",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#invalid_status_transition",
+                                                "request_id": "req_be0f79397919ac81909f69cb2c"
+                                            }
+                                        }
+                                    },
+                                    "invalid_param_format": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 422 invalid_param_format",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "invalid_param_format",
+                                                "message": "La Idempotency-Key debe tener entre 1 y 255 caracteres ASCII printable.",
+                                                "param": "Idempotency-Key",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_format",
+                                                "request_id": "req_fbb1bf145eb2cb2121c7214e31"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "The invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-paid invoice as paid), an attempt to edit an issued invoice (use corrective instead), or a reused idempotency key.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "idempotency_key_reused": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 409 idempotency_key_reused",
+                                        "value": {
+                                            "error": {
+                                                "type": "idempotency_error",
+                                                "code": "idempotency_key_reused",
+                                                "message": "Esa `Idempotency-Key` ya se us\u00f3 con un payload distinto. La clave identifica una operaci\u00f3n concreta, as\u00ed que reutilizarla para otra vaciar\u00eda de sentido el replay.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#idempotency_key_reused",
+                                                "request_id": "req_0c1499462f7d8162cb802b8497"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-speakeasy-group": "invoices",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "invoices:write",
+                "x-irreversible": true
+            }
         }
     },
     "components": {
@@ -212973,7 +213522,7 @@
                     },
                     "is_number_assigned": {
                         "type": "boolean",
-                        "description": "Whether the invoice has a definitive number assigned. `false` for drafts (where `number` is `null`); becomes `true` after `POST /v1/invoices/{uuid}/assign-real-number`, or automatically on send/payment.",
+                        "description": "Whether the invoice has a definitive number assigned. `false` for drafts (where `number` is `null`); becomes `true` after `POST /v1/invoices/{uuid}/assign-real-number`, or automatically when the invoice is issued.",
                         "example": true,
                         "examples": [
                             true
@@ -212995,7 +213544,18 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "Invoice lifecycle status.",
+                        "enum": [
+                            "draft",
+                            "scheduled",
+                            "issued",
+                            "paid",
+                            "partially_paid",
+                            "overdue",
+                            "cancelled",
+                            "annulled",
+                            "sent"
+                        ],
+                        "description": "Public invoice status. `issued` means the invoice has been ISSUED (definitive number, VeriFactu record); it says nothing about delivery, which lives in `is_sent`/`sent_at`/`sent_via`. `paid` and `partially_paid` are derived from the payment ledger. Before API version `2026-10-01` the issued status is published as `sent` (that contract called issuing \"sending\"), so `sent` only appears for integrations pinned to an earlier version.",
                         "example": "paid",
                         "examples": [
                             "paid"
@@ -213361,15 +213921,52 @@
                             "2026-03-20"
                         ]
                     },
+                    "issued_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "When the invoice was issued (ISO 8601), or `null` while it is a draft or scheduled. Not present before API version `2026-10-01`: earlier versions publish this instant in `sent_at`.",
+                        "example": "2026-03-15T11:45:00Z",
+                        "examples": [
+                            "2026-03-15T11:45:00Z"
+                        ]
+                    },
                     "sent_at": {
                         "type": [
                             "string",
                             "null"
                         ],
                         "format": "date-time",
-                        "example": "2026-03-15T11:45:00Z",
+                        "description": "When the invoice was first delivered to the customer (ISO 8601): the moment the mail server accepted its delivery email, or the date of a manual mark. `null` while it has not been delivered. A resend never moves it. Before API version `2026-10-01` this field carries the ISSUANCE instant instead (that contract called issuing \"sending\").",
+                        "example": "2026-03-15T11:47:12Z",
                         "examples": [
-                            "2026-03-15T11:45:00Z"
+                            "2026-03-15T11:47:12Z"
+                        ]
+                    },
+                    "sent_via": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "email",
+                            "manual",
+                            null
+                        ],
+                        "description": "Channel of the first delivery: `email` (the mail server accepted the delivery email) or `manual` (marked with `POST /v1/invoices/{id}/mark-sent`). `null` while the invoice has not been delivered. Not present before API version `2026-10-01`.",
+                        "example": "email",
+                        "examples": [
+                            "email"
+                        ]
+                    },
+                    "is_sent": {
+                        "type": "boolean",
+                        "description": "Whether the invoice has been delivered to the customer, independently of its fiscal `status`: an issued or overdue invoice can be delivered or not. Derived from the delivery mark (`sent_at` + `sent_via`), never set directly. Not present before API version `2026-10-01`.",
+                        "example": true,
+                        "examples": [
+                            true
                         ]
                     },
                     "voided_at": {
@@ -213411,11 +214008,12 @@
                             "null"
                         ],
                         "enum": [
-                            "draft",
+                            "issue",
                             "issue_and_send",
+                            "draft",
                             null
                         ],
-                        "description": "Action the scheduler runs when `scheduled_for` is reached: `issue_and_send` (issue and email) or `draft` (issue only). `null` when the invoice is not scheduled.",
+                        "description": "Action the scheduler runs when `scheduled_for` is reached: `issue` (issue without sending) or `issue_and_send` (issue and email it). `null` when the invoice is not scheduled. Before API version `2026-10-01` the `issue` action is published as `draft`, its previous name.",
                         "example": null,
                         "examples": [
                             null
@@ -213651,7 +214249,10 @@
                     "recurring": null,
                     "paid_at": "2026-03-20T10:30:00Z",
                     "paid_on": "2026-03-20",
-                    "sent_at": "2026-03-15T11:45:00Z",
+                    "issued_at": "2026-03-15T11:45:00Z",
+                    "sent_at": "2026-03-15T11:47:12Z",
+                    "sent_via": "email",
+                    "is_sent": true,
                     "voided_at": null,
                     "void_reason": null,
                     "scheduled_for": null,

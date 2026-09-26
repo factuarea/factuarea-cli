@@ -1798,6 +1798,15 @@ func generatedOps() []genOp {
 			BinaryContentType: "application/xml",
 		},
 		{
+			OperationID: "public-api.v1.invoices.issue", Method: "POST", Path: "/invoices/{invoice}/issue",
+			Action: "issue", Summary: "Issue an invoice", Deprecated: false,
+			Irreversible: true, RequiredScope: "invoices:write",
+			IdempotencyRequired: true,
+			Groups:              []string{"invoices"},
+			PathParams:          []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
+			QueryParams:         []genParam{},
+		},
+		{
 			OperationID: "public-api.v1.invoices.mark_paid", Method: "POST", Path: "/invoices/{invoice}/mark-paid",
 			Action: "mark-paid", Summary: "Mark invoice as paid", Deprecated: false,
 			Irreversible: false, RequiredScope: "invoices:write",
