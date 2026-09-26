@@ -43,19 +43,19 @@ var purchaseScanOperationIDs = []string{
 // derivado de `Resolve()` (`internal/spec/namespace.go`) sobre el
 // `operationId`, igual que la tabla CLI de `design.md`.
 var purchaseScanExpectedCommand = map[string]string{
-	"public-api.v1.purchase_scans.list":                   "factuarea purchase-scans list",
-	"public-api.v1.purchase_scans.create":                 "factuarea purchase-scans create",
-	"public-api.v1.purchase_scans.stats":                  "factuarea purchase-scans stats",
-	"public-api.v1.purchase_scans.show":                   "factuarea purchase-scans show",
-	"public-api.v1.purchase_scans.source":                 "factuarea purchase-scans source",
-	"public-api.v1.purchase_scans.retry":                  "factuarea purchase-scans retry",
-	"public-api.v1.purchase_scans.review":                 "factuarea purchase-scans review",
-	"public-api.v1.purchase_scans.duplicate_resolution":   "factuarea purchase-scans duplicate-resolution",
-	"public-api.v1.purchase_scans.convert":                "factuarea purchase-scans convert",
-	"public-api.v1.purchase_scans.archive":                "factuarea purchase-scans archive",
-	"public-api.v1.purchase_scans.restore":                "factuarea purchase-scans restore",
-	"public-api.v1.purchase_scan_emails.list":             "factuarea purchase-scan-emails list",
-	"public-api.v1.purchase_invoices.expense_categories":  "factuarea purchase-invoices expense-categories",
+	"public-api.v1.purchase_scans.list":                  "factuarea purchase-scans list",
+	"public-api.v1.purchase_scans.create":                "factuarea purchase-scans create",
+	"public-api.v1.purchase_scans.stats":                 "factuarea purchase-scans stats",
+	"public-api.v1.purchase_scans.show":                  "factuarea purchase-scans show",
+	"public-api.v1.purchase_scans.source":                "factuarea purchase-scans source",
+	"public-api.v1.purchase_scans.retry":                 "factuarea purchase-scans retry",
+	"public-api.v1.purchase_scans.review":                "factuarea purchase-scans review",
+	"public-api.v1.purchase_scans.duplicate_resolution":  "factuarea purchase-scans duplicate-resolution",
+	"public-api.v1.purchase_scans.convert":               "factuarea purchase-scans convert",
+	"public-api.v1.purchase_scans.archive":               "factuarea purchase-scans archive",
+	"public-api.v1.purchase_scans.restore":               "factuarea purchase-scans restore",
+	"public-api.v1.purchase_scan_emails.list":            "factuarea purchase-scan-emails list",
+	"public-api.v1.purchase_invoices.expense_categories": "factuarea purchase-invoices expense-categories",
 }
 
 // purchaseScanExpectedScope y purchaseScanExpectedIrreversible: `anchors/contract.md`
@@ -79,7 +79,7 @@ var purchaseScanExpectedScope = map[string]string{
 
 var purchaseScanExpectedIrreversible = map[string]bool{
 	"public-api.v1.purchase_scans.duplicate_resolution": true,
-	"public-api.v1.purchase_scans.convert":               true,
+	"public-api.v1.purchase_scans.convert":              true,
 }
 
 var purchaseScanExpectedPaginated = map[string]bool{
