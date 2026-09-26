@@ -93,7 +93,7 @@ El `client_id` que piden los documentos es el UUID del contacto con rol `custome
 
 ### Escáner de documentos
 
-El escáner conserva originales y permite revisar la extracción antes de convertirla en un **borrador de compra o gasto**. Requiere el módulo OCR de la empresa y los scopes `purchase_invoices:read`, `purchase_invoices:write` o `purchase_invoices:delete` según la operación.
+El escáner conserva originales y permite revisar la extracción antes de convertirla en un **borrador de gasto**. Requiere el módulo OCR de la empresa y los scopes `purchase_invoices:read`, `purchase_invoices:write` o `purchase_invoices:delete` según la operación.
 
 ```bash
 # Hasta 20 archivos PDF/JPEG/PNG; repite el flag, incluso si la ruta lleva comas.
@@ -130,7 +130,7 @@ Cada archivo admite 20 MiB y el lote 100 MiB. La respuesta `202` incluye aceptad
 
 `retry` inicia los documentos `received` cuando la lectura automática está desactivada, o reintenta fallos recuperables según `available_actions`. Una versión obsoleta produce `409`: vuelve a consultar antes de aplicar cambios. Los errores de revisión mantienen `error.details.field_errors` con los campos pendientes. `duplicate-resolution` acepta `link_existing` (con `purchase_invoice_id`) o `archive`; el override y el alta automática de proveedor requieren administrador interactivo en la aplicación.
 
-La conversión devuelve `purchase_invoice_id`, mantiene el original adjunto y nunca emite una factura de venta ni registra un pago. Usa importes decimales como cadenas en el JSON de revisión; los campos omitidos se conservan y `null` borra explícitamente el valor.
+La conversión devuelve `purchase_invoice_id`, mantiene el original adjunto y nunca emite una factura ni registra un pago. Usa importes decimales como cadenas en el JSON de revisión; los campos omitidos se conservan y `null` borra explícitamente el valor.
 
 **Descubrimiento.** El manifiesto de `commands --json` trae un campo `operation_id` (el `operationId` del OpenAPI, p. ej. `public-api.v1.purchase_scans.create`) además del `command` de la CLI: útil para que un agente relacione un endpoint del spec con su comando sin adivinar el mapeo de nombres.
 
