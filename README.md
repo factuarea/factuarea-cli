@@ -60,7 +60,7 @@ El árbol de comandos cubre todos los recursos de la API (`factuarea <recurso> [
 ```bash
 # Listar (con paginación automática por cursor)
 factuarea invoices list --json
-factuarea contacts list --paginate --json
+factuarea contacts list --roles customer --paginate --json
 
 # Obtener uno
 factuarea invoices show <uuid> --json
@@ -84,6 +84,12 @@ factuarea api post /v1/invoices -d '{…}'
 ```
 
 **Operaciones en producción** (mutaciones con una key `fact_live_`) requieren el flag explícito `--live` como red de seguridad.
+
+**Clientes y proveedores son roles del mismo contacto.** No hay recursos `clients`
+ni `suppliers`: se opera sobre `contacts` y se filtra o asigna el rol
+(`customer`, `supplier`, `lead`) — `factuarea contacts create --name … --kind company --roles customer`,
+`factuarea contacts list --roles supplier`, `factuarea contacts assign-contact-role <uuid> supplier`.
+El `client_id` que piden los documentos es el UUID del contacto con rol `customer`.
 
 ### Escáner de documentos
 

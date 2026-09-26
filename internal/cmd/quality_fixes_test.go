@@ -67,7 +67,7 @@ func TestRequiredBodyFlagEnforced(t *testing.T) {
 }
 
 func TestRequiredBodyFlagSatisfiedByRawData(t *testing.T) {
-	srv := scopedServer(t, []byte(`{"data":{"id":"cnt_1"}}`), 200)
+	srv := scopedServer(t, []byte(`{"data":{"id":"0199152d-525d-7000-8000-000000000001"}}`), 200)
 	if _, err := runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check", "-d", `{"name":"X"}`, "--json"); err != nil {
 		t.Fatalf("-d con el cuerpo completo debe satisfacer requeridos: %v", err)
 	}
@@ -142,7 +142,7 @@ func TestFindByPositionalAndFlagConflict(t *testing.T) {
 
 func TestDeleteEmitsConfirmationJSON(t *testing.T) {
 	srv := scopedServer(t, nil, 204)
-	out, err := runCmd(t, srv.URL, "contacts", "delete", "cnt_42", "--confirm", "cnt_42", "--json")
+	out, err := runCmd(t, srv.URL, "contacts", "delete", "con_42", "--confirm", "con_42", "--json")
 	if err != nil {
 		t.Fatalf("delete: %v", err)
 	}
@@ -150,7 +150,7 @@ func TestDeleteEmitsConfirmationJSON(t *testing.T) {
 	if jerr := json.Unmarshal([]byte(strings.TrimSpace(out)), &payload); jerr != nil {
 		t.Fatalf("delete --json debe emitir JSON: %q (%v)", out, jerr)
 	}
-	if payload["deleted"] != true || payload["id"] != "cnt_42" {
+	if payload["deleted"] != true || payload["id"] != "con_42" {
 		t.Fatalf("delete --json debe confirmar {deleted,id}: %v", payload)
 	}
 }
@@ -205,7 +205,7 @@ func TestNonJSONErrorBodyNormalized(t *testing.T) {
 		_, _ = w.Write([]byte("<html><body>Bad Request: malformed input</body></html>"))
 	}))
 	t.Cleanup(srv.Close)
-	_, err := runCmd(t, srv.URL, "contacts", "show", "cnt_1")
+	_, err := runCmd(t, srv.URL, "contacts", "show", "con_1")
 	if err == nil {
 		t.Fatal("una respuesta de error no-JSON debe producir error")
 	}
@@ -232,7 +232,7 @@ func TestTriggerListJSON(t *testing.T) {
 }
 
 func TestTriggerRejectsMalformedOverride(t *testing.T) {
-	_, err := runCmd(t, "", "trigger", "client.created", "--override", "novalue")
+	_, err := runCmd(t, "", "trigger", "contact.created", "--override", "novalue")
 	if err == nil || !strings.Contains(err.Error(), "k=v") {
 		t.Fatalf("esperaba validación de formato k=v, got %v", err)
 	}

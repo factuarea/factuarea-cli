@@ -70,7 +70,7 @@ func TestUnknownSubcommandSuggestsSibling(t *testing.T) {
 }
 
 func TestKeyValueParseErrorTranslated(t *testing.T) {
-	_, err := runCmd(t, "", "contacts", "create", "--metadata", "sinformato", "--name", "x", "--dry-run")
+	_, err := runCmd(t, "", "contacts", "create", "--metadata", "sinformato", "--name", "x", "--kind", "person", "--roles", "customer", "--dry-run")
 	if err == nil || !strings.Contains(err.Error(), "clave=valor") {
 		t.Fatalf("error de map mal formado debe traducirse, got %v", err)
 	}
@@ -106,7 +106,7 @@ func TestNonJSONErrorBodyDoesNotLeakServerHeader(t *testing.T) {
 		_, _ = w.Write([]byte("<html>nginx/1.25.3</html>"))
 	}))
 	t.Cleanup(srv.Close)
-	_, err := runCmd(t, srv.URL, "contacts", "show", "cnt_1")
+	_, err := runCmd(t, srv.URL, "contacts", "show", "con_1")
 	if err == nil || !strings.Contains(err.Error(), "respuesta no-JSON") {
 		t.Fatalf("error no-JSON debe normalizarse, got %v", err)
 	}

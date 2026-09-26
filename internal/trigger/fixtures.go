@@ -12,13 +12,11 @@ import (
 )
 
 func init() {
-	registry["client.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		_, err := c.Do(ctx, http.MethodPost, "/v1/contacts", mustJSON(map[string]any{
-			"name":   orDefault(ov, "name", "Cliente de prueba (trigger)"),
-			"kind":   "company",
-			"roles":  []string{"customer"},
-			"tax_id": orDefault(ov, "tax_id", "12345678Z"),
-		}), nil)
+	// La API pública ya no expone `/v1/clients`: clientes y proveedores son roles
+	// (`customer`/`supplier`) de un contacto canónico. Una escritura canónica emite
+	// `contact.created`, NO el `client.created` de compatibilidad del borde legacy.
+	registry["contact.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
+		_, err := createCustomerContact(ctx, c, ov)
 		return err
 	}
 
@@ -72,7 +70,7 @@ func init() {
 }
 
 func createInvoice(ctx context.Context, c *client.Client, ov map[string]string) (string, error) {
-	clientID, err := ensureClientID(ctx, c)
+	contactID, err := ensureCustomerContactID(ctx, c)
 	if err != nil {
 		return "", err
 	}
@@ -85,7 +83,7 @@ func createInvoice(ctx context.Context, c *client.Client, ov map[string]string) 
 		return "", err
 	}
 	resp, err := c.Do(ctx, http.MethodPost, "/v1/invoices", mustJSON(map[string]any{
-		"client_id": clientID,
+		"client_id": contactID,
 		"series_id": seriesID,
 		"issued_on": time.Now().Format("2006-01-02"),
 		"due_on":    time.Now().AddDate(0, 0, 30).Format("2006-01-02"),
@@ -103,7 +101,7 @@ func createInvoice(ctx context.Context, c *client.Client, ov map[string]string) 
 }
 
 func createQuote(ctx context.Context, c *client.Client, ov map[string]string) (string, error) {
-	clientID, err := ensureClientID(ctx, c)
+	contactID, err := ensureCustomerContactID(ctx, c)
 	if err != nil {
 		return "", err
 	}
@@ -116,7 +114,7 @@ func createQuote(ctx context.Context, c *client.Client, ov map[string]string) (s
 		return "", err
 	}
 	resp, err := c.Do(ctx, http.MethodPost, "/v1/quotes", mustJSON(map[string]any{
-		"client_id": clientID,
+		"client_id": contactID,
 		"series_id": seriesID,
 		"issued_on": time.Now().Format("2006-01-02"),
 		"due_on":    time.Now().AddDate(0, 0, 30).Format("2006-01-02"),
@@ -133,19 +131,27 @@ func createQuote(ctx context.Context, c *client.Client, ov map[string]string) (s
 	return extractID(resp.Body)
 }
 
-func ensureClientID(ctx context.Context, c *client.Client) (string, error) {
-	resp, err := c.Do(ctx, http.MethodGet, "/v1/contacts?"+url.Values{"limit": {"1"}}.Encode(), nil, nil)
+// ensureCustomerContactID reutiliza el primer contacto con rol `customer` de la
+// cuenta sandbox y, si no hay ninguno, crea uno. Los documentos siguen pidiendo
+// `client_id` en el cuerpo, pero su valor es el UUID del contacto.
+func ensureCustomerContactID(ctx context.Context, c *client.Client) (string, error) {
+	q := url.Values{"limit": {"1"}, "roles[]": {"customer"}}
+	resp, err := c.Do(ctx, http.MethodGet, "/v1/contacts?"+q.Encode(), nil, nil)
 	if err != nil {
 		return "", err
 	}
 	if id := firstListID(resp.Body); id != "" {
 		return id, nil
 	}
+	return createCustomerContact(ctx, c, nil)
+}
+
+func createCustomerContact(ctx context.Context, c *client.Client, ov map[string]string) (string, error) {
 	created, err := c.Do(ctx, http.MethodPost, "/v1/contacts", mustJSON(map[string]any{
-		"name":   "Cliente de prueba (trigger)",
-		"kind":   "company",
+		"name":   orDefault(ov, "name", "Cliente de prueba (trigger)"),
+		"kind":   orDefault(ov, "kind", "person"),
+		"tax_id": orDefault(ov, "tax_id", "12345678Z"),
 		"roles":  []string{"customer"},
-		"tax_id": "12345678Z",
 	}), nil)
 	if err != nil {
 		return "", err

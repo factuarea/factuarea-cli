@@ -47,12 +47,16 @@ func TestTypedFlagsBuildBodyWithTypes(t *testing.T) {
 	if got["name"] != "ACME SL" || got["tax_id"] != "B12345678" {
 		t.Errorf("strings mal mapeados: %v", got)
 	}
-	cp, ok := got["customer_profile"].(map[string]any)
+	roles, ok := got["roles"].([]any)
+	if !ok || len(roles) != 1 || roles[0] != "customer" {
+		t.Errorf("roles debe ser slice con customer: %v", got["roles"])
+	}
+	profile, ok := got["customer_profile"].(map[string]any)
 	if !ok {
 		t.Fatalf("customer_profile debe agruparse en objeto: %v", got["customer_profile"])
 	}
-	if n, ok := cp["payment_terms_days"].(float64); !ok || n != 30 {
-		t.Errorf("customer_profile.payment_terms_days debe ser número 30: %v", cp["payment_terms_days"])
+	if n, ok := profile["payment_terms_days"].(float64); !ok || n != 30 {
+		t.Errorf("customer_profile.payment_terms_days debe ser número 30: %v", profile["payment_terms_days"])
 	}
 	addr, ok := got["address"].(map[string]any)
 	if !ok || addr["city"] != "Madrid" {
@@ -78,7 +82,8 @@ func TestTypedFlagsZeroVsOmitted(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check", "--name", "X", "--kind", "company", "--roles", "customer", "--json")
+	_, err := runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check",
+		"--name", "X", "--kind", "person", "--roles", "customer", "--json")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
 	}
@@ -87,16 +92,17 @@ func TestTypedFlagsZeroVsOmitted(t *testing.T) {
 	}
 
 	got = nil
-	_, err = runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check", "--name", "X", "--kind", "company", "--roles", "customer", "--customer-profile.discount", "0", "--json")
+	_, err = runCmd(t, srv.URL, "contacts", "create", "--skip-scope-check",
+		"--name", "X", "--kind", "person", "--roles", "customer", "--customer-profile.discount", "0", "--json")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
 	}
-	cp, ok := got["customer_profile"].(map[string]any)
+	profile, ok := got["customer_profile"].(map[string]any)
 	if !ok {
-		t.Fatalf("customer_profile debe estar presente: %v", got)
+		t.Fatalf("customer_profile debe enviarse al usar un flag anidado: %v", got)
 	}
-	if v, ok := cp["discount"].(float64); !ok || v != 0 {
-		t.Errorf("--customer-profile.discount 0 debe enviarse como 0: %v", cp["discount"])
+	if v, ok := profile["discount"].(float64); !ok || v != 0 {
+		t.Errorf("--customer-profile.discount 0 debe enviarse como 0: %v", profile["discount"])
 	}
 }
 
@@ -147,7 +153,7 @@ func TestDryRunPrintsBodyNoNetwork(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	out, err := runCmd(t, srv.URL, "contacts", "create", "--name", "ACME", "--kind", "company", "--roles", "customer", "--dry-run")
+	out, err := runCmd(t, srv.URL, "contacts", "create", "--name", "ACME", "--kind", "person", "--roles", "customer", "--dry-run")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
 	}
@@ -177,12 +183,15 @@ func TestSkeletonEmitsTemplateNoNetwork(t *testing.T) {
 	if _, ok := body["name"]; !ok {
 		t.Errorf("skeleton debe incluir el campo required name: %v", body)
 	}
-	cp, ok := body["customer_profile"].(map[string]any)
+	if kind, ok := body["kind"].(string); !ok || !strings.Contains(kind, "company") {
+		t.Errorf("skeleton debe incluir hints de enum: %v", body["kind"])
+	}
+	profile, ok := body["customer_profile"].(map[string]any)
 	if !ok {
 		t.Fatalf("skeleton debe anidar customer_profile: %v", body["customer_profile"])
 	}
-	if pm, ok := cp["payment_method"].(string); !ok || !strings.Contains(pm, "direct_debit") {
-		t.Errorf("skeleton debe incluir hints de enum: %v", cp["payment_method"])
+	if pm, ok := profile["payment_method"].(string); !ok || !strings.Contains(pm, "direct_debit") {
+		t.Errorf("skeleton debe incluir hints de enum anidados: %v", profile["payment_method"])
 	}
 	if addr, ok := body["address"].(map[string]any); !ok || addr["city"] == nil {
 		t.Errorf("skeleton debe anidar objetos prof.1: %v", body["address"])
@@ -253,6 +262,6 @@ func TestManifestIncludesFieldSchema(t *testing.T) {
 		t.Error("manifest debe marcar name como required")
 	}
 	if !sawEnum {
-		t.Error("manifest debe incluir enum de payment_method")
+		t.Error("manifest debe incluir enum de customer_profile.payment_method")
 	}
 }

@@ -319,10 +319,6 @@ func TestBodyFieldsScalarEnumNested(t *testing.T) {
 		by[o.OperationID] = o
 	}
 
-	// `clients`/`suppliers` se retiran del spec pineado (re-pin desde el
-	// export de `scanner-sdk-cli-spec-sync`, decisión del propietario
-	// 2026-09-24, ver `anchors/contract.md` "Hallazgo crítico"): sustituidos
-	// por `contacts`, que es lo que mide este test desde ahora.
 	create := by["public-api.v1.contacts.create"]
 	if create.Body == nil || len(create.Body.Fields) == 0 {
 		t.Fatalf("contacts.create debe tener Body.Fields: %+v", create.Body)
@@ -350,6 +346,25 @@ func TestBodyFieldsScalarEnumNested(t *testing.T) {
 		t.Errorf("alternative_id_type enum debe incluir passport: %v", altIDType.Enum)
 	}
 
+	profile := fields["customer_profile"]
+	if profile == nil || profile.Kind != "object" {
+		t.Fatalf("customer_profile debe ser object: %+v", profile)
+	}
+	pf := indexFields(profile.Children)
+
+	terms := pf["payment_terms_days"]
+	if terms == nil || terms.Kind != "scalar" || terms.Type != "integer" || !terms.Nullable {
+		t.Errorf("customer_profile.payment_terms_days debe ser scalar/integer/nullable: %+v", terms)
+	}
+
+	pm := pf["payment_method"]
+	if pm == nil || len(pm.Enum) == 0 {
+		t.Fatalf("customer_profile.payment_method debe traer enum: %+v", pm)
+	}
+	if !contains(pm.Enum, "direct_debit") {
+		t.Errorf("customer_profile.payment_method enum debe incluir direct_debit: %v", pm.Enum)
+	}
+
 	addr := fields["address"]
 	if addr == nil || addr.Kind != "object" {
 		t.Fatalf("address debe ser object: %+v", addr)
@@ -370,7 +385,6 @@ func TestBodyFieldsArraysAndMap(t *testing.T) {
 		by[o.OperationID] = o
 	}
 
-	// Ver la nota de `TestBodyFieldsScalarEnumNested`: `clients` → `contacts`.
 	contact := by["public-api.v1.contacts.create"]
 	cf := indexFields(contact.Body.Fields)
 

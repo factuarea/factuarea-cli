@@ -2,6 +2,8 @@ package trigger
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -12,22 +14,32 @@ import (
 	"github.com/factuarea/factuarea-cli/internal/client"
 )
 
-func TestRunClientCreated(t *testing.T) {
+func TestRunContactCreated(t *testing.T) {
 	var posted bool
+	var body map[string]any
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/v1/contacts") {
 			posted = true
+			raw, _ := io.ReadAll(r.Body)
+			_ = json.Unmarshal(raw, &body)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"id":"cnt_1"}}`))
+		_, _ = w.Write([]byte(`{"data":{"id":"0199152d-525d-7000-8000-000000000001"}}`))
 	}))
 	defer srv.Close()
 	c := client.New("fact_test_aaaaaaaaaaaaaaaaaaaaaaaa", client.WithBaseURL(srv.URL), client.WithSleep(func(time.Duration) {}))
-	if err := Run(context.Background(), c, "client.created", nil); err != nil {
+	if err := Run(context.Background(), c, "contact.created", nil); err != nil {
 		t.Fatal(err)
 	}
 	if !posted {
-		t.Fatal("client.created debe hacer POST /v1/contacts")
+		t.Fatal("contact.created debe hacer POST /v1/contacts")
+	}
+	roles, ok := body["roles"].([]any)
+	if !ok || len(roles) != 1 || roles[0] != "customer" {
+		t.Fatalf("el contacto del fixture debe nacer con rol customer: %v", body["roles"])
+	}
+	if body["kind"] != "person" || body["name"] == "" {
+		t.Fatalf("el cuerpo debe traer los requeridos name/kind: %v", body)
 	}
 }
 
@@ -49,7 +61,7 @@ func TestRunInvoicePaidOrchestration(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		switch {
 		case r.Method == http.MethodGet && r.URL.Path == "/v1/contacts":
-			_, _ = w.Write([]byte(`{"data":[{"id":"cnt_1"}]}`))
+			_, _ = w.Write([]byte(`{"data":[{"id":"0199152d-525d-7000-8000-000000000001"}]}`))
 		case r.Method == http.MethodGet && r.URL.Path == "/v1/series":
 			_, _ = w.Write([]byte(`{"data":[{"id":"ser_1","is_default":false},{"id":"ser_2","is_default":true}]}`))
 		case r.Method == http.MethodGet && r.URL.Path == "/v1/taxes/active":
@@ -97,7 +109,7 @@ func TestRunInvoicePaidOrchestration(t *testing.T) {
 func TestSupported(t *testing.T) {
 	got := Supported()
 	want := []string{
-		"client.created",
+		"contact.created",
 		"invoice.created",
 		"invoice.paid",
 		"invoice.sent",
