@@ -178,3 +178,15 @@ func (op genOp) buildBody(data, dataFile string, files map[string]*string, fileA
 	}
 	return body, map[string]string{"Content-Type": ct}, nil
 }
+
+// Preserve a separately declared scalar parameter instead of shadowing its flag
+// with the convenience alias of the corresponding array parameter.
+func (op genOp) arrayQueryFlag(name string) string {
+	alias := strings.TrimSuffix(name, "[]")
+	for _, parameter := range op.QueryParams {
+		if parameter.Name == alias {
+			return name
+		}
+	}
+	return alias
+}

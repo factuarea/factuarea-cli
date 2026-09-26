@@ -149,7 +149,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			q := url.Values{}
 			for _, p := range op.QueryParams {
 				if strings.HasSuffix(p.Name, "[]") {
-					values, _ := cmd.Flags().GetStringSlice(strings.TrimSuffix(p.Name, "[]"))
+					values, _ := cmd.Flags().GetStringSlice(op.arrayQueryFlag(p.Name))
 					for _, value := range values {
 						q.Add(p.Name, value)
 					}
@@ -242,7 +242,11 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			desc = strings.TrimSpace("(requerido) " + desc)
 		}
 		if strings.HasSuffix(p.Name, "[]") {
-			c.Flags().StringSlice(strings.TrimSuffix(p.Name, "[]"), nil, desc)
+			name := op.arrayQueryFlag(p.Name)
+			c.Flags().StringSlice(name, nil, desc)
+			if name == p.Name {
+				continue
+			}
 		}
 		c.Flags().String(p.Name, "", desc)
 	}

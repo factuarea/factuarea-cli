@@ -327,3 +327,30 @@ func TestPurchaseScansListJSONOnStdoutOnly(t *testing.T) {
 		t.Errorf("stdout sin el envelope data: %v", payload)
 	}
 }
+
+func TestPurchaseScanEmailsScalarAndArrayResultFilters(t *testing.T) {
+	for _, tc := range []struct {
+		flag  string
+		value string
+		key   string
+		want  []string
+	}{
+		{"--result", "accepted", "result", []string{"accepted"}},
+		{"--result[]", "accepted,rejected", "result[]", []string{"accepted", "rejected"}},
+	} {
+		t.Run(tc.flag, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				got := r.URL.Query()[tc.key]
+				if strings.Join(got, ",") != strings.Join(tc.want, ",") {
+					t.Errorf("query %s = %v; want %v", tc.key, got, tc.want)
+				}
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = w.Write([]byte(`{"data":[],"has_more":false,"next_cursor":null}`))
+			}))
+			t.Cleanup(srv.Close)
+			if _, err := runCmd(t, srv.URL, "purchase-scan-emails", "list", "--skip-scope-check", tc.flag, tc.value, "--json"); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
