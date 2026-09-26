@@ -250481,7 +250481,7 @@
                     "name": "Talleres Mediterr\u00e1neo S.L.",
                     "commercial_name": "Talleres Med",
                     "kind": "company",
-                    "tax_id": "B66778899",
+                    "tax_id": "B66778895",
                     "email": "facturacion@talleresmed.es",
                     "phone": "961112233",
                     "roles": [
@@ -250497,8 +250497,8 @@
                 "value": {
                     "name": "Talleres Mediterr\u00e1neo S.L.",
                     "commercial_name": "Talleres Med",
-                    "tax_id": "B66778899",
-                    "vat_id": "ESB66778899",
+                    "tax_id": "B66778895",
+                    "vat_id": "ESB66778895",
                     "email": "facturacion@talleresmed.es",
                     "phone": "961112233",
                     "default_vat_rate": 21,
