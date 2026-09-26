@@ -22,6 +22,7 @@ type manifestField struct {
 
 type manifestEntry struct {
 	Command        string          `json:"command"`
+	OperationID    string          `json:"operation_id"`
 	Summary        string          `json:"summary"`
 	Args           []string        `json:"args"`
 	Flags          []flagInfo      `json:"flags"`
@@ -48,6 +49,7 @@ func newCommandsCmd() *cobra.Command {
 			for _, op := range ops {
 				e := manifestEntry{
 					Command:       commandPath(op),
+					OperationID:   op.OperationID,
 					Summary:       op.Summary,
 					Args:          []string{},
 					Flags:         []flagInfo{},

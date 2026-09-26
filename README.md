@@ -91,6 +91,53 @@ ni `suppliers`: se opera sobre `contacts` y se filtra o asigna el rol
 `factuarea contacts list --roles supplier`, `factuarea contacts assign-contact-role <uuid> supplier`.
 El `client_id` que piden los documentos es el UUID del contacto con rol `customer`.
 
+### Escáner de documentos
+
+El escáner conserva originales y permite revisar la extracción antes de convertirla en un **borrador de compra o gasto**. Requiere el módulo OCR de la empresa y los scopes `purchase_invoices:read`, `purchase_invoices:write` o `purchase_invoices:delete` según la operación.
+
+```bash
+# Hasta 20 archivos PDF/JPEG/PNG; repite el flag, incluso si la ruta lleva comas.
+factuarea purchase-scans create \
+  --file-files factura.pdf --file-files ticket.png \
+  --idempotency-key compra-lote-2026-001 --json
+
+# La lectura es asíncrona: consulta estado, incidencias y available_actions.
+factuarea purchase-scans list --paginate --json
+factuarea purchase-scans show <uuid> --json
+factuarea purchase-scans stats --json
+factuarea purchase-scan-emails list --paginate --json
+
+# Categorías de gasto para clasificar la conversión (purchase-invoices, no purchase-scans).
+factuarea purchase-invoices expense-categories --json
+
+# Guarda solo los cambios; sustituye expected_version por la versión observada.
+factuarea purchase-scans review <uuid> --json -d '{
+  "expected_version": 3,
+  "fields": {"notes": {"value": "Documento revisado"}}
+}'
+
+# Convierte usando la nueva versión devuelta por review.
+factuarea purchase-scans convert <uuid> \
+  --expected-version 4 --idempotency-key compra-conversion-001 --json
+
+# Original sin alterar; archivado reversible con control de versión.
+factuarea purchase-scans source <uuid> -o original.pdf
+factuarea purchase-scans archive <uuid> --expected-version 5 --json
+factuarea purchase-scans restore <uuid> --expected-version 6 --json
+```
+
+Cada archivo admite 20 MiB y el lote 100 MiB. La respuesta `202` incluye aceptados y rechazados por índice; si todos se rechazan, el CLI conserva `data.rejected` en el error JSON y termina con código de validación. Reutiliza la misma `--idempotency-key` y el mismo orden de archivos al reintentar un lote. Las mutaciones generan una clave automáticamente si no la proporcionas.
+
+`retry` inicia los documentos `received` cuando la lectura automática está desactivada, o reintenta fallos recuperables según `available_actions`. Una versión obsoleta produce `409`: vuelve a consultar antes de aplicar cambios. Los errores de revisión mantienen `error.details.field_errors` con los campos pendientes. `duplicate-resolution` acepta `link_existing` (con `purchase_invoice_id`) o `archive`; el override y el alta automática de proveedor requieren administrador interactivo en la aplicación.
+
+La conversión devuelve `purchase_invoice_id`, mantiene el original adjunto y nunca emite una factura de venta ni registra un pago. Usa importes decimales como cadenas en el JSON de revisión; los campos omitidos se conservan y `null` borra explícitamente el valor.
+
+**Descubrimiento.** El manifiesto de `commands --json` trae un campo `operation_id` (el `operationId` del OpenAPI, p. ej. `public-api.v1.purchase_scans.create`) además del `command` de la CLI: útil para que un agente relacione un endpoint del spec con su comando sin adivinar el mapeo de nombres.
+
+```bash
+factuarea commands --json | jq '.[] | select(.operation_id | startswith("public-api.v1.purchase_scan"))'
+```
+
 ### Control horario (workforce)
 
 Con el add-on de **control horario** activo (módulo `control_horario`), el CLI
@@ -250,3 +297,5 @@ API pública, SDKs y MCP: [docs.factuarea.com](https://docs.factuarea.com).
 ## Licencia
 
 MIT.
+
+To discover expense categories for scanner review, run `factuarea purchase-invoices expense-categories`. Use the returned `id` in the `expense_category` field.

@@ -180,7 +180,7 @@ func validateRequiredQueryFlags(cmd *cobra.Command, op genOp) error {
 			continue
 		}
 		if strings.HasSuffix(p.Name, "[]") {
-			values, _ := cmd.Flags().GetStringSlice(strings.TrimSuffix(p.Name, "[]"))
+			values, _ := cmd.Flags().GetStringSlice(op.arrayQueryFlag(p.Name))
 			if len(values) > 0 {
 				continue
 			}
