@@ -29841,7 +29841,7 @@
         "/purchase_scans/{purchase_scan}/convert": {
             "post": {
                 "operationId": "public-api.v1.purchase_scans.convert",
-                "description": "Create exactly one draft expense from a reviewed scan and link it. Responds `200` on the first call and on replays, returning the same linked invoice. Requires `expected_version` and that no blocking issue remains; otherwise `422`.",
+                "description": "Create exactly one draft expense from a reviewed scan and link it. Responds `200` on the first call and on replays, returning the same linked expense. Requires `expected_version` and that no blocking issue remains; otherwise `422`.",
                 "summary": "Create the expense from a scan",
                 "tags": [
                     "Purchase Scans"
@@ -30589,7 +30589,23 @@
                         "$ref": "#/components/responses/NotFound"
                     },
                     "422": {
-                        "$ref": "#/components/responses/UnprocessableEntity"
+                        "description": "The request could not be validated. Possible `error.code` values: `purchase_scan_source_unavailable` \u2014 the original was purged or is no longer retained; the scan history remains available (`error.subcode`: `source_unavailable`).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
                     },
                     "409": {
                         "$ref": "#/components/responses/Conflict"
@@ -155526,7 +155542,23 @@
                         "$ref": "#/components/responses/NotFound"
                     },
                     "422": {
-                        "$ref": "#/components/responses/UnprocessableEntity"
+                        "description": "The request could not be validated. Possible `error.code` values: `purchase_scan_source_unavailable` \u2014 the original was purged or is no longer retained; the scan history remains available (`error.subcode`: `source_unavailable`).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
                     },
                     "409": {
                         "$ref": "#/components/responses/Conflict"
@@ -157225,7 +157257,23 @@
                         "$ref": "#/components/responses/NotFound"
                     },
                     "422": {
-                        "$ref": "#/components/responses/UnprocessableEntity"
+                        "description": "The request could not be validated. Possible `error.code` values: `purchase_scan_source_unavailable` \u2014 the original was purged or is no longer retained; the scan history remains available (`error.subcode`: `source_unavailable`).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
                     },
                     "409": {
                         "$ref": "#/components/responses/Conflict"
