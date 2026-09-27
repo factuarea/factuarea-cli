@@ -133,7 +133,7 @@ func (op genOp) buildPath(args []string) string {
 	return path
 }
 
-func (op genOp) buildBody(data, dataFile string, files map[string]*string) ([]byte, map[string]string, error) {
+func (op genOp) buildBody(data, dataFile string, files map[string]*string, fileArrays map[string]*[]string) ([]byte, map[string]string, error) {
 	if op.Body == nil {
 		return nil, nil, nil
 	}
@@ -153,8 +153,14 @@ func (op genOp) buildBody(data, dataFile string, files map[string]*string) ([]by
 			fileMap[field] = *v
 		}
 	}
-	if len(fileMap) == 0 {
-		return nil, nil, apierr.Usagef("falta --file-<campo> para el upload (%s)", strings.Join(op.Body.FileFields, ", "))
+	arrayMap := map[string][]string{}
+	for field, paths := range fileArrays {
+		if paths != nil && len(*paths) > 0 {
+			arrayMap[field+"[]"] = *paths
+		}
+	}
+	if len(fileMap) == 0 && len(arrayMap) == 0 {
+		return nil, nil, apierr.Usagef("falta --file-<campo> para el upload (%s)", strings.Join(append(append([]string{}, op.Body.FileFields...), op.Body.FileArrayFields...), ", "))
 	}
 	fields := map[string]string{}
 	if data != "" {
@@ -166,9 +172,21 @@ func (op genOp) buildBody(data, dataFile string, files map[string]*string) ([]by
 			fields[k] = fmt.Sprint(v)
 		}
 	}
-	body, ct, err := client.MultipartBody(fields, fileMap)
+	body, ct, err := client.MultipartBody(fields, fileMap, arrayMap)
 	if err != nil {
 		return nil, nil, err
 	}
 	return body, map[string]string{"Content-Type": ct}, nil
+}
+
+// Preserve a separately declared scalar parameter instead of shadowing its flag
+// with the convenience alias of the corresponding array parameter.
+func (op genOp) arrayQueryFlag(name string) string {
+	alias := strings.TrimSuffix(name, "[]")
+	for _, parameter := range op.QueryParams {
+		if parameter.Name == alias {
+			return name
+		}
+	}
+	return alias
 }

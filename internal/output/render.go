@@ -37,11 +37,24 @@ func PrintError(stderr io.Writer, err error, f Format) {
 				"subcode": api.Subcode, "param": api.Param,
 				"doc_url": api.DocURL, "request_id": api.RequestID,
 			}}
+			if len(api.Data) > 0 {
+				payload["data"] = api.Data
+			}
+			errorPayload := payload["error"].(map[string]any)
+			if api.Details != nil {
+				errorPayload["details"] = api.Details
+			}
+			if api.Errors != nil {
+				errorPayload["errors"] = api.Errors
+			}
 			enc := json.NewEncoder(stderr)
 			_ = enc.Encode(payload)
 			return
 		}
 		fmt.Fprintf(stderr, "Error: %s\n", api.Message)
+		if len(api.Data) > 0 {
+			fmt.Fprintf(stderr, "  detalle: %s\n", api.Data)
+		}
 		if api.Code != "" {
 			fmt.Fprintf(stderr, "  código: %s\n", api.Code)
 		}

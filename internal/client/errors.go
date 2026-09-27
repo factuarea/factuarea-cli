@@ -11,9 +11,10 @@ import (
 func parseError(resp *Response) error {
 	if strings.Contains(resp.ContentType, "json") {
 		var raw struct {
-			Error map[string]any `json:"error"`
+			Error map[string]any  `json:"error"`
+			Data  json.RawMessage `json:"data"`
 		}
-		if json.Unmarshal(resp.Body, &raw) == nil && raw.Error != nil {
+		if json.Unmarshal(resp.Body, &raw) == nil && (raw.Error != nil || len(raw.Data) > 0) {
 			get := func(k string) string {
 				if v, ok := raw.Error[k].(string); ok {
 					return v
@@ -29,6 +30,9 @@ func parseError(resp *Response) error {
 				Param:      get("param"),
 				DocURL:     get("doc_url"),
 				RequestID:  get("request_id"),
+				Data:       raw.Data,
+				Details:    raw.Error["details"],
+				Errors:     raw.Error["errors"],
 			}
 			if api.RequestID == "" {
 				api.RequestID = resp.RequestID

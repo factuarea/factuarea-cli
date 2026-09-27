@@ -63,8 +63,8 @@ type Response struct {
 func (c *Client) Do(ctx context.Context, method, path string, body []byte, extraHeaders map[string]string) (*Response, error) {
 	url := c.baseURL + path
 	idempotencyKey := extraHeaders["Idempotency-Key"]
-	if idempotencyKey == "" && method == http.MethodPost {
-		idempotencyKey = newIdempotencyKey()
+	if idempotencyKey == "" && (method == http.MethodPost || method == http.MethodPut || method == http.MethodPatch || method == http.MethodDelete) {
+		idempotencyKey = NewIdempotencyKey()
 	}
 
 	var lastErr error
@@ -148,13 +148,17 @@ func retryDelay(resp *Response, attempt int) time.Duration {
 	return backoff(attempt)
 }
 
-func newIdempotencyKey() string {
+// NewIdempotencyKey genera una clave de idempotencia estable para una sola
+// mutación. Exportada para que `internal/cmd` la use cuando el spec exige la
+// cabecera en una operación cuyo método no autogenera la clave aquí (ver
+// `design.md` D6); `Do` la usa igual para el resto de verbos mutadores.
+func NewIdempotencyKey() string {
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)
 	return "cli_" + hex.EncodeToString(b)
 }
 
-func MultipartBody(fields, files map[string]string) (body []byte, contentType string, err error) {
+func MultipartBody(fields, files map[string]string, fileArrays ...map[string][]string) (body []byte, contentType string, err error) {
 	var buf bytes.Buffer
 	mw := multipart.NewWriter(&buf)
 	for k, v := range fields {
@@ -165,6 +169,15 @@ func MultipartBody(fields, files map[string]string) (body []byte, contentType st
 	for field, path := range files {
 		if err := writeFormFile(mw, field, path); err != nil {
 			return nil, "", err
+		}
+	}
+	for _, arrays := range fileArrays {
+		for field, paths := range arrays {
+			for _, path := range paths {
+				if err := writeFormFile(mw, field, path); err != nil {
+					return nil, "", err
+				}
+			}
 		}
 	}
 	if err := mw.Close(); err != nil {

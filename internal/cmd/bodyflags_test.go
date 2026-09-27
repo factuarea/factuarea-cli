@@ -33,7 +33,7 @@ func TestTypedFlagsBuildBodyWithTypes(t *testing.T) {
 		body, _ := io.ReadAll(r.Body)
 		_ = json.Unmarshal(body, &got)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"id":"cli_1"}}`))
+		_, _ = w.Write([]byte(`{"data":{"id":"cnt_1"}}`))
 	}))
 	t.Cleanup(srv.Close)
 
@@ -78,7 +78,7 @@ func TestTypedFlagsZeroVsOmitted(t *testing.T) {
 		body, _ := io.ReadAll(r.Body)
 		_ = json.Unmarshal(body, &got)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"id":"cli_1"}}`))
+		_, _ = w.Write([]byte(`{"data":{"id":"cnt_1"}}`))
 	}))
 	t.Cleanup(srv.Close)
 
@@ -127,7 +127,7 @@ func TestDataFromStdin(t *testing.T) {
 		body, _ := io.ReadAll(r.Body)
 		_ = json.Unmarshal(body, &got)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"data":{"id":"cli_1"}}`))
+		_, _ = w.Write([]byte(`{"data":{"id":"cnt_1"}}`))
 	}))
 	t.Cleanup(srv.Close)
 
