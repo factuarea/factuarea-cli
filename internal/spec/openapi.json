@@ -30,7 +30,7 @@
         },
         {
             "name": "Invoices",
-            "description": "Create and manage sales invoices (compliant with Spanish AEAT VeriFactu)."
+            "description": "Create and manage invoices (compliant with Spanish AEAT VeriFactu)."
         },
         {
             "name": "Quotes",
@@ -46,7 +46,7 @@
         },
         {
             "name": "Purchase Invoices",
-            "description": "Record invoices received from suppliers."
+            "description": "Record and manage expenses supported by supplier invoices or fiscal receipts."
         },
         {
             "name": "Purchase Scans",
@@ -1763,7 +1763,7 @@
                         }
                     },
                     "402": {
-                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2629,7 +2629,7 @@
                         }
                     },
                     "402": {
-                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6257,7 +6257,7 @@
                         "$ref": "#/components/responses/Unauthorized"
                     },
                     "403": {
-                        "description": "The request is not allowed for this API key or its creator. Possible `error.code` values: `insufficient_scope` \u2014 the API key lacks the scope this operation requires; `forbidden_action` \u2014 the API key has the scope, but the user who created it cannot perform this action for the company; `error.subcode` is `api_key_creator_not_member` (the API key creator no longer belongs to the company), or `purchase_invoices_delete_required` (archiving requires the `delete` capability for purchase invoices).",
+                        "description": "The request is not allowed for this API key or its creator. Possible `error.code` values: `insufficient_scope` \u2014 the API key lacks the scope this operation requires; `forbidden_action` \u2014 the API key has the scope, but the user who created it cannot perform this action for the company; `error.subcode` is `api_key_creator_not_member` (the API key creator no longer belongs to the company), or `purchase_invoices_delete_required` (archiving requires the `delete` capability for expenses).",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -6325,7 +6325,7 @@
             },
             "get": {
                 "operationId": "public-api.v1.purchase_scans.show",
-                "description": "Retrieve a purchase scan by its public `id` (UUID v7): evidence-first extraction (value, confidence and page/bounding-box evidence per field and line), issues, duplicate match, attempts, linked purchase invoice and `available_actions`. The current `version` is required by every mutation.",
+                "description": "Retrieve a purchase scan by its public `id` (UUID v7): evidence-first extraction (value, confidence and page/bounding-box evidence per field and line), issues, duplicate match, attempts, linked expense and `available_actions`. The current `version` is required by every mutation.",
                 "summary": "Retrieve a purchase scan",
                 "tags": [
                     "Purchase Scans"
@@ -9666,8 +9666,8 @@
         "/purchase_invoices/{purchase_invoice}/attach-file": {
             "post": {
                 "operationId": "public-api.v1.purchase_invoices.attach_file",
-                "description": "Upload the original PDF document for a purchase invoice as `multipart/form-data`. Replaces any previously attached file. Returns the updated purchase invoice.",
-                "summary": "Attach a file to a purchase invoice",
+                "description": "Upload the original PDF document for an expense as `multipart/form-data`. Replaces any previously attached file. Returns the updated expense.",
+                "summary": "Attach a file to an expense",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -10057,7 +10057,7 @@
                                             "error": {
                                                 "type": "not_found_error",
                                                 "code": "purchase_invoice_not_found",
-                                                "message": "Factura de compra no encontrada.",
+                                                "message": "Gasto no encontrado.",
                                                 "param": "purchase_invoice_uuid",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#purchase_invoice_not_found",
                                                 "request_id": "req_6228e9f663f9b33c08b996d855"
@@ -10078,7 +10078,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                        "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10119,7 +10119,7 @@
                         }
                     },
                     "409": {
-                        "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                        "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -10152,7 +10152,7 @@
                         }
                     },
                     "402": {
-                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13478,8 +13478,8 @@
         "/purchase_invoices/bulk-delete": {
             "post": {
                 "operationId": "public-api.v1.purchase_invoices.bulk_delete",
-                "description": "Delete up to 100 purchase invoices by UUID in a single request. Returns a `BulkPartialSuccessResult` with `total`, `successful` and `failed` counts plus a `failures` list (`id` + `error_code` + Spanish `error_message`) for each entry that could not be deleted.",
-                "summary": "Bulk delete purchase invoices",
+                "description": "Delete up to 100 expenses by UUID in a single request. Returns a `BulkPartialSuccessResult` with `total`, `successful` and `failed` counts plus a `failures` list (`id` + `error_code` + Spanish `error_message`) for each entry that could not be deleted.",
+                "summary": "Bulk delete expenses",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -13777,7 +13777,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                        "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -13818,7 +13818,7 @@
                         }
                     },
                     "409": {
-                        "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                        "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -19547,8 +19547,8 @@
         "/purchase_invoices/bulk-status": {
             "post": {
                 "operationId": "public-api.v1.purchase_invoices.bulk_status",
-                "description": "Transition up to 50 purchase invoices (by id) to `paid` in one call, each through the document state guard. The required `payment_date` is propagated as-is to every invoice (never `now()`). Returns a `BulkPartialSuccessResult`; invoices that could not transition (not found or already paid) come back in `failures[]`.",
-                "summary": "Bulk change purchase invoice status",
+                "description": "Transition up to 50 expenses (by id) to `paid` in one call, each through the document state guard. The required `payment_date` is propagated as-is to every invoice (never `now()`). Returns a `BulkPartialSuccessResult`; invoices that could not transition (not found or already paid) come back in `failures[]`.",
+                "summary": "Bulk change expense status",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -19841,7 +19841,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                        "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -19882,7 +19882,7 @@
                         }
                     },
                     "409": {
-                        "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                        "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -28737,7 +28737,7 @@
         "/delivery_notes/{delivery_note}/convert": {
             "post": {
                 "operationId": "public-api.v1.delivery_notes.convert",
-                "description": "Convert a delivery note into a sales invoice. The delivery note moves to `invoiced` with `converted_to_id` populated and the new invoice is returned under `data`. Only `target=invoice` is supported.",
+                "description": "Convert a delivery note into an invoice. The delivery note moves to `invoiced` with `converted_to_id` populated and the new invoice is returned under `data`. Only `target=invoice` is supported.",
                 "summary": "Convert delivery note to invoice",
                 "tags": [
                     "Delivery Notes"
@@ -29288,7 +29288,7 @@
         "/proformas/{proforma}/convert": {
             "post": {
                 "operationId": "public-api.v1.proformas.convert",
-                "description": "Convert a proforma into a final sales invoice. The new invoice references the source proforma; the proforma moves to status `converted`.",
+                "description": "Convert a proforma into a final invoice. The new invoice references the source proforma; the proforma moves to status `converted`.",
                 "summary": "Convert proforma to invoice",
                 "tags": [
                     "Proformas"
@@ -29841,8 +29841,8 @@
         "/purchase_scans/{purchase_scan}/convert": {
             "post": {
                 "operationId": "public-api.v1.purchase_scans.convert",
-                "description": "Create exactly one draft purchase invoice from a reviewed scan and link it. Responds `200` on the first call and on replays, returning the same linked invoice. Requires `expected_version` and that no blocking issue remains; otherwise `422`.",
-                "summary": "Create the purchase invoice from a scan",
+                "description": "Create exactly one draft expense from a reviewed scan and link it. Responds `200` on the first call and on replays, returning the same linked expense. Requires `expected_version` and that no blocking issue remains; otherwise `422`.",
+                "summary": "Create the expense from a scan",
                 "tags": [
                     "Purchase Scans"
                 ],
@@ -30589,7 +30589,23 @@
                         "$ref": "#/components/responses/NotFound"
                     },
                     "422": {
-                        "$ref": "#/components/responses/UnprocessableEntity"
+                        "description": "The request could not be validated. Possible `error.code` values: `purchase_scan_source_unavailable` \u2014 the original was purged or is no longer retained; the scan history remains available (`error.subcode`: `source_unavailable`).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
                     },
                     "409": {
                         "$ref": "#/components/responses/Conflict"
@@ -30651,7 +30667,7 @@
         "/quotes/{quote}/convert": {
             "post": {
                 "operationId": "public-api.v1.quotes.convert",
-                "description": "Convert an accepted quote into a sales invoice. The new invoice references the source quote via metadata; the quote moves to status `converted`.",
+                "description": "Convert an accepted quote into an invoice. The new invoice references the source quote via metadata; the quote moves to status `converted`.",
                 "summary": "Convert quote to invoice",
                 "tags": [
                     "Quotes"
@@ -36826,7 +36842,7 @@
                         }
                     },
                     "402": {
-                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -39483,7 +39499,7 @@
                         }
                     },
                     "402": {
-                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -39971,7 +39987,7 @@
         "/invoices": {
             "post": {
                 "operationId": "public-api.v1.invoices.create",
-                "description": "Create a sales invoice. It is created in `draft` by default; pass `options.issue_directly: true` to issue it immediately (assigning the correlative number and freezing the document per AEAT), or issue it later. VeriFactu *alta* is transmitted to AEAT asynchronously \u2014 a `201` does not mean AEAT has accepted the invoice yet, so poll it for the AEAT status.\n\n```json\n{\n  \"client_id\": \"0190a1b2-c3d4-7e5f-8a90-1b2c3d4e5f60\",\n  \"lines\": [{ \"description\": \"Consulting\", \"quantity\": 1, \"unit_price\": 1000, \"tax_rate\": 21 }],\n  \"options\": { \"issue_directly\": true }\n}\n```\n\nLimits: at least one line is required; send an `Idempotency-Key` (\u2264255 chars, remembered 24 h) for safe retries; a duplicate `external_id` upserts the existing invoice instead of creating a new one.",
+                "description": "Create an invoice. It is created in `draft` by default; pass `options.issue_directly: true` to issue it immediately (assigning the correlative number and freezing the document per AEAT), or issue it later. VeriFactu *alta* is transmitted to AEAT asynchronously \u2014 a `201` does not mean AEAT has accepted the invoice yet, so poll it for the AEAT status.\n\n```json\n{\n  \"client_id\": \"0190a1b2-c3d4-7e5f-8a90-1b2c3d4e5f60\",\n  \"lines\": [{ \"description\": \"Consulting\", \"quantity\": 1, \"unit_price\": 1000, \"tax_rate\": 21 }],\n  \"options\": { \"issue_directly\": true }\n}\n```\n\nLimits: at least one line is required; send an `Idempotency-Key` (\u2264255 chars, remembered 24 h) for safe retries; a duplicate `external_id` upserts the existing invoice instead of creating a new one.",
                 "summary": "Create an invoice",
                 "tags": [
                     "Invoices"
@@ -40489,7 +40505,7 @@
             },
             "get": {
                 "operationId": "public-api.v1.invoices.list",
-                "description": "List your sales invoices with cursor-based pagination. Supports filtering by `status[in]`, `client_id`, `series_id`, `issued_on[gte|lte]`, and `total[gte|lte]`.",
+                "description": "List your invoices with cursor-based pagination. Supports filtering by `status[in]`, `client_id`, `series_id`, `issued_on[gte|lte]`, and `total[gte|lte]`.",
                 "summary": "List all invoices",
                 "tags": [
                     "Invoices"
@@ -46887,7 +46903,7 @@
             "post": {
                 "operationId": "public-api.v1.purchase_invoices.create",
                 "description": "Record an invoice received from a supplier. Catalog lines accept `product_id`, `variant_id`, `presentation_id`, `supplier_offer_id` and an optional `confirmed_base_quantity`. When `supplier_offer_id` is provided, the supplier cost, purchase unit and base-unit conversion are frozen in the invoice line snapshot; `unit_price` may be omitted. Creating the invoice as `pending` registers the inbound stock once. A `draft` invoice does not affect stock until it is later marked as paid.",
-                "summary": "Create a purchase invoice",
+                "summary": "Create an expense",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -46953,7 +46969,7 @@
                 },
                 "responses": {
                     "201": {
-                        "description": "Purchase invoice created successfully. The `Location` header contains the canonical URL of the newly created resource.",
+                        "description": "Expense created successfully. The `Location` header contains the canonical URL of the newly created resource.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -47303,7 +47319,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                        "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -47344,7 +47360,7 @@
                         }
                     },
                     "409": {
-                        "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                        "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -47396,8 +47412,8 @@
             },
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.list",
-                "description": "List purchase invoices received from suppliers with cursor-based pagination.",
-                "summary": "List all purchase invoices",
+                "description": "List expenses recorded from suppliers with cursor-based pagination.",
+                "summary": "List all expenses",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -47434,7 +47450,7 @@
                     {
                         "name": "status",
                         "in": "query",
-                        "description": "Purchase invoice status. Exact match on `status`.",
+                        "description": "Expense status. Exact match on `status`.",
                         "schema": {
                             "type": "string"
                         }
@@ -47442,7 +47458,7 @@
                     {
                         "name": "status[in]",
                         "in": "query",
-                        "description": "Purchase invoice status. Comma-separated list. Any of the values matches.",
+                        "description": "Expense status. Comma-separated list. Any of the values matches.",
                         "schema": {
                             "type": "string",
                             "description": "Comma-separated list of values (CSV)."
@@ -47606,7 +47622,7 @@
                     {
                         "name": "tags",
                         "in": "query",
-                        "description": "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics \u2014 matches purchase invoices carrying ANY of the tags). Exact match on `tags`.",
+                        "description": "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics \u2014 matches expenses carrying ANY of the tags). Exact match on `tags`.",
                         "schema": {
                             "type": "string"
                         }
@@ -47614,7 +47630,7 @@
                     {
                         "name": "tags[in]",
                         "in": "query",
-                        "description": "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics \u2014 matches purchase invoices carrying ANY of the tags). Comma-separated list. Any of the values matches.",
+                        "description": "Filter by classification tag (lowercase slug). Supports multiple values with `tags[in]=a,b` (JSON_CONTAINS, OR semantics \u2014 matches expenses carrying ANY of the tags). Comma-separated list. Any of the values matches.",
                         "schema": {
                             "type": "string",
                             "description": "Comma-separated list of values (CSV)."
@@ -48013,7 +48029,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                        "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -53827,7 +53843,7 @@
                         }
                     },
                     "402": {
-                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -56375,7 +56391,7 @@
         "/contacts/{contact}": {
             "delete": {
                 "operationId": "public-api.v1.contacts.delete",
-                "description": "Delete a contact. It is a soft delete: the contact disappears from every read surface \u2014 list, search, options and selectors, stats, export, activities and its own detail, which answers 404 `contact_not_found` from then on \u2014 while nothing is physically removed. Its identity, roles, directional profiles, bank accounts, legacy aliases and every invoice, quote, delivery note or purchase invoice that references it are preserved exactly as they were, and those documents keep showing their customer or supplier data. Deleting releases the fiscal identity and the `external_id`, so the same tax ID or external ID can be registered again as a different contact. A deleted contact can no longer be used in new documents, not even through its legacy alias. The operation is irreversible through the API \u2014 `PUT /contacts/{contact}/restore` only unarchives \u2014 and deleting an unknown, foreign or already deleted UUID returns 404 `contact_not_found`. For a reversible removal that keeps the contact readable, use `POST /contacts/{contact}/archive` instead. It emits the `contact.deleted` webhook event.",
+                "description": "Delete a contact. It is a soft delete: the contact disappears from every read surface \u2014 list, search, options and selectors, stats, export, activities and its own detail, which answers 404 `contact_not_found` from then on \u2014 while nothing is physically removed. Its identity, roles, directional profiles, bank accounts, legacy aliases and every invoice, quote, delivery note or expense that references it are preserved exactly as they were, and those documents keep showing their customer or supplier data. Deleting releases the fiscal identity and the `external_id`, so the same tax ID or external ID can be registered again as a different contact. A deleted contact can no longer be used in new documents, not even through its legacy alias. The operation is irreversible through the API \u2014 `PUT /contacts/{contact}/restore` only unarchives \u2014 and deleting an unknown, foreign or already deleted UUID returns 404 `contact_not_found`. For a reversible removal that keeps the contact readable, use `POST /contacts/{contact}/archive` instead. It emits the `contact.deleted` webhook event.",
                 "summary": "Delete a contact",
                 "tags": [
                     "Contacts"
@@ -59788,7 +59804,7 @@
             },
             "get": {
                 "operationId": "public-api.v1.invoices.show",
-                "description": "Retrieve a sales invoice by its `uuid`.",
+                "description": "Retrieve an invoice by its `uuid`.",
                 "summary": "Retrieve an invoice",
                 "tags": [
                     "Invoices"
@@ -68076,8 +68092,8 @@
         "/purchase_invoices/{purchase_invoice}": {
             "delete": {
                 "operationId": "public-api.v1.purchase_invoices.delete",
-                "description": "Delete a purchase invoice.",
-                "summary": "Delete a purchase invoice",
+                "description": "Delete an expense.",
+                "summary": "Delete an expense",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -68347,7 +68363,7 @@
                                             "error": {
                                                 "type": "not_found_error",
                                                 "code": "purchase_invoice_not_found",
-                                                "message": "Factura de compra no encontrada.",
+                                                "message": "Gasto no encontrado.",
                                                 "param": "purchase_invoice_uuid",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#purchase_invoice_not_found",
                                                 "request_id": "req_085d70142c2eb624650b92ea19"
@@ -68368,7 +68384,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                        "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -68402,7 +68418,7 @@
                         }
                     },
                     "409": {
-                        "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                        "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -68455,8 +68471,8 @@
             },
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.show",
-                "description": "Retrieve a purchase invoice by its `uuid`.",
-                "summary": "Retrieve a purchase invoice",
+                "description": "Retrieve an expense by its `uuid`.",
+                "summary": "Retrieve an expense",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -68823,7 +68839,7 @@
                                             "error": {
                                                 "type": "not_found_error",
                                                 "code": "purchase_invoice_not_found",
-                                                "message": "Factura de compra no encontrada.",
+                                                "message": "Gasto no encontrado.",
                                                 "param": "purchase_invoice_uuid",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#purchase_invoice_not_found",
                                                 "request_id": "req_6a4a0dd9c915c293a2d37c8108"
@@ -68863,8 +68879,8 @@
             },
             "put": {
                 "operationId": "public-api.v1.purchase_invoices.update",
-                "description": "Update a purchase invoice.",
-                "summary": "Update a purchase invoice",
+                "description": "Update an expense.",
+                "summary": "Update an expense",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -69265,7 +69281,7 @@
                                             "error": {
                                                 "type": "not_found_error",
                                                 "code": "purchase_invoice_not_found",
-                                                "message": "Factura de compra no encontrada.",
+                                                "message": "Gasto no encontrado.",
                                                 "param": "purchase_invoice_uuid",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#purchase_invoice_not_found",
                                                 "request_id": "req_37c74da0e31fab5d1285511df8"
@@ -69286,7 +69302,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                        "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -69320,7 +69336,7 @@
                         }
                     },
                     "409": {
-                        "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                        "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -69374,8 +69390,8 @@
         "/purchase_invoices/{purchase_invoice}/file": {
             "delete": {
                 "operationId": "public-api.v1.purchase_invoices.delete_file",
-                "description": "Delete the original file attached to a purchase invoice and release its storage. Idempotent: succeeds even when no file was attached.",
-                "summary": "Remove a purchase invoice file",
+                "description": "Delete the original file attached to an expense and release its storage. Idempotent: succeeds even when no file was attached.",
+                "summary": "Remove an expense file",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -69636,7 +69652,7 @@
                                             "error": {
                                                 "type": "not_found_error",
                                                 "code": "purchase_invoice_not_found",
-                                                "message": "Factura de compra no encontrada.",
+                                                "message": "Gasto no encontrado.",
                                                 "param": "purchase_invoice_uuid",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#purchase_invoice_not_found",
                                                 "request_id": "req_fde0fedef7f58a1762cd06f5dd"
@@ -69657,7 +69673,7 @@
                         }
                     },
                     "409": {
-                        "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                        "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -69709,8 +69725,8 @@
             },
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.file",
-                "description": "Stream the original file attached to the purchase invoice when it was uploaded \u2014 a PDF or a scanned image (`image/jpeg`, `image/png`), the formats accepted on upload. Returns 404 if no attachment is present.",
-                "summary": "Download the original purchase invoice file",
+                "description": "Stream the original file attached to the expense when it was uploaded \u2014 a PDF or a scanned image (`image/jpeg`, `image/png`), the formats accepted on upload. Returns 404 if no attachment is present.",
+                "summary": "Download the original expense file",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -69994,7 +70010,7 @@
                                             "error": {
                                                 "type": "not_found_error",
                                                 "code": "purchase_invoice_not_found",
-                                                "message": "Factura de compra no encontrada.",
+                                                "message": "Gasto no encontrado.",
                                                 "param": "purchase_invoice_uuid",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#purchase_invoice_not_found",
                                                 "request_id": "req_4a87478ee607cecdbef33f4b80"
@@ -80942,8 +80958,8 @@
         "/purchase_invoices/{purchase_invoice}/payment-receipt": {
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.payment_receipt",
-                "description": "Stream the PDF payment receipt for a paid purchase invoice. Returns 409 if the invoice has not been paid yet.",
-                "summary": "Download a purchase invoice payment receipt",
+                "description": "Stream the PDF payment receipt for a paid expense. Returns 409 if the invoice has not been paid yet.",
+                "summary": "Download an expense payment receipt",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -81205,7 +81221,7 @@
                                             "error": {
                                                 "type": "not_found_error",
                                                 "code": "purchase_invoice_not_found",
-                                                "message": "Factura de compra no encontrada.",
+                                                "message": "Gasto no encontrado.",
                                                 "param": "purchase_invoice_uuid",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#purchase_invoice_not_found",
                                                 "request_id": "req_03c565fc8091b2ae4b2b1cf186"
@@ -81348,7 +81364,7 @@
                         "$ref": "#/components/responses/Unauthorized"
                     },
                     "403": {
-                        "description": "The request is not allowed for this API key or its creator. Possible `error.code` values: `insufficient_scope` \u2014 the API key lacks the scope this operation requires; `forbidden_action` \u2014 the API key has the scope, but the user who created it cannot perform this action for the company; `error.subcode` is `api_key_creator_not_member` (the API key creator no longer belongs to the company), or `purchase_invoices_export_required` (the API key creator lacks the `export` capability for purchase invoices).",
+                        "description": "The request is not allowed for this API key or its creator. Possible `error.code` values: `insufficient_scope` \u2014 the API key lacks the scope this operation requires; `forbidden_action` \u2014 the API key has the scope, but the user who created it cannot perform this action for the company; `error.subcode` is `api_key_creator_not_member` (the API key creator no longer belongs to the company), or `purchase_invoices_export_required` (the API key creator lacks the `export` capability for expenses).",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -88527,8 +88543,8 @@
         "/purchase_invoices/find-by-external-id": {
             "post": {
                 "operationId": "public-api.v1.purchase_invoices.find_by_external_id",
-                "description": "Look up a single purchase invoice by its `external_id` (sent in the JSON body), the integration key that maps it to a record in a third-party system (ERP/CRM/e-commerce). Orthogonal to the supplier-provided `external_invoice_number` (the vendor's fiscal number). Returns the matching purchase invoice or 404 `purchase_invoice_not_found` if none uses that external_id within your company.",
-                "summary": "Find a purchase invoice by external ID",
+                "description": "Look up a single expense by its `external_id` (sent in the JSON body), the integration key that maps it to a record in a third-party system (ERP/CRM/e-commerce). Orthogonal to the supplier-provided `external_invoice_number` (the vendor's fiscal number). Returns the matching expense or 404 `purchase_invoice_not_found` if none uses that external_id within your company.",
+                "summary": "Find an expense by external ID",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -88885,7 +88901,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                        "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -88926,7 +88942,7 @@
                         }
                     },
                     "409": {
-                        "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                        "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -95612,7 +95628,7 @@
                                                     "direction": "sales",
                                                     "event_type": "invoice.created",
                                                     "title": "Factura FAC-2026-0042 creada",
-                                                    "description": "Se cre\u00f3 una factura de venta para el contacto.",
+                                                    "description": "Se cre\u00f3 una factura para el contacto.",
                                                     "related_resource_type": "Invoice",
                                                     "related_resource_id": "0199f2a3-44e7-7a1c-8f10-81d5d7ac0042",
                                                     "amount": 1210,
@@ -99185,7 +99201,7 @@
                         "name": "related_entity_ids[]",
                         "in": "query",
                         "required": true,
-                        "description": "Documents to summarize: UUID v7 of each one, either comma-separated (`related_entity_ids=a,b,c`) or repeated. Required, maximum 100 per call \u2014 more returns 422. The type is not needed: a UUID v7 is globally unique, so the batch MAY mix invoices, quotes, pro formas, delivery notes, purchase invoices and recurring invoices. Ids without any email, and ids that do not belong to a document of your company, are OMITTED from the response instead of being reported as zero, so match the results back by `related_entity_id`.",
+                        "description": "Documents to summarize: UUID v7 of each one, either comma-separated (`related_entity_ids=a,b,c`) or repeated. Required, maximum 100 per call \u2014 more returns 422. The type is not needed: a UUID v7 is globally unique, so the batch MAY mix invoices, quotes, pro formas, delivery notes, expenses and recurring invoices. Ids without any email, and ids that do not belong to a document of your company, are OMITTED from the response instead of being reported as zero, so match the results back by `related_entity_id`.",
                         "schema": {
                             "type": "array",
                             "format": "uuid",
@@ -107367,8 +107383,8 @@
         "/purchase_invoices/stats": {
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.stats",
-                "description": "Aggregated KPIs for your purchase invoices: total count and amount, counts per status, pending and overdue totals, and amounts by supplier. Returned as `{ \"data\": PurchaseInvoiceStats }`.",
-                "summary": "Get purchase invoice stats",
+                "description": "Aggregated KPIs for your expenses: total count and amount, counts per status, pending and overdue totals, and amounts by supplier. Returned as `{ \"data\": PurchaseInvoiceStats }`.",
+                "summary": "Get expense stats",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -120513,7 +120529,7 @@
                         }
                     },
                     "402": {
-                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -123541,7 +123557,7 @@
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.expense_categories",
                 "description": "List the expense categories available to your company. Use the returned `id` as the scanner review field `expense_category`. The complete catalog is returned in `data`, without pagination.",
-                "summary": "List purchase invoice expense categories",
+                "summary": "List expense categories",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -127370,8 +127386,8 @@
         "/purchase_invoices/overdue": {
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.overdue",
-                "description": "Return purchase invoices whose due date has passed and are still unpaid.",
-                "summary": "List overdue purchase invoices",
+                "description": "Return expenses whose due date has passed and are still unpaid.",
+                "summary": "List overdue expenses",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -128744,8 +128760,8 @@
         "/purchase_invoices/pending": {
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.pending",
-                "description": "Return purchase invoices in pending payment status, paginated.",
-                "summary": "List pending purchase invoices",
+                "description": "Return expenses in pending payment status, paginated.",
+                "summary": "List pending expenses",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -131969,8 +131985,8 @@
         "/purchase_invoices/{purchase_invoice}/payments": {
             "get": {
                 "operationId": "public-api.v1.purchase_invoices.list_payments",
-                "description": "Return the full payment ledger of a purchase invoice as `{ \"data\": [...] }`, ordered by payment date descending. The ledger of a single invoice is bounded, so the complete set is returned without cursor pagination. An invoice with no payments returns an empty array, never a `404`; a `404` here means the invoice does not exist or belongs to another company.",
-                "summary": "List purchase invoice payments",
+                "description": "Return the full payment ledger of an expense as `{ \"data\": [...] }`, ordered by payment date descending. The ledger of a single invoice is bounded, so the complete set is returned without cursor pagination. An invoice with no payments returns an empty array, never a `404`; a `404` here means the invoice does not exist or belongs to another company.",
+                "summary": "List expense payments",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -131992,7 +132008,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "All payments for the purchase invoice, including reversed payments. An invoice without payments returns an empty collection.",
+                        "description": "All payments for the expense, including reversed payments. An expense without payments returns an empty collection.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -132262,7 +132278,7 @@
                                             "error": {
                                                 "type": "not_found_error",
                                                 "code": "purchase_invoice_not_found",
-                                                "message": "Factura de compra no encontrada.",
+                                                "message": "Gasto no encontrado.",
                                                 "param": "purchase_invoice_uuid",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#purchase_invoice_not_found",
                                                 "request_id": "req_ea397548bd9a23d955cbf350dd"
@@ -132302,8 +132318,8 @@
             },
             "post": {
                 "operationId": "public-api.v1.purchase_invoices.register_payment",
-                "description": "Record a partial (or total) payment against a purchase invoice and append it to its ledger. Body: `amount`, `paid_on`, `payment_method`, plus the optional `bank_account_id`, `reference` and `notes`. Three invariants are enforced and return `422`: the amount must be greater than zero and no larger than the outstanding balance, `paid_on` must fall between the invoice issue date and today, and a cancelled invoice accepts no payments. Once the accumulated payments cover the total, the invoice settles on its own \u2014 you do not need to call `mark_paid` as well. Returns `201` with the payment just created and a `Location` header pointing at the ledger.",
-                "summary": "Register a purchase invoice payment",
+                "description": "Record a partial (or total) payment against an expense and append it to its ledger. Body: `amount`, `paid_on`, `payment_method`, plus the optional `bank_account_id`, `reference` and `notes`. Three invariants are enforced and return `422`: the amount must be greater than zero and no larger than the outstanding balance, `paid_on` must fall between the invoice issue date and today, and a cancelled invoice accepts no payments. Once the accumulated payments cover the total, the invoice settles on its own \u2014 you do not need to call `mark_paid` as well. Returns `201` with the payment just created and a `Location` header pointing at the ledger.",
+                "summary": "Register an expense payment",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -132612,7 +132628,7 @@
                                             "error": {
                                                 "type": "not_found_error",
                                                 "code": "purchase_invoice_not_found",
-                                                "message": "Factura de compra no encontrada.",
+                                                "message": "Gasto no encontrado.",
                                                 "param": "purchase_invoice_uuid",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#purchase_invoice_not_found",
                                                 "request_id": "req_1e6496ca0cb931ecffc659e4e1"
@@ -132633,7 +132649,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                        "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -132674,7 +132690,7 @@
                         }
                     },
                     "409": {
-                        "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                        "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -140153,8 +140169,8 @@
         "/purchase_invoices/{purchase_invoice}/mark_paid": {
             "post": {
                 "operationId": "public-api.v1.purchase_invoices.mark_paid",
-                "description": "Record payment of a purchase invoice using the optional `paid_on` date. When a draft invoice contains stock-managed catalog lines, this transition registers their frozen base quantities as inbound stock exactly once. A pending invoice has already registered them, so marking it as paid never duplicates stock.",
-                "summary": "Mark purchase invoice as paid",
+                "description": "Record payment of an expense using the optional `paid_on` date. When a draft expense contains stock-managed catalog lines, this transition registers their frozen base quantities as inbound stock exactly once. A pending expense has already registered them, so marking it as paid never duplicates stock.",
+                "summary": "Mark expense as paid",
                 "tags": [
                     "Purchase Invoices"
                 ],
@@ -140539,7 +140555,7 @@
                                             "error": {
                                                 "type": "not_found_error",
                                                 "code": "purchase_invoice_not_found",
-                                                "message": "Factura de compra no encontrada.",
+                                                "message": "Gasto no encontrado.",
                                                 "param": "purchase_invoice_uuid",
                                                 "doc_url": "https://docs.factuarea.com/guides/errors#purchase_invoice_not_found",
                                                 "request_id": "req_44d49d16c6fb73f120ad425f57"
@@ -140560,7 +140576,7 @@
                         }
                     },
                     "422": {
-                        "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                        "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -140594,7 +140610,7 @@
                         }
                     },
                     "409": {
-                        "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                        "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -146838,7 +146854,7 @@
                         }
                     },
                     "402": {
-                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -153766,7 +153782,7 @@
         "/purchase_scans/{purchase_scan}/duplicate_resolution": {
             "post": {
                 "operationId": "public-api.v1.purchase_scans.duplicate_resolution",
-                "description": "Resolve a scan in `duplicate` status with `resolution` = `link_existing` (link the existing purchase invoice) or `archive`. Duplicate overrides require an authorised user in the Factuarea app; they are not available through the public API or MCP. Requires `expected_version`. Accepts `Idempotency-Key`.",
+                "description": "Resolve a scan in `duplicate` status with `resolution` = `link_existing` (link the existing expense) or `archive`. Duplicate overrides require an authorised user in the Factuarea app; they are not available through the public API or MCP. Requires `expected_version`. Accepts `Idempotency-Key`.",
                 "summary": "Resolve a duplicate purchase scan",
                 "tags": [
                     "Purchase Scans"
@@ -154471,7 +154487,7 @@
                         "$ref": "#/components/responses/Unauthorized"
                     },
                     "403": {
-                        "description": "The request is not allowed for this API key or its creator. Possible `error.code` values: `insufficient_scope` \u2014 the API key lacks the scope this operation requires; `forbidden_action` \u2014 the API key has the scope, but the user who created it cannot perform this action for the company; `error.subcode` is `api_key_creator_not_member` (the API key creator no longer belongs to the company), or `purchase_invoices_delete_required` (archiving requires the `delete` capability for purchase invoices).",
+                        "description": "The request is not allowed for this API key or its creator. Possible `error.code` values: `insufficient_scope` \u2014 the API key lacks the scope this operation requires; `forbidden_action` \u2014 the API key has the scope, but the user who created it cannot perform this action for the company; `error.subcode` is `api_key_creator_not_member` (the API key creator no longer belongs to the company), or `purchase_invoices_delete_required` (archiving requires the `delete` capability for expenses).",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -155526,7 +155542,23 @@
                         "$ref": "#/components/responses/NotFound"
                     },
                     "422": {
-                        "$ref": "#/components/responses/UnprocessableEntity"
+                        "description": "The request could not be validated. Possible `error.code` values: `purchase_scan_source_unavailable` \u2014 the original was purged or is no longer retained; the scan history remains available (`error.subcode`: `source_unavailable`).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
                     },
                     "409": {
                         "$ref": "#/components/responses/Conflict"
@@ -157225,7 +157257,23 @@
                         "$ref": "#/components/responses/NotFound"
                     },
                     "422": {
-                        "$ref": "#/components/responses/UnprocessableEntity"
+                        "description": "The request could not be validated. Possible `error.code` values: `purchase_scan_source_unavailable` \u2014 the original was purged or is no longer retained; the scan history remains available (`error.subcode`: `source_unavailable`).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
                     },
                     "409": {
                         "$ref": "#/components/responses/Conflict"
@@ -179101,7 +179149,7 @@
                         }
                     },
                     "402": {
-                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -180396,7 +180444,7 @@
                         }
                     },
                     "402": {
-                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                        "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -190955,6 +191003,555 @@
                 "x-required-scope": "invoices:void",
                 "x-irreversible": true
             }
+        },
+        "/invoices/{invoice}/issue": {
+            "post": {
+                "operationId": "public-api.v1.invoices.issue",
+                "description": "Issues a draft invoice without sending it: assigns its definitive series number, freezes the issuer and customer snapshots, sets `issued_at`, registers the VeriFactu record when applicable and emits the `invoice.issued` event. No email is sent and the delivery mark is not set (`is_sent` stays `false`); to deliver it use `POST /v1/invoices/{id}/send`, or `POST /v1/invoices/{id}/mark-sent` with `Factuarea-Version: 2026-10-01` when you delivered it through another channel. Only a `draft` can be issued: any other status returns 422 `invalid_status_transition`. Issuing is irreversible and consumes a series number, so send an `Idempotency-Key` to retry safely. Available in every API version; the response follows the effective version (before `2026-10-01` the issued invoice is published as `status: sent`).",
+                "summary": "Issue an invoice",
+                "tags": [
+                    "Invoices"
+                ],
+                "parameters": [
+                    {
+                        "name": "invoice",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "Idempotency-Key",
+                        "in": "header",
+                        "description": "Client-generated opaque key (up to 255 characters; UUID v7 recommended) that makes retries safe: the first response is cached and replayed for repeats without re-executing the mutation. Reusing a key with a different body returns `409 idempotency_key_reused`. See the [Idempotency guide](/guides/idempotency). **Required on this operation**: repeating it delivers an effect that cannot be taken back (an email sent, a file generated, a third-party call, a charge), so a request without this header is rejected with `422 idempotency_key_required` before any business logic runs.",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "minLength": 1,
+                            "maxLength": 255,
+                            "example": "01928f10-7c0e-7c4a-9b7d-2f8a6e3c1d4b"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Invoice"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                },
+                                "examples": {
+                                    "success": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 200",
+                                        "value": {
+                                            "data": {
+                                                "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
+                                                "object": "invoice",
+                                                "number": "FAC-2026-00042",
+                                                "is_number_assigned": true,
+                                                "type": "F1",
+                                                "series": {
+                                                    "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b02",
+                                                    "code": "FAC-2026"
+                                                },
+                                                "client": {
+                                                    "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a01",
+                                                    "name": "Acme Soluciones SL"
+                                                },
+                                                "status": "issued",
+                                                "price_list_id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b10",
+                                                "price_list_name": "Tarifa profesional 2026",
+                                                "issued_on": "2026-03-15",
+                                                "due_on": "2026-04-14",
+                                                "subtotal": 1000,
+                                                "taxes_total": 210,
+                                                "total_vat": 210,
+                                                "total_retention": 0,
+                                                "total_surcharge": 0,
+                                                "total": 1210,
+                                                "total_disbursements": 0,
+                                                "total_to_pay": 1210,
+                                                "currency": "EUR",
+                                                "notes": "Servicios profesionales marzo 2026.",
+                                                "external_id": "ERP-2026-0042",
+                                                "lines": [
+                                                    {
+                                                        "object": "invoice_line",
+                                                        "description": "Consultor\u00eda t\u00e9cnica (10 h)",
+                                                        "additional_description": "Auditor\u00eda inicial e informe de mejoras",
+                                                        "product": {
+                                                            "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b03",
+                                                            "name": "Consultor\u00eda t\u00e9cnica (hora)"
+                                                        },
+                                                        "quantity": 10,
+                                                        "unit_price": 100,
+                                                        "tax_rate": 21,
+                                                        "retention_rate": 0,
+                                                        "surcharge_rate": 0,
+                                                        "discount_percent": 0,
+                                                        "subtotal": 1000,
+                                                        "taxes": 210,
+                                                        "total": 1210,
+                                                        "indirect_tax_regime": "iva",
+                                                        "variant": null,
+                                                        "presentation": null,
+                                                        "item_kind": "service",
+                                                        "commercial_unit_code": "HUR",
+                                                        "base_unit_code": "HUR",
+                                                        "conversion_factor": "1.000000",
+                                                        "base_quantity": "10.0000",
+                                                        "price_list_id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b10",
+                                                        "price_list_name": "Tarifa profesional 2026",
+                                                        "price_source": "price_list",
+                                                        "price_unit_code": "HUR",
+                                                        "configuration": null,
+                                                        "options": [],
+                                                        "price_semantics": "per_commercial_unit",
+                                                        "price_adjustment_total": "0.0000",
+                                                        "option_adjustments_absorbed": false,
+                                                        "regime_key": null,
+                                                        "exemption_reason": null,
+                                                        "aeat_tax_code": "S1",
+                                                        "line_type": "NORMAL",
+                                                        "source_invoice_reference": null,
+                                                        "source_invoice_ids": null,
+                                                        "unit": null,
+                                                        "exemption_reason_text": null
+                                                    }
+                                                ],
+                                                "metadata": {
+                                                    "order_id": "PO-2026-0042"
+                                                },
+                                                "tags": [
+                                                    "consultoria",
+                                                    "cliente-vip"
+                                                ],
+                                                "custom_fields": [
+                                                    {
+                                                        "field": "centro_coste",
+                                                        "value": "CC-2026-001"
+                                                    },
+                                                    {
+                                                        "field": "numero_pedido",
+                                                        "value": "PO-2026-0042"
+                                                    }
+                                                ],
+                                                "operation_regime": "general",
+                                                "exemption_reason": null,
+                                                "legal_mentions": [],
+                                                "exclude_347": false,
+                                                "verifactu_status": "not_applicable",
+                                                "paid_amount": 0,
+                                                "pending_amount": 1210,
+                                                "payments": {
+                                                    "detail": [],
+                                                    "total": 0,
+                                                    "pending": 1210
+                                                },
+                                                "is_corrective": false,
+                                                "corrective": null,
+                                                "payment": null,
+                                                "public_link": {
+                                                    "object": "public_link",
+                                                    "url": "https://app.factuarea.com/d/01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
+                                                    "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a42",
+                                                    "enabled": true,
+                                                    "expires_at": "2026-09-15T23:59:59Z",
+                                                    "max_days": 120
+                                                },
+                                                "substituted_by": null,
+                                                "recurring": null,
+                                                "paid_at": null,
+                                                "paid_on": null,
+                                                "issued_at": "2026-03-15T11:45:00Z",
+                                                "sent_at": null,
+                                                "sent_via": null,
+                                                "is_sent": false,
+                                                "voided_at": null,
+                                                "void_reason": null,
+                                                "scheduled_for": null,
+                                                "scheduled_action": null,
+                                                "channel": null,
+                                                "source_store_id": null,
+                                                "created_at": "2026-03-15T11:30:00Z",
+                                                "updated_at": "2026-03-15T11:45:00Z"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds). Omitted when the API key has no cap (unlimited tier).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            },
+                            "Idempotent-Replayed": {
+                                "description": "Present with value `\"true\"` only when this response was replayed from the idempotency cache for a repeated `Idempotency-Key` (same key, same request fingerprint). Absent on the first, freshly executed request.",
+                                "schema": {
+                                    "type": "string",
+                                    "examples": [
+                                        "true"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing or invalid API key.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "missing_api_key": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 401 missing_api_key",
+                                        "value": {
+                                            "error": {
+                                                "type": "authentication_error",
+                                                "code": "missing_api_key",
+                                                "message": "Falta header Authorization o X-API-Key.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#missing_api_key",
+                                                "request_id": "req_8ab20dc56100cea62cad744353"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The API key lacks the required scope for this operation.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "insufficient_scope": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 403 insufficient_scope",
+                                        "value": {
+                                            "error": {
+                                                "type": "authorization_error",
+                                                "code": "insufficient_scope",
+                                                "message": "Esta operaci\u00f3n requiere el scope 'invoices:write'. Tu API key solo tiene los scopes: ninguno.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#insufficient_scope",
+                                                "request_id": "req_b1b65e5b74360faf5b3d5f4f8f"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Rate limit exceeded. Retry after the duration in `Retry-After`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "rate_limit_exceeded": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 429 rate_limit_exceeded",
+                                        "value": {
+                                            "error": {
+                                                "type": "rate_limit_error",
+                                                "code": "rate_limit_exceeded",
+                                                "message": "Has excedido el l\u00edmite de requests permitido. Reintenta m\u00e1s tarde.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#rate_limit_exceeded",
+                                                "request_id": "req_25132af59081a0301d5c3e763b"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Number of seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "RateLimit-Limit": {
+                                "description": "Request quota for the current window (RFC 9331).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "RateLimit-Remaining": {
+                                "description": "Remaining requests in the current window (RFC 9331).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "RateLimit-Reset": {
+                                "description": "Seconds until the quota window resets (RFC 9331).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Request quota for the current window (legacy header).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Remaining requests in the current window (legacy header).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Seconds until the quota window resets (legacy header).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Unexpected server error.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "internal_error": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 500 internal_error",
+                                        "value": {
+                                            "error": {
+                                                "type": "api_error",
+                                                "code": "internal_error",
+                                                "message": "Algo se rompi\u00f3 en nuestro lado al procesar la petici\u00f3n. La condici\u00f3n no la provoca tu payload.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#internal_error",
+                                                "request_id": "req_c68f63f42b39f9d6bd4a17d5ec"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The requested resource does not exist or belongs to another company.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "invoice_not_found": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 404 invoice_not_found",
+                                        "value": {
+                                            "error": {
+                                                "type": "not_found_error",
+                                                "code": "invoice_not_found",
+                                                "message": "Factura no encontrada.",
+                                                "param": "invoice_uuid",
+                                                "subcode": "invoice_not_found",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#invoice_not_found",
+                                                "request_id": "req_d918c4160693bfdb8384227243"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation failed, or the invoice cannot undergo the requested state transition (e.g. marking an already-paid invoice as paid, or editing an issued invoice \u2014 use a corrective instead). The `error.param` field identifies which input is invalid, if any.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "invalid_status_transition": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 422 invalid_status_transition",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "invalid_status_transition",
+                                                "message": "Transici\u00f3n de estado inv\u00e1lida: de 'issued' a 'issued'",
+                                                "subcode": "invoice_invalid_status_transition",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#invalid_status_transition",
+                                                "request_id": "req_be0f79397919ac81909f69cb2c"
+                                            }
+                                        }
+                                    },
+                                    "invalid_param_format": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 422 invalid_param_format",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "invalid_param_format",
+                                                "message": "La Idempotency-Key debe tener entre 1 y 255 caracteres ASCII printable.",
+                                                "param": "Idempotency-Key",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_format",
+                                                "request_id": "req_fbb1bf145eb2cb2121c7214e31"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "The invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-paid invoice as paid), an attempt to edit an issued invoice (use corrective instead), or a reused idempotency key.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "idempotency_key_reused": {
+                                        "summary": "POST /v1/invoices/{invoice}/issue \u00b7 409 idempotency_key_reused",
+                                        "value": {
+                                            "error": {
+                                                "type": "idempotency_error",
+                                                "code": "idempotency_key_reused",
+                                                "message": "Esa `Idempotency-Key` ya se us\u00f3 con un payload distinto. La clave identifica una operaci\u00f3n concreta, as\u00ed que reutilizarla para otra vaciar\u00eda de sentido el replay.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#idempotency_key_reused",
+                                                "request_id": "req_0c1499462f7d8162cb802b8497"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "x-speakeasy-group": "invoices",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "invoices:write",
+                "x-irreversible": true
+            }
         }
     },
     "components": {
@@ -191016,10 +191613,10 @@
                             "delivery_notes:delete": "Delete delivery notes.",
                             "delivery_notes:transition": "Change the lifecycle status of delivery notes.",
                             "delivery_notes:gdpr_forget": "Erase personal data (GDPR Art. 17) from delivery notes.",
-                            "purchase_invoices:read": "Read purchase invoices.",
-                            "purchase_invoices:write": "Create and update purchase invoices.",
-                            "purchase_invoices:delete": "Delete purchase invoices.",
-                            "purchase_invoices:transition": "Change the lifecycle status of purchase invoices.",
+                            "purchase_invoices:read": "Read expenses.",
+                            "purchase_invoices:write": "Create and update expenses.",
+                            "purchase_invoices:delete": "Delete expenses.",
+                            "purchase_invoices:transition": "Change the lifecycle status of expenses.",
                             "recurring_invoices:read": "Read recurring invoices.",
                             "recurring_invoices:write": "Create and update recurring invoices.",
                             "recurring_invoices:delete": "Delete recurring invoices.",
@@ -195598,7 +196195,7 @@
             },
             "BulkDeletePurchaseInvoicesRequest": {
                 "type": "object",
-                "description": "Delete several purchase invoices in one request. `ids` is an array of 1 to 100 UUIDs; unknown identifiers are reported as failed rather than failing the whole request.",
+                "description": "Delete several expenses in one request. `ids` is an array of 1 to 100 UUIDs; unknown identifiers are reported as failed rather than failing the whole request.",
                 "properties": {
                     "ids": {
                         "type": "array",
@@ -196201,7 +196798,7 @@
             },
             "BulkStatusPurchaseInvoicesV1Request": {
                 "type": "object",
-                "description": "Transition several purchase invoices to `new_status` (`paid`) in one request, up to 50 per batch. `ids` is an array of purchase-invoice UUIDs; `payment_date` is required and cannot be in the future. Every transition passes the document state guard, and invoices that cannot transition are returned under `failures[]`.",
+                "description": "Transition several expenses to `new_status` (`paid`) in one request, up to 50 per batch. `ids` is an array of purchase-invoice UUIDs; `payment_date` is required and cannot be in the future. Every transition passes the document state guard, and invoices that cannot transition are returned under `failures[]`.",
                 "properties": {
                     "ids": {
                         "type": "array",
@@ -201807,7 +202404,7 @@
             },
             "CreateInvoiceRequest": {
                 "type": "object",
-                "description": "Create a sales invoice. Required: `client_id`, `series_id`, `issued_on`, `due_on` and `lines[]` (at least one). Optional: `notes`, `metadata`, `tags`, `custom_fields`, and an `options` object to atomically create, issue, send and wait for the PDF in a single call. Without `options` the invoice is created as a draft. A line may also be a DISBURSEMENT (`line_type: \"SUPLIDO\"`): an amount paid in the name and on behalf of the client (an official fee, duty or registry charge) that is re-invoiced at cost and, under art. 78.Tres.3 of the Spanish VAT Act (LIVA), stays out of the taxable base \u2014 it carries no VAT, withholding, surcharge, discount or product, requires `source_invoice_reference`, and is not allowed on a simplified (`F2`) invoice. Worked example: a 1,000.00 service line at 21% plus a 150.00 `SUPLIDO` line returns `subtotal` 1000.00, `taxes_total` 210.00, `total` 1210.00, `total_disbursements` 150.00 and `total_to_pay` 1360.00.",
+                "description": "Create an invoice. Required: `client_id`, `series_id`, `issued_on`, `due_on` and `lines[]` (at least one). Optional: `notes`, `metadata`, `tags`, `custom_fields`, and an `options` object to atomically create, issue, send and wait for the PDF in a single call. Without `options` the invoice is created as a draft. A line may also be a DISBURSEMENT (`line_type: \"SUPLIDO\"`): an amount paid in the name and on behalf of the client (an official fee, duty or registry charge) that is re-invoiced at cost and, under art. 78.Tres.3 of the Spanish VAT Act (LIVA), stays out of the taxable base \u2014 it carries no VAT, withholding, surcharge, discount or product, requires `source_invoice_reference`, and is not allowed on a simplified (`F2`) invoice. Worked example: a 1,000.00 service line at 21% plus a 150.00 `SUPLIDO` line returns `subtotal` 1000.00, `taxes_total` 210.00, `total` 1210.00, `total_disbursements` 150.00 and `total_to_pay` 1360.00.",
                 "properties": {
                     "client_id": {
                         "type": "string",
@@ -202082,7 +202679,7 @@
                                         "string",
                                         "null"
                                     ],
-                                    "description": "Reference of the supporting document that originated the disbursement \u2014 the receipt or fee number issued by the public body (up to 100 characters). REQUIRED when `line_type` is `SUPLIDO`; leave it out on a normal line. Free text on purpose: the receipt of a public body is rarely registered as a purchase invoice.",
+                                    "description": "Reference of the supporting document that originated the disbursement \u2014 the receipt or fee number issued by the public body (up to 100 characters). REQUIRED when `line_type` is `SUPLIDO`; leave it out on a normal line. Free text on purpose: the receipt of a public body is rarely registered as an expense.",
                                     "maxLength": 100
                                 },
                                 "source_invoice_ids": {
@@ -202090,7 +202687,7 @@
                                         "array",
                                         "null"
                                     ],
-                                    "description": "Optional traceability of a disbursement: list of IDs (UUID v7) of your own purchase invoices that back it. A purchase invoice of another company is rejected with 422. Omit it (or send `null`) when there is nothing to link.",
+                                    "description": "Optional traceability of a disbursement: list of IDs (UUID v7) of your own expenses that back it. An expense of another company is rejected with 422. Omit it (or send `null`) when there is nothing to link.",
                                     "items": {
                                         "type": "string",
                                         "format": "uuid"
@@ -203318,7 +203915,7 @@
                     },
                     "exclude_347": {
                         "type": "boolean",
-                        "description": "Whether to exclude this purchase invoice from the annual Modelo 347 declaration."
+                        "description": "Whether to exclude this expense from the annual Modelo 347 declaration."
                     },
                     "lines": {
                         "type": "array",
@@ -205748,7 +206345,7 @@
                     },
                     "taxes_total": {
                         "type": "number",
-                        "description": "NET aggregate of the header taxes: `total_vat + total_surcharge \u2212 total_retention`. It is the amount that, added to `subtotal`, yields `total` (`total === subtotal + taxes_total`), so it must NOT be combined with `total_retention`: subtracting the withholding again on top of the aggregate produces a false total (4,320.00 + 259.20 \u2212 648.00 = 3,931.20 against a real total of 4,579.20). It is NOT the VAT figure of the Spanish Modelo 303 \u2014 read `total_vat` for that. Beware that on a purchase invoice the same field name carries a DIFFERENT meaning (VAT only), which is why the identity that holds across all five document families is the explicit one: `total === subtotal + total_vat + total_surcharge \u2212 total_retention`.",
+                        "description": "NET aggregate of the header taxes: `total_vat + total_surcharge \u2212 total_retention`. It is the amount that, added to `subtotal`, yields `total` (`total === subtotal + taxes_total`), so it must NOT be combined with `total_retention`: subtracting the withholding again on top of the aggregate produces a false total (4,320.00 + 259.20 \u2212 648.00 = 3,931.20 against a real total of 4,579.20). It is NOT the VAT figure of the Spanish Modelo 303 \u2014 read `total_vat` for that. Beware that on an expense the same field name carries a DIFFERENT meaning (VAT only), which is why the identity that holds across all five document families is the explicit one: `total === subtotal + total_vat + total_surcharge \u2212 total_retention`.",
                         "example": 168,
                         "examples": [
                             168
@@ -212328,7 +212925,7 @@
             },
             "FindPurchaseInvoiceByExternalIdRequest": {
                 "type": "object",
-                "description": "Look up a purchase invoice by its `external_id` (the integration key that maps it to a record in a third-party ERP/CRM/e-commerce system) within your company. Orthogonal to `external_invoice_number`, the supplier fiscal number.",
+                "description": "Look up an expense by its `external_id` (the integration key that maps it to a record in a third-party ERP/CRM/e-commerce system) within your company. Orthogonal to `external_invoice_number`, the supplier fiscal number.",
                 "properties": {
                     "external_id": {
                         "type": "string",
@@ -212941,7 +213538,7 @@
             },
             "Invoice": {
                 "type": "object",
-                "description": "A sales invoice (compliant with Spanish AEAT VeriFactu).",
+                "description": "An invoice (compliant with Spanish AEAT VeriFactu).",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -212973,7 +213570,7 @@
                     },
                     "is_number_assigned": {
                         "type": "boolean",
-                        "description": "Whether the invoice has a definitive number assigned. `false` for drafts (where `number` is `null`); becomes `true` after `POST /v1/invoices/{uuid}/assign-real-number`, or automatically on send/payment.",
+                        "description": "Whether the invoice has a definitive number assigned. `false` for drafts (where `number` is `null`); becomes `true` after `POST /v1/invoices/{uuid}/assign-real-number`, or automatically when the invoice is issued.",
                         "example": true,
                         "examples": [
                             true
@@ -212995,7 +213592,18 @@
                     },
                     "status": {
                         "type": "string",
-                        "description": "Invoice lifecycle status.",
+                        "enum": [
+                            "draft",
+                            "scheduled",
+                            "issued",
+                            "paid",
+                            "partially_paid",
+                            "overdue",
+                            "cancelled",
+                            "annulled",
+                            "sent"
+                        ],
+                        "description": "Public invoice status. `issued` means the invoice has been ISSUED (definitive number, VeriFactu record); it says nothing about delivery, which lives in `is_sent`/`sent_at`/`sent_via`. `paid` and `partially_paid` are derived from the payment ledger. Before API version `2026-10-01` the issued status is published as `sent` (that contract called issuing \"sending\"), so `sent` only appears for integrations pinned to an earlier version.",
                         "example": "paid",
                         "examples": [
                             "paid"
@@ -213051,7 +213659,7 @@
                     },
                     "taxes_total": {
                         "type": "number",
-                        "description": "NET aggregate of the header taxes: `total_vat + total_surcharge \u2212 total_retention`. It is the amount that, added to `subtotal`, yields `total` (`total === subtotal + taxes_total`), so it must NOT be combined with `total_retention`: subtracting the withholding again on top of the aggregate produces a false total (4,320.00 + 259.20 \u2212 648.00 = 3,931.20 against a real total of 4,579.20). It is NOT the VAT figure of the Spanish Modelo 303 \u2014 read `total_vat` for that. Beware that on a purchase invoice the same field name carries a DIFFERENT meaning (VAT only), which is why the identity that holds across all five document families is the explicit one: `total === subtotal + total_vat + total_surcharge \u2212 total_retention`.",
+                        "description": "NET aggregate of the header taxes: `total_vat + total_surcharge \u2212 total_retention`. It is the amount that, added to `subtotal`, yields `total` (`total === subtotal + taxes_total`), so it must NOT be combined with `total_retention`: subtracting the withholding again on top of the aggregate produces a false total (4,320.00 + 259.20 \u2212 648.00 = 3,931.20 against a real total of 4,579.20). It is NOT the VAT figure of the Spanish Modelo 303 \u2014 read `total_vat` for that. Beware that on an expense the same field name carries a DIFFERENT meaning (VAT only), which is why the identity that holds across all five document families is the explicit one: `total === subtotal + total_vat + total_surcharge \u2212 total_retention`.",
                         "example": 210,
                         "examples": [
                             210
@@ -213361,15 +213969,52 @@
                             "2026-03-20"
                         ]
                     },
+                    "issued_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "When the invoice was issued (ISO 8601), or `null` while it is a draft or scheduled. Not present before API version `2026-10-01`: earlier versions publish this instant in `sent_at`.",
+                        "example": "2026-03-15T11:45:00Z",
+                        "examples": [
+                            "2026-03-15T11:45:00Z"
+                        ]
+                    },
                     "sent_at": {
                         "type": [
                             "string",
                             "null"
                         ],
                         "format": "date-time",
-                        "example": "2026-03-15T11:45:00Z",
+                        "description": "When the invoice was first delivered to the customer (ISO 8601): the moment the mail server accepted its delivery email, or the date of a manual mark. `null` while it has not been delivered. A resend never moves it. Before API version `2026-10-01` this field carries the ISSUANCE instant instead (that contract called issuing \"sending\").",
+                        "example": "2026-03-15T11:47:12Z",
                         "examples": [
-                            "2026-03-15T11:45:00Z"
+                            "2026-03-15T11:47:12Z"
+                        ]
+                    },
+                    "sent_via": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "email",
+                            "manual",
+                            null
+                        ],
+                        "description": "Channel of the first delivery: `email` (the mail server accepted the delivery email) or `manual` (marked with `POST /v1/invoices/{id}/mark-sent`). `null` while the invoice has not been delivered. Not present before API version `2026-10-01`.",
+                        "example": "email",
+                        "examples": [
+                            "email"
+                        ]
+                    },
+                    "is_sent": {
+                        "type": "boolean",
+                        "description": "Whether the invoice has been delivered to the customer, independently of its fiscal `status`: an issued or overdue invoice can be delivered or not. Derived from the delivery mark (`sent_at` + `sent_via`), never set directly. Not present before API version `2026-10-01`.",
+                        "example": true,
+                        "examples": [
+                            true
                         ]
                     },
                     "voided_at": {
@@ -213411,11 +214056,12 @@
                             "null"
                         ],
                         "enum": [
-                            "draft",
+                            "issue",
                             "issue_and_send",
+                            "draft",
                             null
                         ],
-                        "description": "Action the scheduler runs when `scheduled_for` is reached: `issue_and_send` (issue and email) or `draft` (issue only). `null` when the invoice is not scheduled.",
+                        "description": "Action the scheduler runs when `scheduled_for` is reached: `issue` (issue without sending) or `issue_and_send` (issue and email it). `null` when the invoice is not scheduled. Before API version `2026-10-01` the `issue` action is published as `draft`, its previous name.",
                         "example": null,
                         "examples": [
                             null
@@ -213651,7 +214297,10 @@
                     "recurring": null,
                     "paid_at": "2026-03-20T10:30:00Z",
                     "paid_on": "2026-03-20",
-                    "sent_at": "2026-03-15T11:45:00Z",
+                    "issued_at": "2026-03-15T11:45:00Z",
+                    "sent_at": "2026-03-15T11:47:12Z",
+                    "sent_via": "email",
+                    "is_sent": true,
                     "voided_at": null,
                     "void_reason": null,
                     "scheduled_for": null,
@@ -214297,7 +214946,7 @@
                             "string",
                             "null"
                         ],
-                        "description": "Reference of the supporting document that originated the disbursement \u2014 the receipt or fee number issued by the public body (\u2264100 chars). REQUIRED on a `SUPLIDO` line (a disbursement without its supporting reference is rejected with 422) and `null` on a normal line. Free text on purpose: the receipt of a public body is rarely registered as a purchase invoice.",
+                        "description": "Reference of the supporting document that originated the disbursement \u2014 the receipt or fee number issued by the public body (\u2264100 chars). REQUIRED on a `SUPLIDO` line (a disbursement without its supporting reference is rejected with 422) and `null` on a normal line. Free text on purpose: the receipt of a public body is rarely registered as an expense.",
                         "example": null
                     },
                     "source_invoice_ids": {
@@ -214308,7 +214957,7 @@
                         "items": {
                             "type": "string"
                         },
-                        "description": "Optional traceability of a `SUPLIDO` line: IDs (UUID v7) of your own purchase invoices that back the disbursement. `null` when the line carries no traceability \u2014 never `[]`, so \"no traceability\" cannot be confused with \"empty list\". A purchase invoice of another company is rejected with 422.",
+                        "description": "Optional traceability of a `SUPLIDO` line: IDs (UUID v7) of your own expenses that back the disbursement. `null` when the line carries no traceability \u2014 never `[]`, so \"no traceability\" cannot be confused with \"empty list\". An expense of another company is rejected with 422.",
                         "example": null
                     },
                     "unit": {
@@ -217884,7 +218533,7 @@
                     },
                     "taxes_total": {
                         "type": "number",
-                        "description": "NET aggregate of the header taxes: `total_vat + total_surcharge \u2212 total_retention`. It is the amount that, added to `subtotal`, yields `total` (`total === subtotal + taxes_total`), so it must NOT be combined with `total_retention`: subtracting the withholding again on top of the aggregate produces a false total (4,320.00 + 259.20 \u2212 648.00 = 3,931.20 against a real total of 4,579.20). It is NOT the VAT figure of the Spanish Modelo 303 \u2014 read `total_vat` for that. Beware that on a purchase invoice the same field name carries a DIFFERENT meaning (VAT only), which is why the identity that holds across all five document families is the explicit one: `total === subtotal + total_vat + total_surcharge \u2212 total_retention`.",
+                        "description": "NET aggregate of the header taxes: `total_vat + total_surcharge \u2212 total_retention`. It is the amount that, added to `subtotal`, yields `total` (`total === subtotal + taxes_total`), so it must NOT be combined with `total_retention`: subtracting the withholding again on top of the aggregate produces a false total (4,320.00 + 259.20 \u2212 648.00 = 3,931.20 against a real total of 4,579.20). It is NOT the VAT figure of the Spanish Modelo 303 \u2014 read `total_vat` for that. Beware that on an expense the same field name carries a DIFFERENT meaning (VAT only), which is why the identity that holds across all five document families is the explicit one: `total === subtotal + total_vat + total_surcharge \u2212 total_retention`.",
                         "example": 315,
                         "examples": [
                             315
@@ -218774,7 +219423,7 @@
                     },
                     "is_simplified": {
                         "type": "boolean",
-                        "description": "Whether this is a simplified purchase invoice (expense ticket). When `true`, `supplier` and `external_invoice_number` may be `null`."
+                        "description": "Whether this is a simplified supplier invoice (expense ticket). When `true`, `supplier` and `external_invoice_number` may be `null`."
                     },
                     "external_id": {
                         "type": [
@@ -218856,7 +219505,7 @@
                     },
                     "taxes_total": {
                         "type": "number",
-                        "description": "VAT BORNE (IVA soportado) of this purchase invoice, WITHOUT surcharge and WITHOUT withholding. Careful: on the sales-side documents (invoice, delivery note, quote, proforma) the SAME field name carries the NET aggregate `total_vat + total_surcharge \u2212 total_retention` instead. Header invariant here: `total === subtotal + taxes_total + total_surcharge \u2212 total_retention`. Read `total_vat` for a VAT figure whose meaning does not depend on the document family.",
+                        "description": "VAT BORNE (IVA soportado) of this expense, WITHOUT surcharge and WITHOUT withholding. Careful: on the sales-side documents (invoice, delivery note, quote, proforma) the SAME field name carries the NET aggregate `total_vat + total_surcharge \u2212 total_retention` instead. Header invariant here: `total === subtotal + taxes_total + total_surcharge \u2212 total_retention`. Read `total_vat` for a VAT figure whose meaning does not depend on the document family.",
                         "example": 73.5,
                         "examples": [
                             73.5
@@ -218888,7 +219537,7 @@
                     },
                     "total": {
                         "type": "number",
-                        "description": "Total of the purchase invoice. Two equivalent ways to reconstruct it from the published amounts, and only these two: the EXPLICIT one, identical in the five document families - `total = subtotal + total_vat + total_surcharge - total_retention` - or the one specific to this family, where `taxes_total` is the VAT alone - `total = subtotal + taxes_total + total_surcharge - total_retention`. Note that the aggregate shortcut of the sales-side families (`subtotal + taxes_total`) does NOT apply here: the same field name carries a different meaning on each side.",
+                        "description": "Total of the expense. Two equivalent ways to reconstruct it from the published amounts, and only these two: the EXPLICIT one, identical in the five document families - `total = subtotal + total_vat + total_surcharge - total_retention` - or the one specific to this family, where `taxes_total` is the VAT alone - `total = subtotal + taxes_total + total_surcharge - total_retention`. Note that the aggregate shortcut of the sales-side families (`subtotal + taxes_total`) does NOT apply here: the same field name carries a different meaning on each side.",
                         "example": 423.5,
                         "examples": [
                             423.5
@@ -218903,7 +219552,7 @@
                     },
                     "paid_amount": {
                         "type": "number",
-                        "description": "Amount already paid against this purchase invoice (derived from the payment ledger). Satisfies the invariant `paid_amount + pending_amount === total`.",
+                        "description": "Amount already paid against this expense (derived from the payment ledger). Satisfies the invariant `paid_amount + pending_amount === total`.",
                         "example": 423.5,
                         "examples": [
                             423.5
@@ -218911,7 +219560,7 @@
                     },
                     "pending_amount": {
                         "type": "number",
-                        "description": "Outstanding balance pending payment for this purchase invoice (derived from the payment ledger).",
+                        "description": "Outstanding balance pending payment for this expense (derived from the payment ledger).",
                         "example": 0,
                         "examples": [
                             0
@@ -219018,7 +219667,7 @@
                     },
                     "exclude_347": {
                         "type": "boolean",
-                        "description": "Declarative per-document flag: whether this purchase invoice is excluded from the annual Modelo 347 report.",
+                        "description": "Declarative per-document flag: whether this expense is excluded from the annual Modelo 347 report.",
                         "example": false,
                         "examples": [
                             false
@@ -219188,7 +219837,7 @@
             },
             "PurchaseInvoiceAttachment": {
                 "type": "object",
-                "description": "Fichero adjunto (PDF/imagen) de la factura de compra. `null` cuando no hay adjunto.",
+                "description": "Fichero adjunto (PDF/imagen) del gasto. `null` cuando no hay adjunto.",
                 "properties": {
                     "filename": {
                         "type": "string",
@@ -219233,7 +219882,7 @@
             },
             "PurchaseInvoiceLine": {
                 "type": "object",
-                "description": "A line item on a purchase invoice.",
+                "description": "A line item on an expense.",
                 "properties": {
                     "object": {
                         "type": "string",
@@ -219251,7 +219900,7 @@
                             "null"
                         ],
                         "minimum": 0,
-                        "description": "Zero-based ordinal of the line within this purchase invoice, in the stable read order. Send it back on create/update to keep a line matched to its historical counterpart (measures, units and frozen cost are preserved when the physical selection and the supplier do not change). It is NOT a primary key and it grants no access to any other document."
+                        "description": "Zero-based ordinal of the line within this expense, in the stable read order. Send it back on create/update to keep a line matched to its historical counterpart (measures, units and frozen cost are preserved when the physical selection and the supplier do not change). It is NOT a primary key and it grants no access to any other document."
                     },
                     "description": {
                         "type": [
@@ -219840,7 +220489,7 @@
             },
             "PurchaseInvoiceStats": {
                 "type": "object",
-                "description": "Aggregated metrics (KPIs) of the purchase invoices of the authenticated company: total, count by status and accumulated amounts. `overdue` is a derived condition (`pending` + past due date), not a persisted status.",
+                "description": "Aggregated metrics (KPIs) of the expenses of the authenticated company: total, count by status and accumulated amounts. `overdue` is a derived condition (`pending` + past due date), not a persisted status.",
                 "properties": {
                     "object": {
                         "type": "string",
@@ -219854,7 +220503,7 @@
                     },
                     "total_invoices": {
                         "type": "integer",
-                        "description": "Total number of purchase invoices.",
+                        "description": "Total number of expenses.",
                         "example": 12,
                         "examples": [
                             12
@@ -219925,7 +220574,7 @@
                     },
                     "total_amount": {
                         "type": "number",
-                        "description": "Total aggregate amount of all purchase invoices.",
+                        "description": "Total aggregate amount of all expenses.",
                         "example": 5558.36,
                         "examples": [
                             5558.36
@@ -222143,7 +222792,7 @@
                     },
                     "taxes_total": {
                         "type": "number",
-                        "description": "NET aggregate of the header taxes: `total_vat + total_surcharge \u2212 total_retention`. It is the amount that, added to `subtotal`, yields `total` (`total === subtotal + taxes_total`), so it must NOT be combined with `total_retention`: subtracting the withholding again on top of the aggregate produces a false total (4,320.00 + 259.20 \u2212 648.00 = 3,931.20 against a real total of 4,579.20). It is NOT the VAT figure of the Spanish Modelo 303 \u2014 read `total_vat` for that. Beware that on a purchase invoice the same field name carries a DIFFERENT meaning (VAT only), which is why the identity that holds across all five document families is the explicit one: `total === subtotal + total_vat + total_surcharge \u2212 total_retention`.",
+                        "description": "NET aggregate of the header taxes: `total_vat + total_surcharge \u2212 total_retention`. It is the amount that, added to `subtotal`, yields `total` (`total === subtotal + taxes_total`), so it must NOT be combined with `total_retention`: subtracting the withholding again on top of the aggregate produces a false total (4,320.00 + 259.20 \u2212 648.00 = 3,931.20 against a real total of 4,579.20). It is NOT the VAT figure of the Spanish Modelo 303 \u2014 read `total_vat` for that. Beware that on an expense the same field name carries a DIFFERENT meaning (VAT only), which is why the identity that holds across all five document families is the explicit one: `total === subtotal + total_vat + total_surcharge \u2212 total_retention`.",
                         "example": 105,
                         "examples": [
                             105
@@ -224424,7 +225073,7 @@
             },
             "RegisterInvoicePaymentRequest": {
                 "type": "object",
-                "description": "Register a partial (or full) payment against a sales invoice. Required: `amount` (> 0), `paid_on` (date) and `payment_method` (a value from the closed catalog). Optional: `reference`, `notes`.",
+                "description": "Register a partial (or full) payment against an invoice. Required: `amount` (> 0), `paid_on` (date) and `payment_method` (a value from the closed catalog). Optional: `reference`, `notes`.",
                 "properties": {
                     "amount": {
                         "type": "number",
@@ -224473,7 +225122,7 @@
             },
             "RegisterPurchaseInvoicePaymentRequest": {
                 "type": "object",
-                "description": "Register a partial (or full) payment against a purchase invoice. Required: `amount` (> 0), `paid_on` (date) and `payment_method` (a value from the closed catalog). Optional: `bank_account_id`, `reference`, `notes`. The domain invariants (amount within the pending balance, issue date \u2264 payment date \u2264 today, invoice not cancelled) are enforced with a 422.",
+                "description": "Register a partial (or full) payment against an expense. Required: `amount` (> 0), `paid_on` (date) and `payment_method` (a value from the closed catalog). Optional: `bank_account_id`, `reference`, `notes`. The domain invariants (amount within the pending balance, issue date \u2264 payment date \u2264 today, invoice not cancelled) are enforced with a 422.",
                 "properties": {
                     "amount": {
                         "type": "number",
@@ -232663,7 +233312,7 @@
                     },
                     "purchase_invoice_count": {
                         "type": "integer",
-                        "description": "Number of purchase invoices considered in the period.",
+                        "description": "Number of expenses considered in the period.",
                         "example": 18,
                         "examples": [
                             18
@@ -236214,7 +236863,7 @@
                                         "array",
                                         "null"
                                     ],
-                                    "description": "Optional traceability of a disbursement: list of IDs (UUID v7) of your own purchase invoices that back it. A purchase invoice of another company is rejected with 422.",
+                                    "description": "Optional traceability of a disbursement: list of IDs (UUID v7) of your own expenses that back it. An expense of another company is rejected with 422.",
                                     "items": {
                                         "type": "string",
                                         "format": "uuid"
@@ -248813,7 +249462,7 @@
                 }
             },
             "PaymentRequired": {
-                "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to a purchase invoice \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
+                "description": "The operation requires a payment that could not be completed: either no payment method is on file (`error.details.payment_setup_url` links to the Billing Portal where it can be set up), the immediate charge was declined by the payment provider, the account lacks the plan or add-on this operation bills against, or the storage your plan grants is exhausted (`storage_quota_exceeded`, raised by upload operations such as signing a delivery note or attaching a file to an expense \u2014 free space or move to a plan with more storage). Nothing was created or modified \u2014 resolve the payment and retry the same request. Version note: `error.type` is `payment_required_error` from `Factuarea-Version: 2026-09-01` onwards; earlier versions receive `invalid_request_error` for the five codes that predate that cut (`addon_required` is newer and always carries `payment_required_error`). `error.code` is stable across every version.",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -249247,7 +249896,7 @@
                 }
             },
             "ConflictPurchaseInvoice": {
-                "description": "The purchase invoice request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid purchase invoice, or a reused idempotency key.",
+                "description": "The expense request conflicts with its current state \u2014 e.g. an invalid status transition (marking an already-received invoice as received), an attempt to delete a paid expense, or a reused idempotency key.",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -249639,7 +250288,7 @@
                 }
             },
             "UnprocessableEntityPurchaseInvoice": {
-                "description": "Validation failed, or the purchase invoice cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
+                "description": "Validation failed, or the expense cannot undergo the requested state transition (e.g. marking an already-received invoice as received). The `error.param` field identifies which input is invalid, if any.",
                 "content": {
                     "application/json": {
                         "schema": {
@@ -249678,7 +250327,7 @@
                                     "error": {
                                         "type": "invalid_request_error",
                                         "code": "invalid_status_transition",
-                                        "message": "No se puede marcar como recibida una factura de compra ya recibida.",
+                                        "message": "No se puede marcar como recibido un gasto ya recibido.",
                                         "param": null,
                                         "doc_url": "https://docs.factuarea.com/guides/errors#invalid_status_transition",
                                         "request_id": "req_01HKQS5NJV0B5V8S3F4G9HAYUK"
