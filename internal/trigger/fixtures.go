@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/factuarea/factuarea-cli/internal/client"
@@ -67,6 +69,46 @@ func init() {
 		_, err = c.Do(ctx, http.MethodPost, "/v1/quotes/"+id+"/accept", nil, nil)
 		return err
 	}
+
+	registry["project.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
+		_, err := createProject(ctx, c, ov)
+		return err
+	}
+
+	// Una tarea vive siempre dentro de un proyecto: el fixture crea uno nuevo (su
+	// propia clave, sin depender de ninguno previo de la cuenta sandbox) y una
+	// tarea en él. Por eso este evento también emite `project.created`.
+	registry["task.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
+		projectID, err := createProject(ctx, c, ov)
+		if err != nil {
+			return err
+		}
+		_, err = c.Do(ctx, http.MethodPost, "/v1/tasks", mustJSON(map[string]any{
+			"project_id": projectID,
+			"title":      orDefault(ov, "title", "Tarea de prueba (trigger)"),
+		}), nil)
+		return err
+	}
+}
+
+// createProject crea un proyecto de tareas con el mínimo que exige la API
+// (nombre y clave). La clave es única por empresa y no se puede repetir, así que
+// por defecto se deriva del reloj: una letra y hasta nueve letras o números.
+func createProject(ctx context.Context, c *client.Client, ov map[string]string) (string, error) {
+	resp, err := c.Do(ctx, http.MethodPost, "/v1/projects", mustJSON(map[string]any{
+		"name": orDefault(ov, "name", "Proyecto de prueba (trigger)"),
+		"key":  orDefault(ov, "key", uniqueProjectKey(time.Now())),
+	}), nil)
+	if err != nil {
+		return "", err
+	}
+	return extractID(resp.Body)
+}
+
+// uniqueProjectKey devuelve `T` seguida de los milisegundos de `now` en base 36
+// y mayúsculas (9 caracteres a día de hoy), válida para `^[A-Z][A-Z0-9]{0,9}$`.
+func uniqueProjectKey(now time.Time) string {
+	return "T" + strings.ToUpper(strconv.FormatInt(now.UnixMilli(), 36))
 }
 
 func createInvoice(ctx context.Context, c *client.Client, ov map[string]string) (string, error) {

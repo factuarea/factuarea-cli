@@ -101,8 +101,11 @@ func fieldFlagDescription(op genOp, ff fieldFlag) string {
 		return ""
 	}
 	parts := []string{}
-	if f.Required {
+	if fieldRequired(op.Body.Fields, ff.jsonPath) {
 		parts = append(parts, "(requerido)")
+	}
+	if f.isUnionType() {
+		parts = append(parts, unionFlagHint)
 	}
 	if len(f.Enum) > 0 {
 		parts = append(parts, "valores: "+strings.Join(f.Enum, ", "))
@@ -114,6 +117,31 @@ func fieldFlagDescription(op genOp, ff fieldFlag) string {
 		parts = append(parts, "pares clave=valor")
 	}
 	return strings.TrimSpace(strings.Join(parts, " "))
+}
+
+// unionTypeSeparator une los tipos de un campo de tipo unión en el manifiesto y en
+// la ayuda (`string|number|boolean|array|null`).
+const unionTypeSeparator = "|"
+
+// unionFlagHint es lo que dice la ayuda de un flag cuyo campo admite varios tipos:
+// el flag es de texto, y lo que no es texto va en el cuerpo completo.
+const unionFlagHint = "envía texto; los valores tipados, las listas y null van por -d/--data-file"
+
+// isUnionType dice si el campo admite varios tipos JSON (`anyOf`, `oneOf` o `type`
+// como lista de tipos distintos). Su flag envía texto.
+func (f genBodyField) isUnionType() bool {
+	return f.Kind == "scalar" && strings.Contains(f.Type, unionTypeSeparator)
+}
+
+// unionFieldFlags devuelve los flags (`--value`) de los campos de tipo unión.
+func unionFieldFlags(op genOp) []string {
+	var names []string
+	for _, ff := range collectFieldFlags(op.Body.Fields, nil) {
+		if f := findField(op.Body.Fields, ff.jsonPath); f != nil && f.isUnionType() {
+			names = append(names, "--"+ff.flagName)
+		}
+	}
+	return names
 }
 
 func registerEnumCompletions(c *cobra.Command, op genOp) {
@@ -205,9 +233,71 @@ func requiredBodyFlags(op genOp) []fieldFlag {
 		if ff.kind != "scalar" && ff.kind != "scalar_array" {
 			continue
 		}
-		f := findField(op.Body.Fields, ff.jsonPath)
-		if f != nil && f.Required {
+		if fieldRequired(op.Body.Fields, ff.jsonPath) {
 			out = append(out, ff)
+		}
+	}
+	return out
+}
+
+// fieldRequired dice si el campo de `path` es requerido de verdad: él y todos sus
+// ancestros. Un hijo requerido de un objeto opcional solo se exige cuando se envía
+// ese objeto (ver requiredChildFlagsOfUsedObjects), no en cada petición.
+func fieldRequired(fields []genBodyField, path []string) bool {
+	if len(path) == 0 {
+		return false
+	}
+	for i := range fields {
+		if fields[i].Name != path[0] {
+			continue
+		}
+		if !fields[i].Required {
+			return false
+		}
+		if len(path) == 1 {
+			return true
+		}
+		return fieldRequired(fields[i].Children, path[1:])
+	}
+	return false
+}
+
+// requiredChildFlagsOfUsedObjects devuelve los hijos requeridos de cada objeto
+// OPCIONAL del que se ha usado algún flag. Es el contrato del esquema: el objeto
+// se omite entero o se envía completo, y enviarlo a medias lo rechaza el servidor
+// con 422 (p. ej. `entity_link` sin `id`). Fallarlo aquí evita el viaje y dice
+// qué falta.
+func requiredChildFlagsOfUsedObjects(cmd *cobra.Command, op genOp) []fieldFlag {
+	if !op.typedBody() {
+		return nil
+	}
+	var out []fieldFlag
+	flags := collectFieldFlags(op.Body.Fields, nil)
+	for _, obj := range op.Body.Fields {
+		if obj.Kind != "object" || obj.Required {
+			continue
+		}
+		var group []fieldFlag
+		used := false
+		for _, ff := range flags {
+			if len(ff.jsonPath) < 2 || ff.jsonPath[0] != obj.Name {
+				continue
+			}
+			group = append(group, ff)
+			if cmd.Flags().Changed(ff.flagName) {
+				used = true
+			}
+		}
+		if !used {
+			continue
+		}
+		for _, ff := range group {
+			if ff.kind != "scalar" && ff.kind != "scalar_array" {
+				continue
+			}
+			if fieldRequired(obj.Children, ff.jsonPath[1:]) {
+				out = append(out, ff)
+			}
 		}
 	}
 	return out
@@ -225,8 +315,7 @@ func singlePositionalField(op genOp) (fieldFlag, bool) {
 			return fieldFlag{}, false
 		}
 		count++
-		f := findField(op.Body.Fields, ff.jsonPath)
-		if f != nil && f.Required {
+		if fieldRequired(op.Body.Fields, ff.jsonPath) {
 			requiredScalars++
 			found = ff
 		}
@@ -239,7 +328,8 @@ func singlePositionalField(op genOp) (fieldFlag, bool) {
 
 func validateRequiredBodyFlags(cmd *cobra.Command, op genOp) error {
 	var missing []string
-	for _, ff := range requiredBodyFlags(op) {
+	required := append(requiredBodyFlags(op), requiredChildFlagsOfUsedObjects(cmd, op)...)
+	for _, ff := range required {
 		if !cmd.Flags().Changed(ff.flagName) || flagIsEmpty(cmd, ff) {
 			missing = append(missing, "--"+ff.flagName)
 		}
@@ -467,9 +557,12 @@ func bodyFieldsHelp(op genOp) string {
 	}
 	var b strings.Builder
 	b.WriteString("\n\nCampos del cuerpo (flags tipados):")
-	writeFieldsHelp(&b, op.Body.Fields, nil)
+	writeFieldsHelp(&b, op.Body.Fields, nil, true)
 	if op.HasObjectArrayBody() {
 		b.WriteString("\n\nEsta operación incluye una lista de objetos: pásala con --data-file/-d (JSON).")
+	}
+	if flags := unionFieldFlags(op); len(flags) > 0 {
+		b.WriteString("\n\nLos flags de tipo unión (" + strings.Join(flags, ", ") + ") envían texto; para un número, un booleano, una lista o null pasa el cuerpo con -d/--data-file (JSON).")
 	}
 	if op.isUpdate() {
 		b.WriteString("\n\nEdición parcial: solo se actualizan los campos que envíes; los omitidos se conservan. Para vaciar un campo, pásalo con valor vacío/null.")
@@ -477,14 +570,17 @@ func bodyFieldsHelp(op genOp) string {
 	return b.String()
 }
 
-func writeFieldsHelp(b *strings.Builder, fields []genBodyField, parent []string) {
+// writeFieldsHelp escribe la ayuda de los flags de cuerpo. `ancestorsRequired` es
+// true si todos los objetos que contienen `fields` son requeridos: solo entonces
+// un campo requerido se presenta como «requerido».
+func writeFieldsHelp(b *strings.Builder, fields []genBodyField, parent []string, ancestorsRequired bool) {
 	for _, f := range fields {
 		path := append(append([]string{}, parent...), f.Name)
 		switch f.Kind {
 		case "scalar", "scalar_array", "map":
 			b.WriteString("\n  --" + fieldFlagName(path))
 			b.WriteString(" (" + fieldHelpType(f) + ")")
-			if f.Required {
+			if ancestorsRequired && f.Required {
 				b.WriteString(" requerido")
 			}
 			if len(f.Enum) > 0 {
@@ -492,7 +588,7 @@ func writeFieldsHelp(b *strings.Builder, fields []genBodyField, parent []string)
 			}
 		case "object":
 			if len(parent) == 0 {
-				writeFieldsHelp(b, f.Children, path)
+				writeFieldsHelp(b, f.Children, path, ancestorsRequired && f.Required)
 			}
 		}
 	}

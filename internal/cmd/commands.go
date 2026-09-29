@@ -70,7 +70,7 @@ func newCommandsCmd() *cobra.Command {
 					e.Example = op.Body.Example
 				}
 				if op.typedBody() {
-					e.BodyFields = manifestFields(op.Body.Fields, nil)
+					e.BodyFields = manifestFields(op.Body.Fields, nil, true)
 					e.BodyHasObjects = op.Body.HasObjectArray
 					e.FullReplace = op.isUpdate()
 				}
@@ -84,7 +84,11 @@ func newCommandsCmd() *cobra.Command {
 	}
 }
 
-func manifestFields(fields []genBodyField, parent []string) []manifestField {
+// manifestFields aplana los campos del cuerpo. `ancestorsRequired` es true si todos
+// los objetos que contienen `fields` son requeridos: un campo solo se anuncia como
+// requerido si él y todos sus ancestros lo son (la misma regla que fieldRequired),
+// de modo que el hijo requerido de un objeto opcional no figura como requerido.
+func manifestFields(fields []genBodyField, parent []string, ancestorsRequired bool) []manifestField {
 	var out []manifestField
 	for _, f := range fields {
 		path := append(append([]string{}, parent...), f.Name)
@@ -94,12 +98,12 @@ func manifestFields(fields []genBodyField, parent []string) []manifestField {
 				Name:     fieldFlagName(path),
 				Type:     fieldHelpType(f),
 				Kind:     f.Kind,
-				Required: f.Required,
+				Required: ancestorsRequired && f.Required,
 				Enum:     f.Enum,
 			})
 		case "object":
 			if len(parent) == 0 {
-				out = append(out, manifestFields(f.Children, path)...)
+				out = append(out, manifestFields(f.Children, path, ancestorsRequired && f.Required)...)
 			}
 		}
 	}
