@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/factuarea/factuarea-cli/internal/exit"
+	"github.com/spf13/cobra"
 )
 
 func runCmd(t *testing.T, baseURL string, args ...string) (string, error) {
@@ -263,5 +264,258 @@ func TestManifestIncludesFieldSchema(t *testing.T) {
 	}
 	if !sawEnum {
 		t.Error("manifest debe incluir enum de customer_profile.payment_method")
+	}
+}
+
+// nestedBodyOp es una operación sintética con un objeto `link` cuyos hijos `type`
+// e `id` son requeridos. `objectRequired` decide si el propio objeto lo es.
+func nestedBodyOp(objectRequired bool) genOp {
+	return genOp{
+		Method: "POST",
+		Body: &genBody{Kind: "json", Fields: []genBodyField{
+			{Name: "title", Type: "string", Kind: "scalar", Required: true},
+			{Name: "link", Type: "object", Kind: "object", Required: objectRequired, Children: []genBodyField{
+				{Name: "type", Type: "string", Kind: "scalar", Required: true},
+				{Name: "id", Type: "string", Kind: "scalar", Required: true},
+				{Name: "note", Type: "string", Kind: "scalar"},
+			}},
+		}},
+	}
+}
+
+func requiredFlagNames(op genOp) []string {
+	var names []string
+	for _, ff := range requiredBodyFlags(op) {
+		names = append(names, ff.flagName)
+	}
+	return names
+}
+
+func TestRequiredBodyFlagsSkipRequiredChildrenOfAnOptionalObject(t *testing.T) {
+	got := requiredFlagNames(nestedBodyOp(false))
+	if strings.Join(got, ",") != "title" {
+		t.Fatalf("un hijo requerido de un objeto opcional no es requerido por sí solo: got %v, want [title]", got)
+	}
+}
+
+func TestRequiredBodyFlagsKeepRequiredChildrenOfARequiredObject(t *testing.T) {
+	got := requiredFlagNames(nestedBodyOp(true))
+	if strings.Join(got, ",") != "title,link.type,link.id" {
+		t.Fatalf("un hijo requerido de un objeto requerido sí lo es: got %v, want [title link.type link.id]", got)
+	}
+}
+
+func TestFieldHelpMarksRequiredOnlyWhenEveryAncestorIsRequired(t *testing.T) {
+	cases := []struct {
+		name           string
+		objectRequired bool
+		wantRequired   map[string]bool
+	}{
+		{"objeto opcional", false, map[string]bool{"--title": true, "--link.type": false, "--link.id": false, "--link.note": false}},
+		{"objeto requerido", true, map[string]bool{"--title": true, "--link.type": true, "--link.id": true, "--link.note": false}},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			op := nestedBodyOp(tc.objectRequired)
+
+			lines := map[string]string{}
+			for _, line := range strings.Split(bodyFieldsHelp(op), "\n") {
+				if fields := strings.Fields(line); len(fields) > 0 && strings.HasPrefix(fields[0], "--") {
+					lines[fields[0]] = line
+				}
+			}
+			for flag, want := range tc.wantRequired {
+				line, ok := lines[flag]
+				if !ok {
+					t.Errorf("la ayuda no lista %s: %q", flag, bodyFieldsHelp(op))
+					continue
+				}
+				if got := strings.Contains(line, "requerido"); got != want {
+					t.Errorf("ayuda de %s: requerido = %v, quiero %v (%q)", flag, got, want, line)
+				}
+			}
+
+			for _, ff := range collectFieldFlags(op.Body.Fields, nil) {
+				desc := fieldFlagDescription(op, ff)
+				if got := strings.Contains(desc, "(requerido)"); got != tc.wantRequired["--"+ff.flagName] {
+					t.Errorf("descripción del flag --%s: %q", ff.flagName, desc)
+				}
+			}
+		})
+	}
+}
+
+func TestOptionalObjectIsAllOrNothing(t *testing.T) {
+	cases := []struct {
+		name           string
+		objectRequired bool
+		args           []string
+		wantMissing    []string
+	}{
+		{"objeto opcional omitido", false, []string{"--title", "x"}, nil},
+		{"objeto opcional completo", false, []string{"--title", "x", "--link.type", "quote", "--link.id", "q1"}, nil},
+		{"objeto opcional sin id", false, []string{"--title", "x", "--link.type", "quote"}, []string{"--link.id"}},
+		{"objeto opcional sin type", false, []string{"--title", "x", "--link.id", "q1"}, []string{"--link.type"}},
+		{"objeto opcional con solo un hijo opcional", false, []string{"--title", "x", "--link.note", "n"}, []string{"--link.type", "--link.id"}},
+		{"objeto requerido omitido", true, []string{"--title", "x"}, []string{"--link.type", "--link.id"}},
+		{"objeto requerido completo", true, []string{"--title", "x", "--link.type", "quote", "--link.id", "q1"}, nil},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			op := nestedBodyOp(tc.objectRequired)
+			cmd := &cobra.Command{Use: "x"}
+			registerFieldFlags(cmd, op)
+			if err := cmd.ParseFlags(tc.args); err != nil {
+				t.Fatalf("flags: %v", err)
+			}
+
+			err := validateRequiredBodyFlags(cmd, op)
+			if len(tc.wantMissing) == 0 {
+				if err != nil {
+					t.Fatalf("no debería faltar nada, y falla con: %v", err)
+				}
+				return
+			}
+			if err == nil {
+				t.Fatalf("debería faltar %v y no falla", tc.wantMissing)
+			}
+			if exit.ForError(err) != exit.Usage {
+				t.Errorf("exit code = %d, want %d (Usage)", exit.ForError(err), exit.Usage)
+			}
+			want := "faltan campos requeridos: " + strings.Join(tc.wantMissing, ", ") + " ("
+			if !strings.Contains(err.Error(), want) {
+				t.Errorf("mensaje = %q, quiero que contenga %q", err.Error(), want)
+			}
+		})
+	}
+}
+
+// TestManifestRequiredFollowsTheAncestorRule ata el manifiesto de `commands --json`
+// al predicado que aplican la validación y la ayuda: para TODA operación con
+// cuerpo tipado, un campo se anuncia como requerido si y solo si fieldRequired.
+func TestManifestRequiredFollowsTheAncestorRule(t *testing.T) {
+	checked := 0
+	for _, op := range generatedOps() {
+		if !op.typedBody() {
+			continue
+		}
+		manifest := map[string]bool{}
+		for _, f := range manifestFields(op.Body.Fields, nil, true) {
+			manifest[f.Name] = f.Required
+		}
+		for _, ff := range collectFieldFlags(op.Body.Fields, nil) {
+			got, ok := manifest[ff.flagName]
+			if !ok {
+				t.Errorf("%s: el manifiesto no trae el campo %s", commandPath(op), ff.flagName)
+				continue
+			}
+			checked++
+			if want := fieldRequired(op.Body.Fields, ff.jsonPath); got != want {
+				t.Errorf("%s: %s anunciado required=%v, la regla de ancestros da %v", commandPath(op), ff.flagName, got, want)
+			}
+		}
+	}
+	if checked == 0 {
+		t.Fatal("no se comprobó ningún campo: el árbol generado no tiene cuerpos tipados")
+	}
+}
+
+func TestManifestRequiredSkipsRequiredChildrenOfAnOptionalObject(t *testing.T) {
+	cases := []struct {
+		name           string
+		objectRequired bool
+		want           map[string]bool
+	}{
+		{"objeto opcional", false, map[string]bool{"title": true, "link.type": false, "link.id": false, "link.note": false}},
+		{"objeto requerido", true, map[string]bool{"title": true, "link.type": true, "link.id": true, "link.note": false}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := map[string]bool{}
+			for _, f := range manifestFields(nestedBodyOp(tc.objectRequired).Body.Fields, nil, true) {
+				got[f.Name] = f.Required
+			}
+			for name, want := range tc.want {
+				if got[name] != want {
+					t.Errorf("manifiesto: %s required = %v, quiero %v", name, got[name], want)
+				}
+			}
+		})
+	}
+}
+
+// TestSinglePositionalFieldIgnoresRequiredChildrenOfAnOptionalObject — el único
+// campo escalar de una operación solo es su argumento posicional si de verdad es
+// requerido.
+func TestSinglePositionalFieldIgnoresRequiredChildrenOfAnOptionalObject(t *testing.T) {
+	build := func(objectRequired bool) genOp {
+		return genOp{
+			Method: "POST",
+			Body: &genBody{Kind: "json", Fields: []genBodyField{
+				{Name: "link", Type: "object", Kind: "object", Required: objectRequired, Children: []genBodyField{
+					{Name: "id", Type: "string", Kind: "scalar", Required: true},
+				}},
+			}},
+		}
+	}
+
+	if ff, ok := singlePositionalField(build(false)); ok {
+		t.Errorf("el hijo requerido de un objeto opcional no es un argumento posicional: %s", ff.flagName)
+	}
+	if ff, ok := singlePositionalField(build(true)); !ok || ff.flagName != "link.id" {
+		t.Errorf("el hijo requerido de un objeto requerido sí lo es: got %q/%v", ff.flagName, ok)
+	}
+}
+
+// TestUnionTypedFlagSendsTextAndPointsToTheRawBody — un campo de tipo unión se
+// presenta con su tipo completo, su flag envía texto y la ayuda dice que lo
+// tipado, las listas y null van por -d.
+func TestUnionTypedFlagSendsTextAndPointsToTheRawBody(t *testing.T) {
+	const union = "string|number|boolean|array|null"
+	op := genOp{
+		Method: "PUT",
+		Body: &genBody{Kind: "json", Fields: []genBodyField{
+			{Name: "value", Type: union, Kind: "scalar", Required: true, Nullable: true},
+			{Name: "label", Type: "string", Kind: "scalar"},
+		}},
+	}
+
+	if f := findField(op.Body.Fields, []string{"value"}); f == nil || !f.isUnionType() {
+		t.Fatalf("value debe ser un campo de tipo unión: %+v", f)
+	}
+	if f := findField(op.Body.Fields, []string{"label"}); f == nil || f.isUnionType() {
+		t.Fatalf("label no es una unión: %+v", f)
+	}
+
+	help := bodyFieldsHelp(op)
+	for _, want := range []string{"--value (" + union + ") requerido", "Los flags de tipo unión (--value) envían texto", "-d/--data-file"} {
+		if !strings.Contains(help, want) {
+			t.Errorf("la ayuda debe contener %q:\n%s", want, help)
+		}
+	}
+	if strings.Contains(help, "--label (string) requerido") || strings.Contains(help, "(--value, --label)") {
+		t.Errorf("solo el campo unión lleva la nota:\n%s", help)
+	}
+
+	cmd := &cobra.Command{Use: "x"}
+	registerFieldFlags(cmd, op)
+	flag := cmd.Flags().Lookup("value")
+	if flag == nil || flag.Value.Type() != "string" {
+		t.Fatalf("el flag de una unión debe ser de texto: %+v", flag)
+	}
+	if !strings.Contains(flag.Usage, unionFlagHint) {
+		t.Errorf("la descripción del flag debe llevar la pista de -d: %q", flag.Usage)
+	}
+	if err := cmd.ParseFlags([]string{"--value", "42"}); err != nil {
+		t.Fatalf("flags: %v", err)
+	}
+	body, err := bodyFromFieldFlags(cmd, op)
+	if err != nil {
+		t.Fatalf("cuerpo: %v", err)
+	}
+	if body["value"] != "42" {
+		t.Errorf("el flag envía texto: got %#v, quiero \"42\"", body["value"])
 	}
 }

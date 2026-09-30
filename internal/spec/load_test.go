@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pb33f/libopenapi"
+	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
 	"go.yaml.in/yaml/v4"
 )
@@ -471,4 +473,142 @@ func boolNode(value bool) *yaml.Node {
 		v = "true"
 	}
 	return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!bool", Value: v}
+}
+
+// schemaFromJSON construye un esquema real de libopenapi a partir de su JSON, para
+// probar la clasificación de campos sin depender del spec embebido.
+func schemaFromJSON(t *testing.T, raw string) *base.Schema {
+	t.Helper()
+	doc, err := libopenapi.NewDocument([]byte(`{"openapi":"3.1.0","info":{"title":"t","version":"1"},"paths":{},"components":{"schemas":{"S":` + raw + `}}}`))
+	if err != nil {
+		t.Fatalf("documento: %v", err)
+	}
+	model, err := doc.BuildV3Model()
+	if err != nil {
+		t.Fatalf("modelo: %v", err)
+	}
+	proxy, ok := model.Model.Components.Schemas.Get("S")
+	if !ok || proxy.Schema() == nil {
+		t.Fatalf("esquema S ausente: %s", raw)
+	}
+	return proxy.Schema()
+}
+
+func TestFieldTypeNamesUnions(t *testing.T) {
+	cases := []struct {
+		name         string
+		schema       string
+		wantType     string
+		wantNullable bool
+		wantUnion    bool
+	}{
+		{"un solo tipo", `{"type":"string"}`, "string", false, false},
+		{"tipo nullable", `{"type":["string","null"]}`, "string", true, false},
+		{"tipos distintos", `{"type":["string","number"]}`, "string|number", false, true},
+		{"tipos distintos y null", `{"type":["string","number","null"]}`, "string|number|null", true, true},
+		{"anyOf con cinco miembros",
+			`{"anyOf":[{"type":"string"},{"type":"number"},{"type":"boolean"},{"type":"array","items":{"type":"string"}},{"type":"null"}]}`,
+			"string|number|boolean|array|null", true, true},
+		{"oneOf sin null", `{"oneOf":[{"type":"integer"},{"type":"string"}]}`, "integer|string", false, true},
+		{"anyOf de un tipo y null", `{"anyOf":[{"type":"integer"},{"type":"null"}]}`, "integer", true, false},
+		{"anyOf con tipos repetidos", `{"anyOf":[{"type":"string"},{"type":"string","enum":["a"]}]}`, "string", false, false},
+		{"anyOf anidado", `{"anyOf":[{"type":"string"},{"anyOf":[{"type":"number"},{"type":"null"}]}]}`, "string|number|null", true, true},
+		{"sin tipo", `{}`, "", false, false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			gotType, gotNullable, gotUnion := fieldType(schemaFromJSON(t, tc.schema))
+			if gotType != tc.wantType || gotNullable != tc.wantNullable || gotUnion != tc.wantUnion {
+				t.Errorf("fieldType(%s) = (%q, nullable=%v, union=%v), quiero (%q, %v, %v)",
+					tc.schema, gotType, gotNullable, gotUnion, tc.wantType, tc.wantNullable, tc.wantUnion)
+			}
+		})
+	}
+}
+
+func TestClassifyFieldUnionIsAFreeTypedScalar(t *testing.T) {
+	cases := []struct {
+		name   string
+		schema string
+	}{
+		{"con un miembro lista", `{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"string"}]}`},
+		{"con un miembro objeto", `{"oneOf":[{"type":"object"},{"type":"string"}]}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var f BodyField
+			classifyField(&f, schemaFromJSON(t, tc.schema), 0)
+			if f.Kind != "scalar" || f.Children != nil {
+				t.Errorf("un tipo unión es un escalar de tipo libre, no una lista ni un objeto: %+v", f)
+			}
+			if f.Type == "" || !contains([]string{"array|string", "object|string"}, f.Type) {
+				t.Errorf("tipo = %q, quiero la unión de sus miembros", f.Type)
+			}
+		})
+	}
+}
+
+// TestCustomFieldValuesAreUnionTyped — `value` y `default_value` de los campos
+// personalizados admiten texto, número, booleano, lista o null: su tipo no es "".
+func TestCustomFieldValuesAreUnionTyped(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	const union = "string|number|boolean|array|null"
+	cases := []struct {
+		operation string
+		field     string
+		required  bool
+	}{
+		{"public-api.v1.tasks.custom_fields.set", "value", true},
+		{"public-api.v1.projects.custom_fields.create", "default_value", false},
+		{"public-api.v1.projects.custom_fields.update", "default_value", false},
+	}
+	for _, tc := range cases {
+		op, ok := by[tc.operation]
+		if !ok || op.Body == nil {
+			t.Errorf("%s: ausente de Load() o sin cuerpo", tc.operation)
+			continue
+		}
+		f := indexFields(op.Body.Fields)[tc.field]
+		if f == nil {
+			t.Errorf("%s: el cuerpo no declara %s", tc.operation, tc.field)
+			continue
+		}
+		if f.Kind != "scalar" || f.Type != union || !f.Nullable || f.Required != tc.required {
+			t.Errorf("%s.%s = %+v, quiero scalar de tipo %q, nullable y required=%v", tc.operation, tc.field, *f, union, tc.required)
+		}
+	}
+}
+
+// TestBodyFieldTypesAreNeverEmptyExceptUntypedEnums fija que ningún campo de
+// cuerpo escalar vuelve a salir sin tipo por ser una unión. La única excepción es
+// un `enum` sin `type` (el `confirm` de la baja definitiva de tarifas), que no es
+// una unión de tipos.
+func TestBodyFieldTypesAreNeverEmptyExceptUntypedEnums(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	var walk func(op string, fields []BodyField)
+	walk = func(op string, fields []BodyField) {
+		for _, f := range fields {
+			if f.Kind == "scalar" && f.Type == "" && len(f.Enum) == 0 {
+				t.Errorf("%s: el campo %s es escalar y no tiene tipo", op, f.Name)
+			}
+			walk(op, f.Children)
+		}
+	}
+	for _, o := range ops {
+		if o.Body != nil {
+			walk(o.OperationID, o.Body.Fields)
+		}
+	}
 }
