@@ -170,15 +170,17 @@ factuarea monthly-time-record-closes export <uuid> --format rdley_8_2019 --json
 
 ### Automatizaciones (automations)
 
-Con el add-on de **automatizaciones** activo (módulo `automations`, planes
-`empresario` y `enterprise`), el CLI expone el motor de reglas con sus cuatro
+Con el módulo de **automatizaciones** activo (`automations`, planes **Negocio**,
+**Integral** y **Enterprise**; slugs `empresario`, `integral` y `enterprise`), el
+CLI expone el motor de reglas con sus cuatro
 recursos y sus scopes finos (`automations:read` en 8 comandos,
 `automations:write` en 6, `automations:delete` en 1 y `automation_runs:read` en
 3): el catálogo de metadatos (`automations catalog show` y
 `automations catalog trigger-fields`), las reglas (`automations rules`, con su
 historial en `automations rules versions`), las ejecuciones (`automations runs`,
 con su detalle por paso en `automations runs steps`) y el consumo frente al
-presupuesto del plan (`automations usage show`).
+presupuesto del plan (`automations usage show`). Las cuotas de Enterprise se
+acuerdan según contrato; consulta el consumo y los límites vigentes con ese comando.
 
 ```bash
 # Qué se puede automatizar: disparadores, operadores y acciones registradas.
