@@ -313,12 +313,20 @@ func bodyFields(sc *base.Schema, depth int) []BodyField {
 }
 
 func classifyField(f *BodyField, s *base.Schema, depth int) {
-	jsonType, nullable := scalarType(s.Type)
+	jsonType, nullable, union := fieldType(s)
 	if s.Nullable != nil && *s.Nullable {
 		nullable = true
 	}
 	f.Nullable = nullable
 	f.Enum = enumValues(s.Enum)
+
+	if union {
+		// Un tipo unión (`string|number|boolean|array|null`) no es un array ni un
+		// objeto aunque uno de sus miembros lo sea: es un escalar de tipo libre.
+		f.Kind = "scalar"
+		f.Type = jsonType
+		return
+	}
 
 	switch jsonType {
 	case "array":
@@ -380,6 +388,68 @@ func requiredSet(sc *base.Schema) map[string]bool {
 		}
 	}
 	return set
+}
+
+// unionSeparator une los tipos de un campo de tipo unión: `string|number|null`.
+const unionSeparator = "|"
+
+// maxUnionDepth acota la recursión por `anyOf`/`oneOf` anidados.
+const maxUnionDepth = 4
+
+// fieldType devuelve el tipo de un campo de cuerpo. Un campo de un solo tipo
+// (`type: string`, `type: [string, null]`, `anyOf: [string, null]`) devuelve ese
+// tipo y su nulabilidad, con `union` a false. Un campo con VARIOS tipos distintos
+// —`type: [string, number]` o `anyOf`/`oneOf` de miembros de tipos distintos—
+// devuelve la unión de sus tipos en orden de declaración, con `null` al final si
+// alguno lo admite (`string|number|boolean|array|null`), y `union` a true.
+func fieldType(s *base.Schema) (jsonType string, nullable, union bool) {
+	names := schemaTypeNames(s, 0)
+	var concrete []string
+	for _, n := range names {
+		if n == "null" {
+			nullable = true
+			continue
+		}
+		concrete = append(concrete, n)
+	}
+	switch len(concrete) {
+	case 0:
+		return "", nullable, false
+	case 1:
+		return concrete[0], nullable, false
+	}
+	if nullable {
+		concrete = append(concrete, "null")
+	}
+	return strings.Join(concrete, unionSeparator), nullable, true
+}
+
+// schemaTypeNames recoge, sin repetir y en orden de declaración, los tipos que
+// declara el esquema: su `type` y los de sus miembros `anyOf`/`oneOf`.
+func schemaTypeNames(s *base.Schema, depth int) []string {
+	if s == nil || depth > maxUnionDepth {
+		return nil
+	}
+	var names []string
+	seen := map[string]bool{}
+	add := func(list []string) {
+		for _, n := range list {
+			if n != "" && !seen[n] {
+				seen[n] = true
+				names = append(names, n)
+			}
+		}
+	}
+	add(s.Type)
+	for _, members := range [][]*base.SchemaProxy{s.AnyOf, s.OneOf} {
+		for _, m := range members {
+			if m == nil {
+				continue
+			}
+			add(schemaTypeNames(m.Schema(), depth+1))
+		}
+	}
+	return names
 }
 
 func scalarType(types []string) (jsonType string, nullable bool) {

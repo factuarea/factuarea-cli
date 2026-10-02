@@ -245,6 +245,66 @@ sobre un documento de la empresa hija se rechazan al crear o editar la regla.
 `factuarea automations runs list --subject_company_id <uuid>` filtra sus
 ejecuciones por la empresa sobre la que actuaron.
 
+### Tareas y proyectos (tasks)
+
+Con el módulo **tareas** (`tasks`, incluido en todos los planes), el CLI expone los proyectos con su tablero de columnas, las tareas, las etiquetas, el tiempo imputado y la agenda: 80 comandos en siete grupos, cada uno con su scope fino. Los scopes son `projects:read|write|delete`, `tasks:read|write|delete`, `users:read` y `notifications:read|write`; la factura de horas de un proyecto (`projects time-invoices create`) pide además `invoices:write`, porque crea una factura.
+
+| Grupo | Qué cubre |
+| --- | --- |
+| `projects` | proyectos, columnas (`projects columns`), campos personalizados, exportar e importar tareas (`projects tasks`), resumen de tiempo y factura de horas |
+| `tasks` | tareas y sus subrecursos: comentarios, adjuntos, entradas de tiempo (`tasks time-entries`), etiquetas, relaciones, vínculos con documentos y contactos, actividad |
+| `task-labels` | etiquetas de tarea de la empresa |
+| `task-timers` | el temporizador en marcha del titular de la key |
+| `users` | miembros de la empresa a los que se puede asignar una tarea |
+| `notifications` | avisos del titular de la key |
+| `agenda` | agenda combinada: tareas con vencimiento, vencimientos de documentos, plazos fiscales y ausencias |
+
+```bash
+# Un proyecto: su clave (una letra y hasta nueve letras o números) prefija la de sus tareas (WEB-1, WEB-2…).
+factuarea projects create --name "Web corporativa" --key WEB --json
+factuarea projects columns list <project_id> --json
+
+# Crear una tarea. El cuerpo completo permite, además, vincularla a un documento o contacto
+# en la misma petición con `entity_link` (invoice, quote, contact, product…).
+factuarea tasks create --json -d '{
+  "project_id": "<project_id>",
+  "title": "Preparar el presupuesto",
+  "priority": "high",
+  "due_on": "2026-10-15",
+  "entity_link": {"type": "quote", "id": "<quote_id>"}
+}'
+
+# Los comandos piden el UUID; con la clave de la tarea se resuelve primero.
+factuarea tasks find-by-key WEB-1 --json
+
+# Cambiar su estado: a una columna del proyecto o a un estado virtual (`planned` es el backlog).
+factuarea tasks status <task_id> --column-id <column_id>
+factuarea tasks status <task_id> --status planned
+
+# Buscar y recorrer el cursor de forma transparente.
+factuarea tasks search --project_id <project_id> --status active --paginate --json
+
+# Imputar tiempo: un periodo cerrado (ISO 8601 con zona horaria)…
+factuarea tasks time-entries create <task_id> \
+  --started-at 2026-09-28T09:00:00+02:00 --ended-at 2026-09-28T10:30:00+02:00 \
+  --description "Revisión del presupuesto"
+
+# …o con el temporizador del titular de la key, que solo admite uno en marcha.
+factuarea tasks timer start <task_id>
+factuarea task-timers current --json      # `{"data": null}` si no hay ninguno
+factuarea task-timers stop --json
+
+# Borrar una columna con tareas exige decir dónde van. Es irreversible: sin terminal
+# interactiva hay que confirmar con --confirm, y lo que se confirma es el ÚLTIMO
+# argumento posicional (aquí, la columna borrada).
+factuarea projects columns delete <project_id> <column_id> \
+  --move_to_column_id <other_column_id> --confirm <column_id>
+```
+
+Los borrados de proyectos, columnas, campos personalizados, etiquetas, tareas (también `tasks bulk-delete`), comentarios, adjuntos y entradas de tiempo son irreversibles y piden `--confirm`; las mutaciones generan la cabecera `Idempotency-Key` si no pasas `--idempotency-key`.
+
+**`task-timers` no es el fichaje de jornada.** El temporizador y las entradas de `tasks time-entries` registran el tiempo dedicado a una tarea, para medirlo y facturarlo; no son el registro de jornada del módulo de control horario (`factuarea time-entries clock-in`, arriba), que tiene su propio scope y su propio registro inalterable.
+
 ## Devloop (webhooks)
 
 Prueba tus webhooks en local sin desplegar ni ngrok, al estilo del CLI de Stripe:
