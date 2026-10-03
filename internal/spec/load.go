@@ -301,7 +301,7 @@ func bodyFields(sc *base.Schema, depth int) []BodyField {
 		if ps == nil {
 			continue
 		}
-		s := ps.Schema()
+		s := fieldSchema(ps)
 		if s == nil {
 			continue
 		}
@@ -310,6 +310,26 @@ func bodyFields(sc *base.Schema, depth int) []BodyField {
 		fields = append(fields, f)
 	}
 	return fields
+}
+
+// fieldSchema devuelve el esquema que clasifica un campo del cuerpo. Un campo
+// OpenAPI 3.1 que es un `$ref` con palabras clave hermanas (por ejemplo
+// `remission_mode`: `description` más `$ref` a un enum) lo entrega libopenapi
+// como la vista de solo los hermanos, sin tipo ni enum. En ese caso se clasifica
+// por el esquema referido.
+func fieldSchema(ps *base.SchemaProxy) *base.Schema {
+	s := ps.Schema()
+	if s == nil || !ps.IsTransformedRefWithSiblings() {
+		return s
+	}
+	semantic, err := ps.BuildTransformedRefSemanticSchema(s)
+	if err != nil || semantic == nil || len(semantic.AllOf) != 2 {
+		return s
+	}
+	if target := semantic.AllOf[1].Schema(); target != nil {
+		return target
+	}
+	return s
 }
 
 func classifyField(f *BodyField, s *base.Schema, depth int) {

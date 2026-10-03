@@ -417,8 +417,13 @@ func TestBodyFieldsArraysAndMap(t *testing.T) {
 	if len(lines.Children) != 0 {
 		t.Errorf("lines object_array NO debe expandir Children: %+v", lines.Children)
 	}
-	if cid := invf["client_id"]; cid == nil || !cid.Required {
-		t.Errorf("client_id debe ser required: %+v", cid)
+	// `client_id` es opcional desde el cajero desatendido: una F2 sin cliente es
+	// un ticket anónimo. Lo que sigue siendo obligatorio son las líneas.
+	if cid := invf["client_id"]; cid == nil || cid.Required {
+		t.Errorf("client_id debe existir y ser opcional: %+v", cid)
+	}
+	if lines == nil || !lines.Required {
+		t.Errorf("lines debe ser required: %+v", lines)
 	}
 }
 
@@ -585,6 +590,34 @@ func TestCustomFieldValuesAreUnionTyped(t *testing.T) {
 		if f.Kind != "scalar" || f.Type != union || !f.Nullable || f.Required != tc.required {
 			t.Errorf("%s.%s = %+v, quiero scalar de tipo %q, nullable y required=%v", tc.operation, tc.field, *f, union, tc.required)
 		}
+	}
+}
+
+// TestBodyFieldFollowsRefWithSiblingKeywords fija que un campo `$ref` con
+// `description` hermana se clasifica por el esquema referido. Sin eso,
+// `remission_mode` de los ajustes de VERI*FACTU salía sin tipo ni valores
+// permitidos.
+func TestBodyFieldFollowsRefWithSiblingKeywords(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	op, ok := by["public-api.v1.verifactu.settings.update"]
+	if !ok || op.Body == nil {
+		t.Fatal("public-api.v1.verifactu.settings.update: ausente de Load() o sin cuerpo")
+	}
+	f := indexFields(op.Body.Fields)["remission_mode"]
+	if f == nil {
+		t.Fatal("el cuerpo no declara remission_mode")
+	}
+	want := []string{"own_certificate", "social_collaborator", "power_of_attorney"}
+	if f.Kind != "scalar" || f.Type != "string" || !reflect.DeepEqual(f.Enum, want) {
+		t.Errorf("remission_mode = %+v, quiero scalar de tipo string con enum %v", *f, want)
 	}
 }
 
