@@ -115547,7 +115547,7 @@
                                                 "managed": false,
                                                 "plan": {
                                                     "slug": "empresario",
-                                                    "name": "Negocio",
+                                                    "name": "Profesional",
                                                     "status": "active",
                                                     "billing_interval": "month",
                                                     "is_trialing": false,
@@ -226087,7 +226087,7 @@
                             },
                             "name": {
                                 "type": "string",
-                                "example": "Negocio"
+                                "example": "Profesional"
                             }
                         },
                         "required": [
@@ -226347,7 +226347,7 @@
                                     "string",
                                     "null"
                                 ],
-                                "example": "Negocio"
+                                "example": "Profesional"
                             },
                             "status": {
                                 "type": "string",
