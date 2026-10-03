@@ -541,7 +541,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"companies"},
 			PathParams:          []genParam{},
-			QueryParams:         []genParam{{Name: "status", In: "query", Type: "string", Description: "Filtrar por estado del vínculo de gestoría. Sin filtro se ocultan las archivadas (solo `active` e `inactive`).", Required: false}},
+			QueryParams:         []genParam{{Name: "status", In: "query", Type: "string", Description: "Filter by the status of the managed-company link (gestoría). Without a filter the archived companies are hidden (only `active` and `inactive` are returned).", Required: false}},
 		},
 		{
 			OperationID: "public-api.v1.companies.create", Method: "POST", Path: "/companies",
@@ -570,7 +570,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"companies"},
 			PathParams:          []genParam{},
-			QueryParams:         []genParam{{Name: "count", In: "query", Type: "integer", Description: "Número de empresas hijas que se activarían en bloque (≥1, default 1).", Required: false}, {Name: "company_ids[]", In: "query", Type: "array", Description: "", Required: true}},
+			QueryParams:         []genParam{{Name: "count", In: "query", Type: "integer", Description: "Number of child companies that would be activated in bulk (≥1, default 1).", Required: false}, {Name: "company_ids[]", In: "query", Type: "array", Description: "", Required: true}},
 		},
 		{
 			OperationID: "public-api.v1.companies.delete", Method: "DELETE", Path: "/companies/{company}",
@@ -635,7 +635,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: true,
 			Groups:              []string{"companies", "api-keys"},
 			PathParams:          []genParam{{Name: "company", In: "path", Type: "string", Description: "", Required: true}, {Name: "api_key", In: "path", Type: "string", Description: "", Required: true}},
-			QueryParams:         []genParam{{Name: "reason", In: "query", Type: "string", Description: "Motivo opcional de la revocación (queda en audit log).", Required: false}},
+			QueryParams:         []genParam{{Name: "reason", In: "query", Type: "string", Description: "Optional reason for the revocation, kept in the audit trail. Up to 500 characters.", Required: false}},
 		},
 		{
 			OperationID: "public-api.v1.companies.api_keys.show", Method: "GET", Path: "/companies/{company}/api-keys/{api_key}",
@@ -726,7 +726,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"contacts"},
 			PathParams:          []genParam{},
-			QueryParams:         []genParam{{Name: "limit", In: "query", Type: "integer", Description: "", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "", Required: false}, {Name: "search", In: "query", Type: "string", Description: "", Required: false}, {Name: "roles[]", In: "query", Type: "array", Description: "", Required: false}, {Name: "role_match", In: "query", Type: "string", Description: "", Required: false}, {Name: "role_status", In: "query", Type: "string", Description: "", Required: false}, {Name: "kind", In: "query", Type: "string", Description: "", Required: false}, {Name: "fiscal_identity", In: "query", Type: "string", Description: "", Required: false}, {Name: "external_id", In: "query", Type: "string", Description: "", Required: false}, {Name: "tags[]", In: "query", Type: "array", Description: "", Required: false}, {Name: "is_archived", In: "query", Type: "boolean", Description: "", Required: false}, {Name: "city", In: "query", Type: "string", Description: "Coincidencia exacta de ciudad y provincia; país ISO 3166-1 alpha-2 exacto.", Required: false}, {Name: "province", In: "query", Type: "string", Description: "", Required: false}, {Name: "country_code", In: "query", Type: "string", Description: "", Required: false}, {Name: "has_email", In: "query", Type: "boolean", Description: "", Required: false}, {Name: "has_phone", In: "query", Type: "boolean", Description: "Verdadero si hay teléfono fijo O móvil; falso si ambos están vacíos.", Required: false}, {Name: "created_from", In: "query", Type: "string", Description: "", Required: false}, {Name: "created_to", In: "query", Type: "string", Description: "", Required: false}, {Name: "metadata[]", In: "query", Type: "array", Description: "", Required: false}, {Name: "sort_order", In: "query", Type: "string", Description: "", Required: false}},
+			QueryParams:         []genParam{{Name: "limit", In: "query", Type: "integer", Description: "", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "", Required: false}, {Name: "search", In: "query", Type: "string", Description: "", Required: false}, {Name: "roles[]", In: "query", Type: "array", Description: "", Required: false}, {Name: "role_match", In: "query", Type: "string", Description: "", Required: false}, {Name: "role_status", In: "query", Type: "string", Description: "", Required: false}, {Name: "kind", In: "query", Type: "string", Description: "", Required: false}, {Name: "fiscal_identity", In: "query", Type: "string", Description: "", Required: false}, {Name: "external_id", In: "query", Type: "string", Description: "", Required: false}, {Name: "tags[]", In: "query", Type: "array", Description: "", Required: false}, {Name: "is_archived", In: "query", Type: "boolean", Description: "", Required: false}, {Name: "city", In: "query", Type: "string", Description: "Exact match on the city.", Required: false}, {Name: "province", In: "query", Type: "string", Description: "Exact match on the province.", Required: false}, {Name: "country_code", In: "query", Type: "string", Description: "Exact ISO 3166-1 alpha-2 country code.", Required: false}, {Name: "has_email", In: "query", Type: "boolean", Description: "", Required: false}, {Name: "has_phone", In: "query", Type: "boolean", Description: "`true` returns contacts that have a landline OR a mobile phone; `false` returns contacts where both are empty.", Required: false}, {Name: "created_from", In: "query", Type: "string", Description: "", Required: false}, {Name: "created_to", In: "query", Type: "string", Description: "", Required: false}, {Name: "metadata[]", In: "query", Type: "array", Description: "", Required: false}, {Name: "sort_order", In: "query", Type: "string", Description: "", Required: false}},
 		},
 		{
 			OperationID: "public-api.v1.contacts.create", Method: "POST", Path: "/contacts",
@@ -1150,7 +1150,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"delivery-notes"},
 			PathParams:          []genParam{{Name: "delivery_note", In: "path", Type: "string", Description: "", Required: true}},
-			QueryParams:         []genParam{{Name: "download", In: "query", Type: "string", Description: "Cuando es truthy (`1`/`true`), fuerza `Content-Disposition: attachment` (descarga de fichero) en lugar de `inline`.", Required: false}},
+			QueryParams:         []genParam{{Name: "download", In: "query", Type: "string", Description: "When truthy (`1`/`true`), forces `Content-Disposition: attachment` (file download) instead of `inline`.", Required: false}},
 
 			BinaryContentType: "application/pdf",
 		},
@@ -1522,7 +1522,7 @@ func generatedOps() []genOp {
 			Groups:              []string{"invoices"},
 			PathParams:          []genParam{},
 			QueryParams:         []genParam{},
-			Body:                &genBody{Kind: "json", Example: "{\"client_id\":\"f58fbf7f-333f-499b-affc-c0d396cbd83f\",\"due_on\":\"2026-07-01\",\"issued_on\":\"2026-06-01\",\"lines\":[{\"description\":\"Servicio de consultoria\",\"discount_percent\":0,\"quantity\":2,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":150}],\"metadata\":{\"order_ref\":\"PO-2026-0042\"},\"notes\":\"Factura creada via API v1\",\"series_id\":\"019e5584-7a72-7038-a8f6-561ed180b699\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "price_list_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reprice_strategy", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"existing_catalog_lines", "future_lines_only"}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "due_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "options", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "issue_directly", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "send_automatically", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "send_to", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "wait_for_pdf", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}}}},
+			Body:                &genBody{Kind: "json", Example: "{\"client_id\":\"f58fbf7f-333f-499b-affc-c0d396cbd83f\",\"due_on\":\"2026-07-01\",\"issued_on\":\"2026-06-01\",\"lines\":[{\"description\":\"Servicio de consultoria\",\"discount_percent\":0,\"quantity\":2,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":150}],\"metadata\":{\"order_ref\":\"PO-2026-0042\"},\"notes\":\"Factura creada via API v1\",\"series_id\":\"019e5584-7a72-7038-a8f6-561ed180b699\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "type", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"F1", "F2"}, Children: []genBodyField{}}, {Name: "client_id", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "prices_include_tax", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "operation_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "payment", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "method", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{"bank_transfer", "direct_debit", "sepa_direct_debit", "cash", "credit_card", "check", "paypal", "bizum", "other"}, Children: []genBodyField{}}, {Name: "paid_at", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reference", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "price_list_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reprice_strategy", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{"existing_catalog_lines", "future_lines_only"}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "due_on", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "options", Type: "", Kind: "object", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{{Name: "issue_directly", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "send_automatically", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "send_to", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "wait_for_pdf", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "register_verifactu", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.bulk_create", Method: "POST", Path: "/invoices/bulk-create",
@@ -1700,7 +1700,7 @@ func generatedOps() []genOp {
 			Groups:              []string{"invoices"},
 			PathParams:          []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams:         []genParam{},
-			Body:                &genBody{Kind: "json", Example: "{\"lines\":[{\"description\":\"Servicio de consultoria (revisado)\",\"discount_percent\":10,\"quantity\":3,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":150}],\"notes\":\"Notas actualizadas via API v1\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "price_list_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reprice_strategy", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"existing_catalog_lines", "future_lines_only"}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "due_on", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
+			Body:                &genBody{Kind: "json", Example: "{\"lines\":[{\"description\":\"Servicio de consultoria (revisado)\",\"discount_percent\":10,\"quantity\":3,\"tax_rate_id\":\"019e5584-7a7f-70fd-b9cb-9466c3ee12a8\",\"unit_price\":150}],\"notes\":\"Notas actualizadas via API v1\"}", FileFields: []string{}, HasObjectArray: true, Fields: []genBodyField{{Name: "client_id", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "series_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "price_list_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "reprice_strategy", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"existing_catalog_lines", "future_lines_only"}, Children: []genBodyField{}}, {Name: "issued_on", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "due_on", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "operation_on", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "notes", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "external_id", Type: "string", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "metadata", Type: "", Kind: "map", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "tags", Type: "string", Kind: "scalar_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "custom_fields", Type: "", Kind: "object_array", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}, {Name: "lines", Type: "", Kind: "object_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.activities", Method: "GET", Path: "/invoices/{invoice}/activities",
@@ -1719,7 +1719,7 @@ func generatedOps() []genOp {
 			Groups:              []string{"invoices"},
 			PathParams:          []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams:         []genParam{},
-			Body:                &genBody{Kind: "json", Example: "{\"reason\":\"Anulación solicitada por el cliente: pedido cancelado antes de la entrega.\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "reason", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
+			Body:                &genBody{Kind: "json", Example: "{\"reason\":\"Anulación solicitada por el cliente: pedido cancelado antes de la entrega.\",\"revert_collections\":false}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "reason", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "revert_collections", Type: "boolean", Kind: "scalar", Required: false, Nullable: true, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.assign_real_number", Method: "POST", Path: "/invoices/{invoice}/assign-real-number",
@@ -1881,7 +1881,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"invoices"},
 			PathParams:          []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
-			QueryParams:         []genParam{{Name: "download", In: "query", Type: "string", Description: "", Required: false}},
+			QueryParams:         []genParam{{Name: "format", In: "query", Type: "string", Description: "Paper of the PDF: `a4` (default, with the company template), `ticket_80` (80 mm thermal roll) or `ticket_58` (58 mm roll). Any other value returns 422 with a `parameter_invalid_enum` entry (and its `allowed_values`) in `error.errors[]`. The format does not change the company template; each format is rendered and cached separately and has its own `ETag`.", Required: false}, {Name: "download", In: "query", Type: "string", Description: "", Required: false}},
 
 			BinaryContentType: "application/pdf",
 		},
@@ -1892,7 +1892,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"invoices"},
 			PathParams:          []genParam{{Name: "invoice", In: "path", Type: "string", Description: "", Required: true}},
-			QueryParams:         []genParam{},
+			QueryParams:         []genParam{{Name: "format", In: "query", Type: "string", Description: "Paper of the PDF the signed link serves: `a4` (default, with the company template), `ticket_80` (80 mm thermal roll) or `ticket_58` (58 mm roll). Any other value returns 422 with a `parameter_invalid_enum` entry (and its `allowed_values`) in `error.errors[]`. Each format is rendered and cached separately.", Required: false}},
 		},
 		{
 			OperationID: "public-api.v1.invoices.pdf_preview", Method: "GET", Path: "/invoices/{invoice}/pdf/preview",
@@ -2432,7 +2432,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"products"},
 			PathParams:          []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
-			QueryParams:         []genParam{{Name: "include", In: "query", Type: "string", Description: "Recursos anidados a incluir, separados por comas. Hoy solo\n`configurable_catalog`, que adjunta los grupos de opciones\nvendibles y las combinaciones comerciales del producto.", Required: false}},
+			QueryParams:         []genParam{{Name: "include", In: "query", Type: "string", Description: "Nested resources to include, comma-separated. Currently only\n`configurable_catalog`, which attaches the sellable option groups\nand the commercial combinations of the product.", Required: false}},
 		},
 		{
 			OperationID: "public-api.v1.products.update", Method: "PUT", Path: "/products/{product}",
@@ -2585,7 +2585,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"products", "stock-movements"},
 			PathParams:          []genParam{{Name: "product", In: "path", Type: "string", Description: "", Required: true}},
-			QueryParams:         []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Máximo de movimientos por página (1-100, por defecto 25).", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Id del último movimiento ya recibido; la página empieza justo después.", Required: false}, {Name: "direction", In: "query", Type: "string", Description: "`in` = entradas (delta positivo), `out` = salidas (delta negativo). Ausente = el ledger completo.", Required: false}},
+			QueryParams:         []genParam{{Name: "limit", In: "query", Type: "integer", Description: "Maximum number of movements per page (1-100, default 25).", Required: false}, {Name: "starting_after", In: "query", Type: "string", Description: "Id of the last movement already received; the page starts right after it.", Required: false}, {Name: "direction", In: "query", Type: "string", Description: "`in` = inbound movements (positive delta), `out` = outbound movements (negative delta). Omitted = the whole ledger.", Required: false}},
 		},
 		{
 			OperationID: "public-api.v1.products.supplier-offers.list", Method: "GET", Path: "/products/{product}/supplier-offers",
@@ -3180,7 +3180,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"purchase-invoices"},
 			PathParams:          []genParam{},
-			QueryParams:         []genParam{{Name: "per_page", In: "query", Type: "string", Description: "", Required: false}, {Name: "limit", In: "query", Type: "string", Description: "Default `'25'` (string) por consistencia OpenAPI: Scramble infiere\n schema.type=string para `request->input()` y el default debe ser\n string (Spectral rechaza `default: 25` int con `type: string`).", Required: false}, {Name: "cursor", In: "query", Type: "string", Description: "", Required: false}},
+			QueryParams:         []genParam{{Name: "per_page", In: "query", Type: "string", Description: "", Required: false}, {Name: "limit", In: "query", Type: "string", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25. Alias: `per_page`; if both are sent, `limit` wins.", Required: false}, {Name: "cursor", In: "query", Type: "string", Description: "", Required: false}},
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.pending", Method: "GET", Path: "/purchase_invoices/pending",
@@ -3189,7 +3189,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"purchase-invoices"},
 			PathParams:          []genParam{},
-			QueryParams:         []genParam{{Name: "per_page", In: "query", Type: "string", Description: "", Required: false}, {Name: "limit", In: "query", Type: "string", Description: "Default `'25'` (string) por consistencia OpenAPI/Spectral.", Required: false}, {Name: "cursor", In: "query", Type: "string", Description: "", Required: false}},
+			QueryParams:         []genParam{{Name: "per_page", In: "query", Type: "string", Description: "", Required: false}, {Name: "limit", In: "query", Type: "string", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25. Alias: `per_page`; if both are sent, `limit` wins.", Required: false}, {Name: "cursor", In: "query", Type: "string", Description: "", Required: false}},
 		},
 		{
 			OperationID: "public-api.v1.purchase_invoices.stats", Method: "GET", Path: "/purchase_invoices/stats",
@@ -3739,7 +3739,7 @@ func generatedOps() []genOp {
 			IdempotencyRequired: false,
 			Groups:              []string{"recurring-invoices"},
 			PathParams:          []genParam{{Name: "recurring_invoice", In: "path", Type: "string", Description: "", Required: true}},
-			QueryParams:         []genParam{{Name: "per_page", In: "query", Type: "string", Description: "", Required: false}, {Name: "limit", In: "query", Type: "string", Description: "Default `'25'` (string) por consistencia OpenAPI/Spectral.", Required: false}, {Name: "cursor", In: "query", Type: "string", Description: "", Required: false}},
+			QueryParams:         []genParam{{Name: "per_page", In: "query", Type: "string", Description: "", Required: false}, {Name: "limit", In: "query", Type: "string", Description: "Number of objects to return. Integer between 1 and 100. Defaults to 25. Alias: `per_page`; if both are sent, `limit` wins.", Required: false}, {Name: "cursor", In: "query", Type: "string", Description: "", Required: false}},
 		},
 		{
 			OperationID: "public-api.v1.recurring_invoices.pause", Method: "POST", Path: "/recurring_invoices/{recurring_invoice}/pause",
@@ -5102,6 +5102,15 @@ func generatedOps() []genOp {
 			Body:                &genBody{Kind: "json", Example: "{\"number\":\"00042\",\"series\":\"FAC-2026\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "series", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "number", Type: "string", Kind: "scalar", Required: true, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
 		},
 		{
+			OperationID: "public-api.v1.verifactu.records.retry_blocked", Method: "POST", Path: "/verifactu/records/retry-blocked",
+			Action: "retry-blocked", Summary: "Retry every blocked VeriFactu record", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:write",
+			IdempotencyRequired: true,
+			Groups:              []string{"verifactu", "records"},
+			PathParams:          []genParam{},
+			QueryParams:         []genParam{},
+		},
+		{
 			OperationID: "public-api.v1.verifactu.records.show", Method: "GET", Path: "/verifactu/records/{record}",
 			Action: "show", Summary: "Retrieve a VeriFactu record", Deprecated: false,
 			Irreversible: false, RequiredScope: "verifactu:read",
@@ -5130,12 +5139,40 @@ func generatedOps() []genOp {
 		},
 		{
 			OperationID: "public-api.v1.verifactu.records.subsanar", Method: "POST", Path: "/verifactu/records/{record}/subsanar",
-			Action: "subsanar", Summary: "Subsanar a rejected VeriFactu record", Deprecated: false,
+			Action: "subsanar", Summary: "Subsanar a VeriFactu record", Deprecated: false,
 			Irreversible: true, RequiredScope: "verifactu:write",
 			IdempotencyRequired: true,
 			Groups:              []string{"verifactu", "records"},
 			PathParams:          []genParam{{Name: "record", In: "path", Type: "string", Description: "", Required: true}},
 			QueryParams:         []genParam{},
+		},
+		{
+			OperationID: "public-api.v1.verifactu.representation.revoke", Method: "DELETE", Path: "/verifactu/representation",
+			Action: "revoke", Summary: "Revoke the active representation", Deprecated: false,
+			Irreversible: true, RequiredScope: "verifactu:write",
+			IdempotencyRequired: true,
+			Groups:              []string{"verifactu", "representation"},
+			PathParams:          []genParam{},
+			QueryParams:         []genParam{{Name: "reason", In: "query", Type: "string", Description: "Why the representation is revoked, 3 to 500 characters. Optional, in the JSON body or in the query: when omitted «Revocada vía API v1.» is recorded. A text outside that range returns 422 with `param=reason` instead of being silently trimmed.", Required: false}},
+		},
+		{
+			OperationID: "public-api.v1.verifactu.representation.show", Method: "GET", Path: "/verifactu/representation",
+			Action: "show", Summary: "Retrieve the active representation", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:read",
+			IdempotencyRequired: false,
+			Groups:              []string{"verifactu", "representation"},
+			PathParams:          []genParam{},
+			QueryParams:         []genParam{},
+		},
+		{
+			OperationID: "public-api.v1.verifactu.representation.register", Method: "POST", Path: "/verifactu/representation",
+			Action: "register", Summary: "Register a representation", Deprecated: false,
+			Irreversible: false, RequiredScope: "verifactu:write",
+			IdempotencyRequired: true,
+			Groups:              []string{"verifactu", "representation"},
+			PathParams:          []genParam{},
+			QueryParams:         []genParam{},
+			Body:                &genBody{Kind: "multipart", Example: "", FileFields: []string{"document"}, HasObjectArray: false, Fields: []genBodyField{}},
 		},
 		{
 			OperationID: "public-api.v1.verifactu.settings.update", Method: "PUT", Path: "/verifactu/settings",
@@ -5145,7 +5182,7 @@ func generatedOps() []genOp {
 			Groups:              []string{"verifactu", "settings"},
 			PathParams:          []genParam{},
 			QueryParams:         []genParam{},
-			Body:                &genBody{Kind: "json", Example: "{\"auto_transmit\":true,\"enabled\":true,\"environment\":\"production\",\"mode\":\"verifactu\",\"notification_emails\":[\"avisos@empresa.es\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "enabled", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "mode", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"verifactu", "no_verifactu"}, Children: []genBodyField{}}, {Name: "auto_transmit", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "environment", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"sandbox", "production"}, Children: []genBodyField{}}, {Name: "notification_emails", Type: "string", Kind: "scalar_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
+			Body:                &genBody{Kind: "json", Example: "{\"auto_transmit\":true,\"enabled\":true,\"environment\":\"production\",\"mode\":\"verifactu\",\"notification_emails\":[\"avisos@empresa.es\"]}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "enabled", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "mode", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"verifactu", "no_verifactu"}, Children: []genBodyField{}}, {Name: "auto_transmit", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "environment", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"sandbox", "production"}, Children: []genBodyField{}}, {Name: "notification_emails", Type: "string", Kind: "scalar_array", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "remission_mode", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"own_certificate", "social_collaborator", "power_of_attorney"}, Children: []genBodyField{}}}},
 		},
 		{
 			OperationID: "public-api.v1.verifactu.stats", Method: "GET", Path: "/verifactu/stats",
