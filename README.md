@@ -170,8 +170,8 @@ factuarea monthly-time-record-closes export <uuid> --format rdley_8_2019 --json
 
 ### Automatizaciones (automations)
 
-Con el módulo de **automatizaciones** activo (`automations`, planes **Negocio**,
-**Integral** y **Enterprise**; slugs `empresario`, `integral` y `enterprise`), el
+Con el módulo de **automatizaciones** activo (`automations`, planes **Profesional**,
+**Avanzado** y **Enterprise**; slugs `empresario`, `integral` y `enterprise`), el
 CLI expone el motor de reglas con sus cuatro
 recursos y sus scopes finos (`automations:read` en 8 comandos,
 `automations:write` en 6, `automations:delete` en 1 y `automation_runs:read` en
