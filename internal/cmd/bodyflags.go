@@ -73,7 +73,7 @@ func registerFieldFlags(c *cobra.Command, op genOp) {
 		return
 	}
 	for _, ff := range collectFieldFlags(op.Body.Fields, nil) {
-		desc := fieldFlagDescription(op, ff)
+		desc := flagUsage(fieldFlagDescription(op, ff))
 		switch ff.kind {
 		case "scalar":
 			switch ff.jsonType {
