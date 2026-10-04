@@ -14660,7 +14660,7 @@
         "/invoices/bulk-create": {
             "post": {
                 "operationId": "public-api.v1.invoices.bulk_create",
-                "description": "Create up to 100 invoices in one call, each entry a full invoice payload (including an optional `operation_on`, the date the operation took place when it differs from `issued_on`). With `dry_run=true` it validates every row without persisting and returns a per-row classification (`results[]`, including duplicate `external_id` and a non-blocking AEAT census warning); with `dry_run=false` it creates only the valid rows and reports the rest in `failures[]`. Returns the `BulkCreateResult` shape.",
+                "description": "Create up to 100 invoices in one call, each entry a full invoice payload (including an optional `operation_on`, the date the operation took place when it differs from `issued_on`, and an optional `series_id`: without it, each row goes to the default series of its purpose, as in `POST /v1/invoices`). With `dry_run=true` it validates every row without persisting and returns a per-row classification (`results[]`, including duplicate `external_id` and a non-blocking AEAT census warning); with `dry_run=false` it creates only the valid rows and reports the rest in `failures[]`. Returns the `BulkCreateResult` shape.",
                 "summary": "Bulk create invoices",
                 "tags": [
                     "Invoices"
@@ -41962,7 +41962,7 @@
         "/invoices/{invoice}/corrective": {
             "post": {
                 "operationId": "public-api.v1.invoices.corrective",
-                "description": "Issue a corrective invoice (*rectificativa*, RD 1619/2012 art. 15) that amends a previously issued invoice. Returns `201` with the **new** invoice: `is_corrective: true`, `corrective` pointing at the original, and a number derived from the original's in the same series (`F-2026-0042-REC1`, `-REC2`\u2026 for successive correctives).\n\nFlow: the original must already be issued (`sent` or `paid`) \u2192 the corrective is born **already issued**, never as a draft \u2192 when VeriFactu is enabled its *alta* is transmitted to AEAT **asynchronously**, so a `201` does not mean AEAT has accepted it yet. The original is never modified: it keeps its number, its status and its own VeriFactu record. A corrective is an additional document, not an edit.\n\n**Full vs partial.** `correction_type: full` is a substitution (VeriFactu nature `S`): the `lines` you send are the *final correct amounts*, and omitting `lines` entirely turns it into a full cancellation, where every original line is copied back negated and prefixed `[ANULACION]`. `correction_type: partial` is a correction by differences (nature `I`): `lines` is required and each one is a delta \u2014 typically negative \u2014 prefixed `[AJUSTE]`. In a partial correction a line only moves stock if it declares its own `product_id`; in a substitution the product is inherited from the original line at the same index.\n\n**Nature of each corrected line.** A line may declare `unit`, `regime_key`, `exemption_reason` and `exemption_reason_text`, with the same rules as `POST /v1/invoices`. They follow the presence of the key: a key you OMIT inherits the value of the original line at the same index; a key you SEND (even `null`) replaces it, and `null` means explicitly none \u2014 for example `exemption_reason: null` turns an exempt original line into a taxed one. This applies to both substitution and correction by differences.\n\n**AEAT R code.** By default it is derived from `correction_reason`: `error_fundado` \u2192 R1, `concurso` \u2192 R2, `incobrable` \u2192 R3, everything else \u2192 R4; a corrective of a simplified (F2) invoice is always born R5 regardless of the reason. `correction_code` overrides that derivation, but is validated against the legal matrix \u2014 original F2 \u2192 only `R5`; original F1/F3 \u2192 only `R1`\u2013`R4`. Any other combination returns 422 with the legal `allowed_values`.\n\nLimits: `draft`, `overdue`, `cancelled` and `annulled` originals return 422 (an `overdue` invoice must be paid or voided first); a corrective can never itself be corrected \u2014 issue a new corrective of the original instead. List every corrective of an invoice with `GET /v1/invoices/{id}/correctives`.\n\n**Signing certificate (NO VERI*FACTU).** Only when the company has VeriFactu enabled in NO VERI*FACTU mode, the alta billing record of this operation is signed with the company's electronic certificate (art. 6.c and 14 of Order HAC/1177/2024), and a certificate that is missing, expired, revoked, issued for another tax id or unreadable is rejected **before** the invoice is issued: 422 `verifactu_not_eligible` with `error.subcode: signing_certificate_unavailable`; `error.param` says what is missing (`certificate`: the company certificate; `representation`: the representation that lets Factuarea sign on its behalf is not active; `system_certificate`: the Factuarea certificate is unavailable, nothing for you to fix). The invoice stays exactly as it was (a draft without a number) and nothing is consumed: upload a valid certificate in Settings \u2192 Digital certificate (or register the representation in the third-party remission modes) and repeat the same call. Companies that have not enabled VeriFactu, and companies in VERI*FACTU mode (whose records are not signed), are never blocked by this rule.",
+                "description": "Issue a corrective invoice (*rectificativa*, RD 1619/2012 art. 15) that amends a previously issued invoice. Returns `201` with the **new** invoice: `is_corrective: true`, `corrective` pointing at the original, and its own correlative number in a corrective series (`R-2026-001`, `R-2026-002`\u2026 with the default numbering format \u2014 corrective invoices of simplified invoices go in their own series, `RS`). The series is `series_id` when you send it, otherwise the default series of the right purpose (`corrective` for `R1`\u2013`R4`, `simplified_corrective` for `R5`), created automatically if the company has none; a series of another `invoice_kind` returns 422 `series_invoice_kind_mismatch`.\n\nFlow: the original must already be issued (`issued` or `overdue`) \u2192 the corrective is born **already issued**, never as a draft \u2192 when VeriFactu is enabled its *alta* is transmitted to AEAT **asynchronously**, so a `201` does not mean AEAT has accepted it yet. The original is never modified: it keeps its number, its status and its own VeriFactu record (the corrective references it by its number). A corrective is an additional document, not an edit.\n\n**Three ways to correct (art. 15.5 RD 1619/2012).** `correction_nature` is optional: without it, `full` with `lines` is a substitution (`S`) and `full` without `lines` and `partial` are by differences (`I`: the corrective carries the amount of the rectification, whatever its sign).\n- **Void the whole invoice** \u2014 `correction_type: full`, no `lines`: every original line is copied back negated and prefixed `[ANULACION]` (a full refund). Registered in VeriFactu as `TipoRectificativa: I`, with a negative base.\n- **Correct some amounts** \u2014 `correction_type: partial` with the adjustment `lines` (required): each one is a delta prefixed `[AJUSTE]`, with a negative `quantity` to subtract (`unit_price` is never negative). Also `TipoRectificativa: I`. A line only moves stock if it declares its own `product_id`.\n- **Replace it with the correct version** \u2014 `correction_type: full` with the FINAL `lines` of the correct invoice (no negative quantity); `correction_nature: S` is optional here. Registered as `TipoRectificativa: S` with `ImporteRectificacion` (the base and tax of the original, plus its equivalence surcharge when it had one); the product of each line is inherited from the original line at the same index.\n\nIncoherent combinations are rejected with 422 before anything is created: `full` with `lines` and an explicit `correction_nature: I` (`parameter_invalid_value`, subcode `corrective_full_cancellation_with_lines`, `param: lines`); a substitution or a partial correction without `lines` (`missing_required_param`, `param: lines`); a substitution with a negative quantity (`parameter_invalid_value`, subcode `corrective_substitution_negative_amount`, `param: lines.N.quantity`, with `line_index`); a partial substitution (`parameter_invalid_value`, subcode `corrective_substitution_requires_full`, `param: correction_nature`). An invoice already voided in full (a full corrective by differences) admits no further corrective at all, and one replaced in full admits no second full correction, though it still admits a partial one (both `business_rule_violation`, subcode `invoice_already_rectified_in_full`).\n\n**Nature of each corrected line.** A line may declare `unit`, `regime_key`, `exemption_reason` and `exemption_reason_text`, with the same rules as `POST /v1/invoices`. They follow the presence of the key: a key you OMIT inherits the value of the original line at the same index; a key you SEND (even `null`) replaces it, and `null` means explicitly none \u2014 for example `exemption_reason: null` turns an exempt original line into a taxed one. This applies to both substitution and correction by differences.\n\n**AEAT R code.** By default it is derived from `correction_reason`: `error_fundado` \u2192 R1, `concurso` \u2192 R2, `incobrable` \u2192 R3, everything else \u2192 R4; a corrective of a simplified (F2) invoice is always born R5 regardless of the reason. `correction_code` overrides that derivation, but is validated against the legal matrix \u2014 original F2 \u2192 only `R5`; original F1/F3 \u2192 only `R1`\u2013`R4`. Any other combination returns 422 with the legal `allowed_values`.\n\nLimits: `draft`, `scheduled`, `cancelled` and `annulled` originals return 422; a corrective can never itself be corrected \u2014 issue a new corrective of the original instead. List every corrective of an invoice with `GET /v1/invoices/{id}/correctives`.\n\n**Signing certificate (NO VERI*FACTU).** Only when the company has VeriFactu enabled in NO VERI*FACTU mode, the alta billing record of this operation is signed with the company's electronic certificate (art. 6.c and 14 of Order HAC/1177/2024), and a certificate that is missing, expired, revoked, issued for another tax id or unreadable is rejected **before** the invoice is issued: 422 `verifactu_not_eligible` with `error.subcode: signing_certificate_unavailable`; `error.param` says what is missing (`certificate`: the company certificate; `representation`: the representation that lets Factuarea sign on its behalf is not active; `system_certificate`: the Factuarea certificate is unavailable, nothing for you to fix). The invoice stays exactly as it was (a draft without a number) and nothing is consumed: upload a valid certificate in Settings \u2192 Digital certificate (or register the representation in the third-party remission modes) and repeat the same call. Companies that have not enabled VeriFactu, and companies in VERI*FACTU mode (whose records are not signed), are never blocked by this rule.",
                 "summary": "Generate corrective invoice",
                 "tags": [
                     "Invoices"
@@ -42017,6 +42017,9 @@
                                 },
                                 "r5_simplificada": {
                                     "$ref": "#/components/examples/corrective_r5_simplificada"
+                                },
+                                "substitution": {
+                                    "$ref": "#/components/examples/corrective_substitution"
                                 }
                             }
                         }
@@ -42051,12 +42054,12 @@
                                             "data": {
                                                 "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a60",
                                                 "object": "invoice",
-                                                "number": "R-2026-00003",
+                                                "number": "R-2026-001",
                                                 "is_number_assigned": true,
                                                 "type": "R1",
                                                 "series": {
                                                     "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b04",
-                                                    "code": "RECT-2026"
+                                                    "code": "R"
                                                 },
                                                 "client": {
                                                     "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a01",
@@ -44748,7 +44751,7 @@
         "/invoices": {
             "post": {
                 "operationId": "public-api.v1.invoices.create",
-                "description": "Create an invoice. It is created in `draft` by default; pass `options.issue_directly: true` to issue it immediately (assigning the correlative number and freezing the document per AEAT), or issue it later. VeriFactu *alta* is transmitted to AEAT asynchronously \u2014 a `201` does not mean AEAT has accepted the invoice yet, so poll it for the AEAT status.\n\n```json\n{\n  \"client_id\": \"0190a1b2-c3d4-7e5f-8a90-1b2c3d4e5f60\",\n  \"lines\": [{ \"description\": \"Consulting\", \"quantity\": 1, \"unit_price\": 1000, \"tax_rate\": 21 }],\n  \"options\": { \"issue_directly\": true }\n}\n```\n\nLimits: at least one line is required; send an `Idempotency-Key` (\u2264255 chars, remembered 24 h) for safe retries; a duplicate `external_id` upserts the existing invoice instead of creating a new one. A line with no `tax_rate`, no referenced tax and no product with a tax takes the DEFAULT VAT your company has set for invoices; if there is none the request is rejected with 422 `missing_required_param` (`error.param` `lines.N.tax_rate` and `error.line_index` N, the zero-based index of the line). `options.send_automatically` emails the invoice once issued to `options.send_to` or, when omitted, to the client; with no possible recipient the request is rejected BEFORE anything is created \u2014no draft, no number consumed\u2014 with 422 `missing_required_param` and `error.param` `options.send_to`.\n\n**Unattended checkout (kiosks, parking and toll machines).** A terminal can issue an already-paid simplified invoice in ONE idempotent call. A request is a checkout when it carries `type: F2`, a `payment` block or `options.register_verifactu`; only those get the extra response blocks below, any other request behaves as described above.\n\n- `type: F2` is the simplified invoice. Without `client_id` it is an anonymous ticket; with one it is a qualified simplified invoice (the client must belong to your company). `F1` (the default) still requires a client with a complete tax ID. The company needs simplified invoices enabled (422 `simplified_invoices_disabled`) and the amount cannot exceed the absolute cap of 3,000 \u20ac VAT included (422 `simplified_invoice_not_allowed`).\n- `prices_include_tax: true` makes every `unit_price` the FINAL price with taxes. The system computes the net base to the cent so that the invoice total equals the sum of the amounts you sent; if no distribution reaches it, 422 `amount_reconciliation_failed` and nothing is issued. Catalog lines (`product_id`) are not accepted in this mode.\n- `payment` (`method` required, `paid_at` and `reference` optional) records the payment for the whole amount due after issuing. It implies issuing.\n- `operation_on` is the date the operation took place when it differs from `issued_on`; it cannot be later than `issued_on` (422 `operation_date_after_issue_date`) unless the first line that declares a `regime_key` uses 14 or 15.\n- `options.register_verifactu: true` generates the VERI*FACTU alta synchronously, BEFORE responding, and implies issuing. Its transmission to AEAT follows its course in batches.\n\nThe response is the invoice plus `verifactu` (alta `status` `registered` or `failed` with its `error_code`, `aeat_status`, `huella`, `qr_url`, `qr_png_base64`, `legend` and `csv`), `pdf` (`status`, signed `url` and `expires_at`) and `public_url`. `pdf.status` is `ready` only when the A4 PDF is already materialized and `pdf.url` serves it at once (use `options.wait_for_pdf`, which waits up to about 15 s); otherwise it is `pending` and the URL answers 404 for a few seconds \u2014 never an error. If the alta cannot be generated, the invoice stays issued and the response says so (`status: failed`).\n\n**Late retries.** Identify the operation by its `external_id`: it has no expiry, unlike an `Idempotency-Key`. A checkout that repeats the `external_id` of an invoice already issued in your company returns that invoice with `200` and `Idempotent-Replayed: true`, completing the alta and the payment if they were missing, without creating or changing anything else and without emailing again an invoice whose email is already queued or delivered. If the type or the total differ from the issued invoice, it returns `409` `idempotency_key_reused` with `subcode: unattended_replay_mismatch` and `param: external_id`: the `external_id` identifies ONE operation, so use a new one for a new operation. Two simultaneous requests with the same `external_id` produce ONE invoice, ONE number and ONE payment: the second waits for the first (up to 20 seconds) and then replays it, and if the first has still not finished it returns `409` `resource_locked` with `param: external_id` \u2014 nothing was written by the waiting request, so sending the same request again is harmless. Requests that are not checkouts keep the `external_id` upsert.\n\n**Signing certificate (NO VERI*FACTU).** Only when the company has VeriFactu enabled in NO VERI*FACTU mode, the alta billing record of this operation is signed with the company's electronic certificate (art. 6.c and 14 of Order HAC/1177/2024), and a certificate that is missing, expired, revoked, issued for another tax id or unreadable is rejected **before** the invoice is issued: 422 `verifactu_not_eligible` with `error.subcode: signing_certificate_unavailable`; `error.param` says what is missing (`certificate`: the company certificate; `representation`: the representation that lets Factuarea sign on its behalf is not active; `system_certificate`: the Factuarea certificate is unavailable, nothing for you to fix). The invoice stays exactly as it was (a draft without a number) and nothing is consumed: upload a valid certificate in Settings \u2192 Digital certificate (or register the representation in the third-party remission modes) and repeat the same call. Companies that have not enabled VeriFactu, and companies in VERI*FACTU mode (whose records are not signed), are never blocked by this rule.",
+                "description": "Create an invoice. It is created in `draft` by default; pass `options.issue_directly: true` to issue it immediately (assigning the correlative number and freezing the document per AEAT), or issue it later. VeriFactu *alta* is transmitted to AEAT asynchronously \u2014 a `201` does not mean AEAT has accepted the invoice yet, so poll it for the AEAT status.\n\n```json\n{\n  \"client_id\": \"0190a1b2-c3d4-7e5f-8a90-1b2c3d4e5f60\",\n  \"lines\": [{ \"description\": \"Consulting\", \"quantity\": 1, \"unit_price\": 1000, \"tax_rate\": 21 }],\n  \"options\": { \"issue_directly\": true }\n}\n```\n\nLimits: at least one line is required; send an `Idempotency-Key` (\u2264255 chars, remembered 24 h) for safe retries; a duplicate `external_id` upserts the existing invoice instead of creating a new one. A line with no `tax_rate`, no referenced tax and no product with a tax takes the DEFAULT TAX your company has set for invoices, as if you had chosen that tax (its rate, indirect-tax regime and AEAT qualification); if there is none the request is rejected with 422 `missing_required_param` (`error.param` `lines.N.tax_rate` and `error.line_index` N, the zero-based index of the line). `options.send_automatically` emails the invoice once issued to `options.send_to` or, when omitted, to the client; with no possible recipient the request is rejected BEFORE anything is created \u2014no draft, no number consumed\u2014 with 422 `missing_required_param` and `error.param` `options.send_to`.\n\n**Unattended checkout (self-service terminals and vending machines).** A terminal can issue an already-paid simplified invoice in ONE idempotent call. A request is a checkout when it carries `type: F2`, a `payment` block or `options.register_verifactu`; only those get the extra response blocks below, any other request behaves as described above.\n\n- `type: F2` is the simplified invoice. Without `client_id` it is an anonymous ticket; with one it is a qualified simplified invoice (the client must belong to your company). `F1` (the default) still requires a client with a complete tax ID. The company needs simplified invoices enabled (422 `simplified_invoices_disabled`) and the amount cannot exceed the absolute cap of 3,000 \u20ac VAT included (422 `simplified_invoice_not_allowed`).\n- `series_id` is optional. Invoice series have a fixed purpose (`invoice_kind`: `complete`, `simplified`, `corrective`, `simplified_corrective`) and a document is only numbered in a series of its own purpose. Without `series_id`, a `F1` goes to your default complete series (`F`) and a `F2` to your default simplified series (`S`), created automatically if you have none. If you DO send a `series_id` of another `invoice_kind`, issuing is rejected with 422 `series_invoice_kind_mismatch` (it is never changed silently); `GET /v1/series/default?document_type=invoice&invoice_kind=simplified` returns the series to use.\n- `prices_include_tax: true` makes every `unit_price` the FINAL price with taxes. The system computes the net base to the cent so that the invoice total equals the sum of the amounts you sent; if no distribution reaches it, 422 `amount_reconciliation_failed` and nothing is issued. Catalog lines (`product_id`) are not accepted in this mode.\n- `payment` (`method` required, `paid_at` and `reference` optional) records the payment for the whole amount due after issuing. It implies issuing.\n- `operation_on` is the date the operation took place when it differs from `issued_on`; it cannot be later than `issued_on` (422 `operation_date_after_issue_date`) unless the first line that declares a `regime_key` uses 14 or 15.\n- `options.register_verifactu: true` generates the VERI*FACTU alta synchronously, BEFORE responding, and implies issuing. Its transmission to AEAT follows its course in batches.\n\nThe response is the invoice plus `verifactu` (alta `status` `registered` or `failed` with its `error_code`, `aeat_status`, `huella`, `qr_url`, `qr_png_base64`, `legend` and `csv`), `pdf` (`status`, signed `url` and `expires_at`) and `public_url`. `pdf.status` is `ready` only when the A4 PDF is already materialized and `pdf.url` serves it at once (use `options.wait_for_pdf`, which waits up to about 15 s); otherwise it is `pending` and the URL answers 404 for a few seconds \u2014 never an error. If the alta cannot be generated, the invoice stays issued and the response says so (`status: failed`).\n\n**Late retries.** Identify the operation by its `external_id`: it has no expiry, unlike an `Idempotency-Key`. A checkout that repeats the `external_id` of an invoice already issued in your company returns that invoice with `200` and `Idempotent-Replayed: true`, completing the alta and the payment if they were missing, without creating or changing anything else and without emailing again an invoice whose email is already queued or delivered. If the type or the total differ from the issued invoice, it returns `409` `idempotency_key_reused` with `subcode: unattended_replay_mismatch` and `param: external_id`: the `external_id` identifies ONE operation, so use a new one for a new operation. Two simultaneous requests with the same `external_id` produce ONE invoice, ONE number and ONE payment: the second waits for the first (up to 20 seconds) and then replays it, and if the first has still not finished it returns `409` `resource_locked` with `param: external_id` \u2014 nothing was written by the waiting request, so sending the same request again is harmless. Requests that are not checkouts keep the `external_id` upsert.\n\n**Signing certificate (NO VERI*FACTU).** Only when the company has VeriFactu enabled in NO VERI*FACTU mode, the alta billing record of this operation is signed with the company's electronic certificate (art. 6.c and 14 of Order HAC/1177/2024), and a certificate that is missing, expired, revoked, issued for another tax id or unreadable is rejected **before** the invoice is issued: 422 `verifactu_not_eligible` with `error.subcode: signing_certificate_unavailable`; `error.param` says what is missing (`certificate`: the company certificate; `representation`: the representation that lets Factuarea sign on its behalf is not active; `system_certificate`: the Factuarea certificate is unavailable, nothing for you to fix). The invoice stays exactly as it was (a draft without a number) and nothing is consumed: upload a valid certificate in Settings \u2192 Digital certificate (or register the representation in the third-party remission modes) and repeat the same call. Companies that have not enabled VeriFactu, and companies in VERI*FACTU mode (whose records are not signed), are never blocked by this rule.",
                 "summary": "Create an invoice",
                 "tags": [
                     "Invoices"
@@ -44824,7 +44827,7 @@
                                                 "is_number_assigned": true,
                                                 "type": "F2",
                                                 "series": {
-                                                    "id": "019e5584-7a72-7038-a8f6-561ed180b699",
+                                                    "id": "019e5584-7a72-7038-a8f6-561ed180b6a1",
                                                     "code": "TK-2026"
                                                 },
                                                 "client": {
@@ -44851,7 +44854,7 @@
                                                 "lines": [
                                                     {
                                                         "object": "invoice_line",
-                                                        "description": "Aparcamiento 2 h 30 min",
+                                                        "description": "Lavado expr\u00e9s",
                                                         "additional_description": null,
                                                         "product": null,
                                                         "quantity": 1,
@@ -45179,7 +45182,7 @@
                                         }
                                     },
                                     "unattended_checkout": {
-                                        "summary": "POST /v1/invoices \u00b7 201 unattended checkout (5.00 \u20ac parking ticket, paid F2 with VeriFactu QR)",
+                                        "summary": "POST /v1/invoices \u00b7 201 unattended checkout (5.00 \u20ac express car wash, paid F2 with VeriFactu QR)",
                                         "value": {
                                             "data": {
                                                 "id": "019e5b7a-3c1d-7a52-b4e1-6f2d9c8a1e37",
@@ -45188,7 +45191,7 @@
                                                 "is_number_assigned": true,
                                                 "type": "F2",
                                                 "series": {
-                                                    "id": "019e5584-7a72-7038-a8f6-561ed180b699",
+                                                    "id": "019e5584-7a72-7038-a8f6-561ed180b6a1",
                                                     "code": "TK-2026"
                                                 },
                                                 "client": {
@@ -45215,7 +45218,7 @@
                                                 "lines": [
                                                     {
                                                         "object": "invoice_line",
-                                                        "description": "Aparcamiento 2 h 30 min",
+                                                        "description": "Lavado expr\u00e9s",
                                                         "additional_description": null,
                                                         "product": null,
                                                         "quantity": 1,
@@ -57794,6 +57797,7 @@
                                                 "code": "F-2026",
                                                 "name": "Facturas 2026",
                                                 "document_type": "invoice",
+                                                "invoice_kind": "complete",
                                                 "prefix": "F-2026-",
                                                 "number_format": "{code}-{YYYY}-{000}",
                                                 "next_number": 46,
@@ -58188,6 +58192,23 @@
                         }
                     },
                     {
+                        "name": "invoice_kind",
+                        "in": "query",
+                        "description": "Purpose of an invoice series: `complete`, `simplified`, `corrective` or `simplified_corrective`. Exact match on `invoice_kind`.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "invoice_kind[in]",
+                        "in": "query",
+                        "description": "Purpose of an invoice series: `complete`, `simplified`, `corrective` or `simplified_corrective`. Comma-separated list. Any of the values matches.",
+                        "schema": {
+                            "type": "string",
+                            "description": "Comma-separated list of values (CSV)."
+                        }
+                    },
+                    {
                         "$ref": "#/components/parameters/FactuareaVersion"
                     },
                     {
@@ -58228,6 +58249,7 @@
                                                     "code": "F-2026",
                                                     "name": "Facturas 2026",
                                                     "document_type": "invoice",
+                                                    "invoice_kind": "complete",
                                                     "prefix": "F-2026-",
                                                     "number_format": "{code}-{YYYY}-{000}",
                                                     "next_number": 46,
@@ -70988,7 +71010,7 @@
             },
             "put": {
                 "operationId": "public-api.v1.invoices.update",
-                "description": "Update a draft invoice. Once an invoice has been issued (status `issued`), most fields become immutable per AEAT compliance. `operation_on` (the date the operation took place, when it differs from `issued_on`) can only be changed while the invoice is a draft; it cannot be later than `issued_on` (422 `operation_date_after_issue_date`) unless the first line that declares a `regime_key` uses 14 or 15. Sending `lines` replaces the whole set: a line with no `tax_rate`, no referenced tax and no product with a tax takes the DEFAULT VAT your company has set for invoices, and if there is none it is rejected with 422 `missing_required_param` (`error.param` `lines.N.tax_rate`, `error.line_index` N).",
+                "description": "Update a draft invoice. Once an invoice has been issued (status `issued`), most fields become immutable per AEAT compliance. `operation_on` (the date the operation took place, when it differs from `issued_on`) can only be changed while the invoice is a draft; it cannot be later than `issued_on` (422 `operation_date_after_issue_date`) unless the first line that declares a `regime_key` uses 14 or 15. Sending `lines` replaces the whole set: a line with no `tax_rate`, no referenced tax and no product with a tax takes the DEFAULT TAX your company has set for invoices, as if you had chosen that tax (its rate, indirect-tax regime and AEAT qualification), and if there is none it is rejected with 422 `missing_required_param` (`error.param` `lines.N.tax_rate`, `error.line_index` N). A line that sends both a tax (`tax_rate_id`) and a `tax_rate` that contradicts it is rejected with 422 `parameter_invalid_value` (subcode `tax_rate_mismatch`, `error.param` `lines.N.tax_rate`): the chosen tax qualifies the line. `type` switches a draft between a complete (`F1`) and a simplified (`F2`) invoice, never a corrective one: `F2` requires simplified invoices enabled (422 `simplified_invoices_disabled`) and a total eligible for a simplified invoice (422 `simplified_invoice_not_allowed`), and `F1` requires a client (422 `business_rule_violation`, subcode `invoice_type_change_not_allowed`, `error.param` `client_id`). Changing `type` without `series_id` detaches the draft from its series, so it will be numbered in the default series of its new purpose when issued; `series_id: null` detaches it explicitly, and a series of another purpose (`invoice_kind`) is rejected right away with 422 `series_invoice_kind_mismatch`.",
                 "summary": "Update an invoice",
                 "tags": [
                     "Invoices"
@@ -97650,6 +97672,158 @@
                 "x-required-scope": "stores:write"
             }
         },
+        "/contacts/imports/{id}/errors.csv": {
+            "get": {
+                "operationId": "public-api.v1.contacts.imports.errors",
+                "description": "Download the authorized UTF-8 CSV report with original row_number, field, code and message. Requires contacts:read. Unknown, foreign-company and non-contact imports or an unavailable report return 404 import_not_found. The MCP download_contact_import_errors tool returns identical bytes as file_base64 with filename, mime_type and SHA-256 hash.",
+                "summary": "Download contact import errors",
+                "tags": [
+                    "Contacts"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Authorized UTF-8 CSV errors with original row coordinates.",
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string"
+                                },
+                                "examples": {
+                                    "success": {
+                                        "summary": "Original row error CSV",
+                                        "value": "row_number,field,code,message\n3,email,invalid_email,El email no es v\u00e1lido.\n"
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Content-Disposition": {
+                                "schema": {
+                                    "type": "string",
+                                    "const": "attachment; filename=\"errors.csv\""
+                                }
+                            },
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds). Omitted when the API key has no cap (unlimited tier).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "description": "The requested resource does not exist or belongs to another company.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "import_not_found": {
+                                        "summary": "Import or report unavailable in this company",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "import_not_found",
+                                                "message": "Importaci\u00f3n o reporte no encontrado.",
+                                                "param": "id",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#import_not_found",
+                                                "request_id": "req_example"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "x-speakeasy-group": "contacts.imports",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "contacts:read"
+            }
+        },
         "/contacts/import/template": {
             "get": {
                 "operationId": "public-api.v1.contacts.import_template",
@@ -102871,7 +103045,7 @@
         "/invoices/{invoice}/duplicate": {
             "post": {
                 "operationId": "public-api.v1.invoices.duplicate",
-                "description": "Create a new draft invoice by copying the lines, client, and metadata from an existing invoice. The new invoice gets a fresh `uuid` and number.",
+                "description": "Create a new draft invoice by copying the lines, client, and metadata from an existing invoice. The new invoice gets a fresh `uuid` and a draft number. A complete invoice is duplicated as complete (`F1`) in the same series; a simplified one as simplified (`F2`) WITHOUT a series, so it will be numbered in the default series for simplified invoices when issued, and only if its total is still eligible (422 `simplified_invoice_not_allowed`). Corrective, annulled and cancelled invoices cannot be duplicated (422 `invoice_not_duplicatable_in_current_state`): issue a new corrective of the original instead.",
                 "summary": "Duplicate an invoice",
                 "tags": [
                     "Invoices"
@@ -103242,6 +103416,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntityInvoice"
                     },
                     "429": {
                         "description": "Rate limit exceeded. Retry after the duration in `Retry-After`.",
@@ -112536,6 +112713,7 @@
                                                 "code": "F-2026",
                                                 "name": "Facturas 2026",
                                                 "document_type": "invoice",
+                                                "invoice_kind": "complete",
                                                 "prefix": "F-2026-",
                                                 "number_format": "{code}-{YYYY}-{000}",
                                                 "next_number": 46,
@@ -118097,6 +118275,179 @@
                 "x-required-scope": "contacts:read"
             }
         },
+        "/contacts/imports/{id}": {
+            "get": {
+                "operationId": "public-api.v1.contacts.imports.show",
+                "description": "Retrieve persisted progress and row outcomes using the UUID returned as import_uuid, including synchronous imports. Requires contacts:read. Unknown, foreign-company and non-contact imports return the same 404 import_not_found. Added counts applied create/update/add_role rows; failed imports retain confirmed progress and unprocessed_count.",
+                "summary": "Retrieve a contact import",
+                "tags": [
+                    "Contacts"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Persisted contact import progress and original row outcomes.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/BusinessContactImport"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                },
+                                "examples": {
+                                    "success": {
+                                        "summary": "Partial contact import",
+                                        "value": {
+                                            "data": {
+                                                "id": "0198f4d1-a492-7e05-9a35-000000000201",
+                                                "object": "contact_import",
+                                                "entity_type": "business_contacts",
+                                                "status": "partial",
+                                                "source_filename": "contacts.csv",
+                                                "total_rows": 3,
+                                                "added_count": 2,
+                                                "skipped_count": 0,
+                                                "failed_count": 1,
+                                                "unprocessed_count": 0,
+                                                "error_report_url": "/v1/contacts/imports/0198f4d1-a492-7e05-9a35-000000000201/errors.csv",
+                                                "failure_reason": null,
+                                                "created_at": "2026-10-03T10:00:00+00:00",
+                                                "started_at": "2026-10-03T10:00:00+00:00",
+                                                "finished_at": "2026-10-03T10:00:01+00:00",
+                                                "outcomes": []
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds). Omitted when the API key has no cap (unlimited tier).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/BadRequest"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "description": "The requested resource does not exist or belongs to another company.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "import_not_found": {
+                                        "summary": "Import or report unavailable in this company",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "import_not_found",
+                                                "message": "Importaci\u00f3n o reporte no encontrado.",
+                                                "param": "id",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#import_not_found",
+                                                "request_id": "req_example"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "x-speakeasy-group": "contacts.imports",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "contacts:read"
+            }
+        },
         "/contacts/options": {
             "get": {
                 "operationId": "public-api.v1.contacts.options",
@@ -121650,7 +122001,7 @@
         "/series/default": {
             "get": {
                 "operationId": "public-api.v1.series.default",
-                "description": "Return the default numbering series for the given document type (invoice, quote, proforma, delivery_note). Returns 404 when no default is configured.",
+                "description": "Return the default numbering series for the given document type (invoice, quote, proforma, delivery_note). Invoice series have a fixed purpose and the default is per purpose: pass `invoice_kind` (`complete` when omitted, `simplified`, `corrective` or `simplified_corrective`) to get the series an invoice of that purpose will be numbered in. Returns 404 when no default is configured (an invoice series of a purpose is created automatically the first time an invoice of that purpose is issued) and 422 `series_invoice_kind_invalid` for an unknown `invoice_kind`.",
                 "summary": "Get the default series for a document type",
                 "tags": [
                     "Series"
@@ -121670,6 +122021,21 @@
                                 "delivery_note"
                             ],
                             "example": "invoice"
+                        }
+                    },
+                    {
+                        "name": "invoice_kind",
+                        "in": "query",
+                        "description": "Purpose of the invoice series whose default is requested (only with `document_type=invoice`). Defaults to `complete`. Returns 404 when the company has no series of that purpose yet (it is created automatically on the first issue) and 422 `series_invoice_kind_invalid` for a value outside the list.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "complete",
+                                "simplified",
+                                "corrective",
+                                "simplified_corrective"
+                            ],
+                            "example": "simplified"
                         }
                     },
                     {
@@ -121705,6 +122071,7 @@
                                                 "code": "F-2026",
                                                 "name": "Facturas 2026",
                                                 "document_type": "invoice",
+                                                "invoice_kind": "complete",
                                                 "prefix": "F-2026-",
                                                 "number_format": "{code}-{YYYY}-{000}",
                                                 "next_number": 46,
@@ -141745,7 +142112,7 @@
         "/contacts/import": {
             "post": {
                 "operationId": "public-api.v1.contacts.import",
-                "description": "Import canonical contacts from CSV with target roles, explicit field mapping, conflict strategy and optional `dry_run`. Returns per-row classifications; large imports may return 202 when queued.\n\n```bash\ncurl -X POST https://api.factuarea.com/v1/contacts/import \\\n  -F file=@contacts.csv \\\n  -F 'target_roles[]=customer' \\\n  -F 'target_roles[]=supplier' \\\n  -F conflict_strategy=reject \\\n  -F dry_run=true\n```\n\nLimits: the file accepts CSV, TXT, XLSX or XLS up to 10 MB; `target_roles` accepts at most three distinct roles. Use the preview endpoint before importing. A queued import returns `202`.",
+                "description": "Import canonical contacts from CSV with target roles, explicit field mapping, conflict strategy and optional `dry_run`. Returns per-row classifications and a stable import_uuid for synchronous 200 and queued 202 results. Dry-run is always synchronous and does not reserve or consume quota. New admissions share bulk_import_rows_per_month; imports admitted under the previous contact exemption retain it. Applied create/update/add_role rows consume quota; admission rejects with 429 import_row_quota_exceeded before writing or queueing when the allowance is exhausted.\n\nFill in the downloaded template before applying the import. A file with no data rows returns 422 with code `business_rule_violation`, subcode `empty_import` and param `file`, before creating an import record or queueing work. Preview and `dry_run=true` accept a file containing only column headers and preserve `source_headers` with total 0.\n\n```bash\ncurl -X POST https://api.factuarea.com/v1/contacts/import \\\n  -F file=@contacts.csv \\\n  -F 'target_roles[]=customer' \\\n  -F 'target_roles[]=supplier' \\\n  -F conflict_strategy=reject \\\n  -F dry_run=true\n```\n\nLimits: the file accepts CSV, TXT, XLSX or XLS up to 10 MB; `target_roles` accepts at most three distinct roles. Use the preview endpoint before importing. A queued import returns `202`.",
                 "summary": "Import contacts",
                 "tags": [
                     "Contacts"
@@ -141807,7 +142174,8 @@
                                                         "action": "create",
                                                         "target_uuid": "0198f4d1-a492-7e05-9a35-000000000001",
                                                         "errors": [],
-                                                        "warnings": []
+                                                        "warnings": [],
+                                                        "result": "applied"
                                                     }
                                                 ],
                                                 "total": 1,
@@ -141823,7 +142191,52 @@
                                                     "Name",
                                                     "VAT number",
                                                     "Email"
-                                                ]
+                                                ],
+                                                "import_uuid": "0198f4d1-a492-7e05-9a35-000000000201",
+                                                "added_count": 1,
+                                                "skipped_count": 0,
+                                                "failed_count": 0,
+                                                "unprocessed_count": 0,
+                                                "status": "completed",
+                                                "failure_reason": null
+                                            }
+                                        }
+                                    },
+                                    "closed_with_unprocessed_rows": {
+                                        "summary": "Synchronous import closed by maintenance after one confirmed row",
+                                        "value": {
+                                            "data": {
+                                                "rows": [
+                                                    {
+                                                        "row": 2,
+                                                        "action": "create",
+                                                        "target_uuid": "0198f4d1-a492-7e05-9a35-000000000001",
+                                                        "errors": [],
+                                                        "warnings": [],
+                                                        "result": "applied"
+                                                    }
+                                                ],
+                                                "total": 2,
+                                                "create": 1,
+                                                "update": 0,
+                                                "add_role": 0,
+                                                "merge_candidate": 0,
+                                                "conflict": 0,
+                                                "invalid": 0,
+                                                "dry_run": false,
+                                                "queued": false,
+                                                "source_headers": [
+                                                    "Name",
+                                                    "VAT number",
+                                                    "Email"
+                                                ],
+                                                "import_uuid": "0198f4d1-a492-7e05-9a35-000000000201",
+                                                "added_count": 1,
+                                                "skipped_count": 0,
+                                                "failed_count": 0,
+                                                "unprocessed_count": 1,
+                                                "status": "failed",
+                                                "failure_reason": "stale_timeout"
                                             }
                                         }
                                     }
@@ -141878,7 +142291,7 @@
                         }
                     },
                     "202": {
-                        "description": "",
+                        "description": "Import accepted for asynchronous processing.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -141907,7 +142320,14 @@
                                                 "invalid": 0,
                                                 "dry_run": false,
                                                 "queued": true,
-                                                "source_headers": []
+                                                "source_headers": [],
+                                                "import_uuid": "0198f4d1-a492-7e05-9a35-000000000201",
+                                                "added_count": null,
+                                                "skipped_count": null,
+                                                "failed_count": null,
+                                                "unprocessed_count": null,
+                                                "status": "queued",
+                                                "failure_reason": null
                                             }
                                         }
                                     }
@@ -141974,10 +142394,115 @@
                         "$ref": "#/components/responses/Conflict"
                     },
                     "422": {
-                        "$ref": "#/components/responses/UnprocessableEntity"
+                        "description": "Validation failed. The `error.param` field identifies which input is invalid.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "empty_import": {
+                                        "summary": "Fill in the template before applying the import",
+                                        "value": {
+                                            "error": {
+                                                "type": "invalid_request_error",
+                                                "code": "business_rule_violation",
+                                                "subcode": "empty_import",
+                                                "message": "El archivo no contiene filas de datos. Rellena la plantilla antes de importarla.",
+                                                "param": "file",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#business_rule_violation",
+                                                "request_id": "req_example"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
                     },
                     "429": {
-                        "$ref": "#/components/responses/TooManyRequests"
+                        "description": "Rate limit exceeded. Retry after the duration in `Retry-After`.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "import_row_quota_exceeded": {
+                                        "summary": "Monthly import row allowance exhausted",
+                                        "value": {
+                                            "error": {
+                                                "type": "rate_limit_error",
+                                                "code": "import_row_quota_exceeded",
+                                                "message": "Has superado el l\u00edmite de filas mensuales de importaci\u00f3n: solicitadas 3, l\u00edmite 0.",
+                                                "param": "file",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#import_row_quota_exceeded",
+                                                "request_id": "req_example"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Number of seconds to wait before retrying.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "RateLimit-Limit": {
+                                "description": "Request quota for the current window (RFC 9331).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "RateLimit-Remaining": {
+                                "description": "Remaining requests in the current window (RFC 9331).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "RateLimit-Reset": {
+                                "description": "Seconds until the quota window resets (RFC 9331).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Request quota for the current window (legacy header).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Remaining requests in the current window (legacy header).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Seconds until the quota window resets (legacy header).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            }
+                        }
                     },
                     "500": {
                         "$ref": "#/components/responses/InternalServerError"
@@ -145338,12 +145863,42 @@
         "/series/active": {
             "get": {
                 "operationId": "public-api.v1.series.active",
-                "description": "Return all non-archived series for the given document type within your company.",
+                "description": "Return the non-archived series of your company, optionally filtered by `document_type` and, for invoice series, by purpose (`invoice_kind`). Each invoice series carries its `invoice_kind`. Returns 422 `series_invoice_kind_invalid` for an unknown `invoice_kind`.",
                 "summary": "List active series by document type",
                 "tags": [
                     "Series"
                 ],
                 "parameters": [
+                    {
+                        "name": "document_type",
+                        "in": "query",
+                        "description": "Optional filter by document type. Without it, every active series of the company is returned.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "invoice",
+                                "quote",
+                                "proforma",
+                                "delivery_note"
+                            ],
+                            "example": "invoice"
+                        }
+                    },
+                    {
+                        "name": "invoice_kind",
+                        "in": "query",
+                        "description": "Restrict to invoice series of this purpose (only invoice series are returned). A value outside the list returns 422 `series_invoice_kind_invalid`.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "complete",
+                                "simplified",
+                                "corrective",
+                                "simplified_corrective"
+                            ],
+                            "example": "simplified"
+                        }
+                    },
                     {
                         "$ref": "#/components/parameters/FactuareaVersion"
                     },
@@ -145353,7 +145908,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Active document series, optionally filtered by document_type.",
+                        "description": "Active document series, optionally filtered by document_type and, for invoice series, by invoice_kind.",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -145381,6 +145936,7 @@
                                                     "code": "F-2026",
                                                     "name": "Facturas 2026",
                                                     "document_type": "invoice",
+                                                    "invoice_kind": "complete",
                                                     "prefix": "F-2026-",
                                                     "number_format": "{code}-{YYYY}-{000}",
                                                     "next_number": 46,
@@ -145502,6 +146058,9 @@
                                 }
                             }
                         }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
                     },
                     "429": {
                         "description": "Rate limit exceeded. Retry after the duration in `Retry-After`.",
@@ -152472,12 +153031,12 @@
                                                 {
                                                     "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a60",
                                                     "object": "invoice",
-                                                    "number": "RECT-2026-00007",
+                                                    "number": "R-2026-001",
                                                     "is_number_assigned": true,
                                                     "type": "R1",
                                                     "series": {
                                                         "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8b04",
-                                                        "code": "RECT-2026"
+                                                        "code": "R"
                                                     },
                                                     "client": {
                                                         "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a01",
@@ -171605,6 +172164,7 @@
                                                 "code": "F-2026",
                                                 "name": "Facturas 2026",
                                                 "document_type": "invoice",
+                                                "invoice_kind": "complete",
                                                 "prefix": "F-2026-",
                                                 "number_format": "{code}-{YYYY}-{000}",
                                                 "next_number": 46,
@@ -174283,7 +174843,7 @@
         "/contacts/import/preview": {
             "post": {
                 "operationId": "public-api.v1.contacts.preview_import",
-                "description": "Validate a CSV contact import without writing. Each row is classified as create, update, add-role, merge candidate, conflict or invalid; ambiguous identities are never merged automatically.",
+                "description": "Validate a contact import without writing. Each row is classified as create, update, add-role, merge candidate, conflict or invalid; ambiguous identities are never merged automatically. A file containing only column headers returns 200 with total 0, no rows and source_headers preserved in their original order, so clients can inspect template columns before adding data.",
                 "summary": "Preview a contact import",
                 "tags": [
                     "Contacts"
@@ -174361,7 +174921,14 @@
                                                     "Name",
                                                     "VAT number",
                                                     "Email"
-                                                ]
+                                                ],
+                                                "import_uuid": null,
+                                                "added_count": null,
+                                                "skipped_count": null,
+                                                "failed_count": null,
+                                                "unprocessed_count": null,
+                                                "status": null,
+                                                "failure_reason": null
                                             }
                                         }
                                     }
@@ -234346,6 +234913,153 @@
                 ],
                 "title": "BusinessContactActivity"
             },
+            "BusinessContactImport": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "object": {
+                        "type": "string",
+                        "const": "contact_import"
+                    },
+                    "entity_type": {
+                        "type": "string",
+                        "const": "business_contacts"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "queued",
+                            "running",
+                            "completed",
+                            "partial",
+                            "failed"
+                        ]
+                    },
+                    "source_filename": {
+                        "type": "string"
+                    },
+                    "total_rows": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "added_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "skipped_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "failed_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "unprocessed_count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "error_report_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "failure_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "started_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "finished_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "outcomes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "row_number": {
+                                    "type": "integer"
+                                },
+                                "result": {
+                                    "type": "string"
+                                },
+                                "action": {
+                                    "type": "string"
+                                },
+                                "group_key": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "target_uuid": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "format": "uuid"
+                                },
+                                "errors": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "field": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ]
+                                            },
+                                            "code": {
+                                                "type": "string"
+                                            },
+                                            "message": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "object",
+                    "entity_type",
+                    "status",
+                    "source_filename",
+                    "total_rows",
+                    "added_count",
+                    "skipped_count",
+                    "failed_count",
+                    "unprocessed_count",
+                    "error_report_url",
+                    "failure_reason",
+                    "started_at",
+                    "finished_at",
+                    "created_at",
+                    "outcomes"
+                ],
+                "title": "BusinessContactImport"
+            },
             "BusinessContactImportPreview": {
                 "type": "object",
                 "properties": {
@@ -234373,6 +235087,15 @@
                                         "conflict",
                                         "invalid"
                                     ]
+                                },
+                                "result": {
+                                    "type": "string",
+                                    "enum": [
+                                        "applied",
+                                        "skipped",
+                                        "failed"
+                                    ],
+                                    "description": "Present for confirmed execution rows; omitted from planned preview rows."
                                 },
                                 "target_uuid": {
                                     "type": [
@@ -234465,6 +235188,63 @@
                     "dry_run": {
                         "type": "boolean"
                     },
+                    "import_uuid": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "description": "Persisted import reference for synchronous and queued execution; null for dry-run."
+                    },
+                    "added_count": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0
+                    },
+                    "skipped_count": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0
+                    },
+                    "failed_count": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0
+                    },
+                    "unprocessed_count": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0
+                    },
+                    "status": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "queued",
+                            "running",
+                            "completed",
+                            "partial",
+                            "failed",
+                            null
+                        ],
+                        "description": "Persisted execution status; null for preview and dry-run. Synchronous responses can be failed with unprocessed rows after a concurrent closure."
+                    },
+                    "failure_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "queued": {
                         "type": "boolean"
                     }
@@ -234480,7 +235260,14 @@
                     "conflict",
                     "invalid",
                     "dry_run",
-                    "queued"
+                    "queued",
+                    "import_uuid",
+                    "added_count",
+                    "skipped_count",
+                    "failed_count",
+                    "unprocessed_count",
+                    "status",
+                    "failure_reason"
                 ],
                 "example": {
                     "source_headers": [
@@ -234505,7 +235292,14 @@
                     "conflict": 0,
                     "invalid": 0,
                     "dry_run": true,
-                    "queued": false
+                    "queued": false,
+                    "import_uuid": null,
+                    "added_count": null,
+                    "skipped_count": null,
+                    "failed_count": null,
+                    "unprocessed_count": null,
+                    "status": null,
+                    "failure_reason": null
                 },
                 "title": "BusinessContactImportPreview"
             },
@@ -238364,7 +239158,7 @@
             },
             "CreateCorrectiveInvoiceRequest": {
                 "type": "object",
-                "description": "Generate a corrective (rectificativa) invoice for a previously issued invoice. `correction_reason` (required) maps to a VeriFactu R-code; `correction_type` is `full` or `partial`; the optional `correction_code` (`R1`..`R5`) forces the explicit R-code and is validated against the AEAT legal matrix for the original invoice type. Optional `justification`, `notes`, and `lines[]` (required when `correction_type` is `partial`). Each line may also declare the fiscal nature of the line it corrects \u2014 `unit`, `regime_key`, `exemption_reason` and `exemption_reason_text` \u2014 with the same rules as `POST /v1/invoices`: a key you OMIT inherits the value of the original line at the same index, a key you SEND (even `null`) replaces it, and `null` means explicitly none.",
+                "description": "Generate a corrective (rectificativa) invoice for a previously issued invoice. `correction_reason` (required) maps to a VeriFactu R-code; `correction_type` is `full` or `partial`; the optional `correction_nature` is `I` (by differences: void the whole invoice with `full` and no `lines`, or correct amounts with `partial` and the adjustment `lines`) or `S` (substitution: `full` with the final `lines`, no negative quantity) \u2014 omitted, `full` with `lines` is `S` and the rest `I`; `unit_price` is never negative (a negative `quantity` subtracts); the optional `correction_code` (`R1`..`R5`) forces the explicit R-code and is validated against the AEAT legal matrix for the original invoice type. Optional `justification`, `notes`, and `lines[]` (none to void the whole invoice; required for a partial correction and for a substitution). Each line may also declare the fiscal nature of the line it corrects \u2014 `unit`, `regime_key`, `exemption_reason` and `exemption_reason_text` \u2014 with the same rules as `POST /v1/invoices`: a key you OMIT inherits the value of the original line at the same index, a key you SEND (even `null`) replaces it, and `null` means explicitly none.",
                 "properties": {
                     "correction_reason": {
                         "type": "string",
@@ -238399,6 +239193,25 @@
                             "R5",
                             null
                         ]
+                    },
+                    "correction_nature": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Nature of the correction (art. 15.5 Royal Decree 1619/2012; VeriFactu `TipoRectificativa`). Optional: OMIT it and `full` with `lines` is a substitution (`S`), while `full` without `lines` and `partial` are by differences (`I`). `I`, by differences: the corrective carries the amount of the rectification, whatever its sign \u2014 void the whole invoice with `correction_type: full` and no `lines`, or correct some amounts with `partial` and the adjustment `lines` (`full` with `lines` and an explicit `I` is rejected). `S`, substitution: `correction_type: full` with the FINAL `lines` of the correct invoice (no negative quantity); registered with `ImporteRectificacion` (base and tax of the original). An incoherent combination is rejected with 422 before anything is created.",
+                        "enum": [
+                            "I",
+                            "S",
+                            null
+                        ]
+                    },
+                    "series_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
                     },
                     "justification": {
                         "type": [
@@ -238554,7 +239367,7 @@
                                         "string",
                                         "null"
                                     ],
-                                    "description": "Kind of line: `NORMAL` (default) for an ordinary line, or `SUPLIDO` for a DISBURSEMENT \u2014 an amount paid in the name and on behalf of the client (an official fee, duty or registry charge) re-invoiced at cost, which stays out of the taxable base (art. 78.Tres.3 LIVA) and is aggregated into `total_disbursements`. A `SUPLIDO` line must carry no VAT, withholding, surcharge, discount or product, and requires `source_invoice_reference`. Only meaningful when `correction_type` is `partial`, which is when `lines[]` is sent; a value outside the catalog is rejected with 422.",
+                                    "description": "Kind of line: `NORMAL` (default) for an ordinary line, or `SUPLIDO` for a DISBURSEMENT \u2014 an amount paid in the name and on behalf of the client (an official fee, duty or registry charge) re-invoiced at cost, which stays out of the taxable base (art. 78.Tres.3 LIVA) and is aggregated into `total_disbursements`. A `SUPLIDO` line must carry no VAT, withholding, surcharge, discount or product, and requires `source_invoice_reference`. Only meaningful when `lines[]` is sent (a partial correction or a substitution); a value outside the catalog is rejected with 422.",
                                     "enum": [
                                         "NORMAL",
                                         "SUPLIDO",
@@ -238935,7 +239748,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "VAT rate of the line (0\u2013100). Optional: when you omit it (or send `null`) the line takes, in this order, the tax it references or the tax assigned to its product, and otherwise the DEFAULT VAT of your company for this kind of document (tax settings). If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line): the API never guesses a rate. A `0` you send is honoured as a real 0 % rate, never confused with \u00abnot stated\u00bb.",
+                                    "description": "VAT rate of the line (0\u2013100). Optional: when you omit it (or send `null`) the line takes, in this order, the tax it references or the tax assigned to its product, and otherwise the DEFAULT TAX of your company for this kind of document (tax settings), inherited as a whole: its rate, its indirect-tax regime (IVA, IGIC or IPSI) and its AEAT qualification; an exempt or not-subject default also declares its cause (`exemption_reason`) on the line unless the line sends its own. The line ends up exactly as if you had chosen that tax. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line): the API never guesses a rate. A `0` you send is honoured as a real 0 % rate, never confused with \u00abnot stated\u00bb.",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -239306,7 +240119,10 @@
                         ]
                     },
                     "series_id": {
-                        "type": "string",
+                        "type": [
+                            "string",
+                            "null"
+                        ],
                         "format": "uuid"
                     },
                     "price_list_id": {
@@ -239432,7 +240248,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "VAT rate of the line (0\u2013100). Optional: when you omit it (or send `null`) the line takes, in this order, the tax it references or the tax assigned to its product, and otherwise the DEFAULT VAT of your company for this kind of document (tax settings). If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line): the API never guesses a rate. A `0` you send is honoured as a real 0 % rate, never confused with \u00abnot stated\u00bb.",
+                                    "description": "VAT rate of the line (0\u2013100). Optional: when you omit it (or send `null`) the line takes, in this order, the tax it references or the tax assigned to its product, and otherwise the DEFAULT TAX of your company for this kind of document (tax settings), inherited as a whole: its rate, its indirect-tax regime (IVA, IGIC or IPSI) and its AEAT qualification; an exempt or not-subject default also declares its cause (`exemption_reason`) on the line unless the line sends its own. The line ends up exactly as if you had chosen that tax. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line): the API never guesses a rate. A `0` you send is honoured as a real 0 % rate, never confused with \u00abnot stated\u00bb.",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -239751,7 +240567,6 @@
                     }
                 },
                 "required": [
-                    "series_id",
                     "issued_on",
                     "due_on",
                     "lines"
@@ -240444,7 +241259,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "VAT rate of the line (0\u2013100). Optional: when you omit it (or send `null`) the line takes, in this order, the tax it references or the tax assigned to its product, and otherwise the DEFAULT VAT of your company for this kind of document (tax settings). If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line): the API never guesses a rate. A `0` you send is honoured as a real 0 % rate, never confused with \u00abnot stated\u00bb.",
+                                    "description": "VAT rate of the line (0\u2013100). Optional: when you omit it (or send `null`) the line takes, in this order, the tax it references or the tax assigned to its product, and otherwise the DEFAULT TAX of your company for this kind of document (tax settings), inherited as a whole: its rate, its indirect-tax regime (IVA, IGIC or IPSI) and its AEAT qualification; an exempt or not-subject default also declares its cause (`exemption_reason`) on the line unless the line sends its own. The line ends up exactly as if you had chosen that tax. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line): the API never guesses a rate. A `0` you send is honoured as a real 0 % rate, never confused with \u00abnot stated\u00bb.",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -241406,7 +242221,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "VAT rate of the line (0\u2013100). Optional: when you omit it (or send `null`) the line takes, in this order, the tax it references or the tax assigned to its product, and otherwise the DEFAULT VAT of your company for this kind of document (tax settings). If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line): the API never guesses a rate. A `0` you send is honoured as a real 0 % rate, never confused with \u00abnot stated\u00bb.",
+                                    "description": "VAT rate of the line (0\u2013100). Optional: when you omit it (or send `null`) the line takes, in this order, the tax it references or the tax assigned to its product, and otherwise the DEFAULT TAX of your company for this kind of document (tax settings), inherited as a whole: its rate, its indirect-tax regime (IVA, IGIC or IPSI) and its AEAT qualification; an exempt or not-subject default also declares its cause (`exemption_reason`) on the line unless the line sends its own. The line ends up exactly as if you had chosen that tax. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line): the API never guesses a rate. A `0` you send is honoured as a real 0 % rate, never confused with \u00abnot stated\u00bb.",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -242005,7 +242820,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "VAT rate of the line (0\u2013100). Optional: when you omit it (or send `null`) the line takes, in this order, the tax it references or the tax assigned to its product, and otherwise the DEFAULT VAT of your company for this kind of document (tax settings). If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line): the API never guesses a rate. A `0` you send is honoured as a real 0 % rate, never confused with \u00abnot stated\u00bb.",
+                                    "description": "VAT rate of the line (0\u2013100). Optional: when you omit it (or send `null`) the line takes, in this order, the tax it references or the tax assigned to its product, and otherwise the DEFAULT TAX of your company for this kind of document (tax settings), inherited as a whole: its rate, its indirect-tax regime (IVA, IGIC or IPSI) and its AEAT qualification; an exempt or not-subject default also declares its cause (`exemption_reason`) on the line unless the line sends its own. The line ends up exactly as if you had chosen that tax. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line): the API never guesses a rate. A `0` you send is honoured as a real 0 % rate, never confused with \u00abnot stated\u00bb.",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -242260,6 +243075,19 @@
                             "null"
                         ],
                         "minimum": 1
+                    },
+                    "invoice_kind": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "complete",
+                            "simplified",
+                            "corrective",
+                            "simplified_corrective",
+                            null
+                        ]
                     }
                 },
                 "required": [
@@ -251760,7 +252588,7 @@
                     },
                     "type": {
                         "type": "string",
-                        "description": "AEAT invoice type code: `F1` (ordinary invoice, *ordinaria*), `F2` (simplified invoice, *simplificada*), `F3` (invoice replacing simplified ones, *sustitutiva de simplificadas*), `R1`\u2013`R5` (corrective invoice, *rectificativa*).",
+                        "description": "Document type: `F1` (ordinary invoice, *ordinaria*), `F2` (simplified invoice, *simplificada*), `F3` (invoice replacing simplified ones, *sustitutiva de simplificadas*) or `R5` (corrective of a simplified invoice). A corrective of an `F1`/`F3` keeps `F1` here; its AEAT corrective code (`R1`\u2013`R5`) is `corrective.correction_aeat_type`, and `is_corrective` tells correctives apart.",
                         "example": "F1",
                         "examples": [
                             "F1"
@@ -252663,32 +253491,32 @@
                             "string",
                             "null"
                         ],
-                        "example": "por_sustitucion",
-                        "description": "Type of correction (`por_diferencias` / `por_sustitucion`)."
+                        "example": "total",
+                        "description": "Scope of the correction: `total` (the whole invoice, `correction_type: full` on input) or `partial`."
                     },
                     "correction_nature": {
                         "type": [
                             "string",
                             "null"
                         ],
-                        "example": "S",
-                        "description": "Nature of the correction (`S` substitutive / `I` by differences)."
+                        "example": "I",
+                        "description": "Effective nature of the correction (art. 15.5 RD 1619/2012), the same one its VeriFactu record declares as `TipoRectificativa`: `I` by differences (the corrective carries the amount of the rectification, any sign) or `S` substitution (the invoice as it ends up). A corrective with a negative base is always `I`."
                     },
                     "base_rectificada": {
                         "type": [
                             "number",
                             "null"
                         ],
-                        "example": -500,
-                        "description": "Corrected taxable base."
+                        "example": 500,
+                        "description": "Taxable base of the ORIGINAL invoice being corrected; reported to VeriFactu as `ImporteRectificacion.BaseRectificada` on a substitution (`S`)."
                     },
                     "cuota_rectificada": {
                         "type": [
                             "number",
                             "null"
                         ],
-                        "example": -105,
-                        "description": "Corrected VAT amount."
+                        "example": 105,
+                        "description": "VAT amount of the ORIGINAL invoice being corrected; reported to VeriFactu as `ImporteRectificacion.CuotaRectificada` on a substitution (`S`)."
                     },
                     "correction_aeat_type": {
                         "type": [
@@ -270877,6 +271705,24 @@
                             "invoice"
                         ]
                     },
+                    "invoice_kind": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "complete",
+                            "simplified",
+                            "corrective",
+                            "simplified_corrective",
+                            null
+                        ],
+                        "description": "Fixed purpose of an invoice series (RD 1619/2012 arts. 6.1.a, 7.1.a and 15): `complete` (complete invoices `F1` and the `F3` that replaces simplified invoices \u2014 the usual series), `simplified` (simplified invoices `F2`), `corrective` (corrective invoices `R1`\u2013`R4`) or `simplified_corrective` (corrective invoices of simplified invoices `R5`). An invoice can only be issued in a series of its own purpose, otherwise issuing fails with `series_invoice_kind_mismatch`. Set on creation (default `complete`) and immutable once the series has any invoice (`series_invoice_kind_locked`). `null` for series of other document types.",
+                        "example": "complete",
+                        "examples": [
+                            "complete"
+                        ]
+                    },
                     "prefix": {
                         "type": "string",
                         "description": "Legacy alias for code. Use code field. Will be removed in v2.",
@@ -270982,6 +271828,7 @@
                     "code",
                     "name",
                     "document_type",
+                    "invoice_kind",
                     "prefix",
                     "number_format",
                     "next_number",
@@ -278941,7 +279788,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "VAT rate of the line (0\u2013100). Optional, and it matters whenever `lines` is sent, because a `PUT` replaces the whole set of lines: a line that omits it (or sends `null`) takes the tax it references or the tax assigned to its product and otherwise the DEFAULT VAT of your company for this kind of document. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line); a rate already stored on a line is NOT kept if you resend the line without it. A `0` you send is honoured as a real 0 % rate.",
+                                    "description": "VAT rate of the line (0\u2013100). Optional, and it matters whenever `lines` is sent, because a `PUT` replaces the whole set of lines: a line that omits it (or sends `null`) takes the tax it references or the tax assigned to its product and otherwise the DEFAULT TAX of your company for this kind of document, inherited as a whole: its rate, its indirect-tax regime (IVA, IGIC or IPSI) and its AEAT qualification; an exempt or not-subject default also declares its cause (`exemption_reason`) on the line unless the line sends its own. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line); a rate already stored on a line is NOT kept if you resend the line without it. A `0` you send is honoured as a real 0 % rate.",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -279250,6 +280097,13 @@
                         "type": "string",
                         "format": "uuid"
                     },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "F1",
+                            "F2"
+                        ]
+                    },
                     "series_id": {
                         "type": [
                             "string",
@@ -279384,7 +280238,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "VAT rate of the line (0\u2013100). Optional, and it matters whenever `lines` is sent, because a `PUT` replaces the whole set of lines: a line that omits it (or sends `null`) takes the tax it references or the tax assigned to its product and otherwise the DEFAULT VAT of your company for this kind of document. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line); a rate already stored on a line is NOT kept if you resend the line without it. A `0` you send is honoured as a real 0 % rate.",
+                                    "description": "VAT rate of the line (0\u2013100). Optional, and it matters whenever `lines` is sent, because a `PUT` replaces the whole set of lines: a line that omits it (or sends `null`) takes the tax it references or the tax assigned to its product and otherwise the DEFAULT TAX of your company for this kind of document, inherited as a whole: its rate, its indirect-tax regime (IVA, IGIC or IPSI) and its AEAT qualification; an exempt or not-subject default also declares its cause (`exemption_reason`) on the line unless the line sends its own. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line); a rate already stored on a line is NOT kept if you resend the line without it. A `0` you send is honoured as a real 0 % rate.",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -280403,7 +281257,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "VAT rate of the line (0\u2013100). Optional, and it matters whenever `lines` is sent, because a `PUT` replaces the whole set of lines: a line that omits it (or sends `null`) takes the tax it references or the tax assigned to its product and otherwise the DEFAULT VAT of your company for this kind of document. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line); a rate already stored on a line is NOT kept if you resend the line without it. A `0` you send is honoured as a real 0 % rate.",
+                                    "description": "VAT rate of the line (0\u2013100). Optional, and it matters whenever `lines` is sent, because a `PUT` replaces the whole set of lines: a line that omits it (or sends `null`) takes the tax it references or the tax assigned to its product and otherwise the DEFAULT TAX of your company for this kind of document, inherited as a whole: its rate, its indirect-tax regime (IVA, IGIC or IPSI) and its AEAT qualification; an exempt or not-subject default also declares its cause (`exemption_reason`) on the line unless the line sends its own. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line); a rate already stored on a line is NOT kept if you resend the line without it. A `0` you send is honoured as a real 0 % rate.",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -281351,7 +282205,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "VAT rate of the line (0\u2013100). Optional, and it matters whenever `lines` is sent, because a `PUT` replaces the whole set of lines: a line that omits it (or sends `null`) takes the tax it references or the tax assigned to its product and otherwise the DEFAULT VAT of your company for this kind of document. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line); a rate already stored on a line is NOT kept if you resend the line without it. A `0` you send is honoured as a real 0 % rate.",
+                                    "description": "VAT rate of the line (0\u2013100). Optional, and it matters whenever `lines` is sent, because a `PUT` replaces the whole set of lines: a line that omits it (or sends `null`) takes the tax it references or the tax assigned to its product and otherwise the DEFAULT TAX of your company for this kind of document, inherited as a whole: its rate, its indirect-tax regime (IVA, IGIC or IPSI) and its AEAT qualification; an exempt or not-subject default also declares its cause (`exemption_reason`) on the line unless the line sends its own. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line); a rate already stored on a line is NOT kept if you resend the line without it. A `0` you send is honoured as a real 0 % rate.",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -281802,7 +282656,7 @@
                                         "number",
                                         "null"
                                     ],
-                                    "description": "VAT rate of the line (0\u2013100). Optional, and it matters whenever `lines` is sent, because a `PUT` replaces the whole set of lines: a line that omits it (or sends `null`) takes the tax it references or the tax assigned to its product and otherwise the DEFAULT VAT of your company for this kind of document. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line); a rate already stored on a line is NOT kept if you resend the line without it. A `0` you send is honoured as a real 0 % rate.",
+                                    "description": "VAT rate of the line (0\u2013100). Optional, and it matters whenever `lines` is sent, because a `PUT` replaces the whole set of lines: a line that omits it (or sends `null`) takes the tax it references or the tax assigned to its product and otherwise the DEFAULT TAX of your company for this kind of document, inherited as a whole: its rate, its indirect-tax regime (IVA, IGIC or IPSI) and its AEAT qualification; an exempt or not-subject default also declares its cause (`exemption_reason`) on the line unless the line sends its own. If none of them exists the request is rejected with 422 `missing_required_param`, with `error.param` = `lines.N.tax_rate` and `error.line_index` = N (the zero-based index of the line); a rate already stored on a line is NOT kept if you resend the line without it. A `0` you send is honoured as a real 0 % rate.",
                                     "minimum": 0,
                                     "maximum": 100
                                 },
@@ -296200,17 +297054,16 @@
             },
             "invoice_cajero_ticket_anonimo": {
                 "summary": "Unattended checkout \u00b7 anonymous F2 ticket, paid",
-                "description": "A kiosk, parking or toll machine issues a simplified invoice (`F2`) with no client, prices WITH VAT included, the payment recorded and the VeriFactu alta generated before responding. Here, a 5.00 \u20ac parking ticket paid by card: `unit_price` is the FINAL price, so the API splits it into a 4.13 \u20ac base plus 0.87 \u20ac of VAT at 21 % and the invoice total is exactly the 5.00 \u20ac charged. Identify the operation by `external_id`: a late retry returns the invoice already issued instead of duplicating it. The response carries the `verifactu` block (huella and QR), the `pdf` block and `public_url`.",
+                "description": "A self-service terminal or vending machine issues a simplified invoice (`F2`) with no client, prices WITH VAT included, the payment recorded and the VeriFactu alta generated before responding. Here, a 5.00 \u20ac express car wash paid by card: `unit_price` is the FINAL price, so the API splits it into a 4.13 \u20ac base plus 0.87 \u20ac of VAT at 21 % and the invoice total is exactly the 5.00 \u20ac charged. Without `series_id` the ticket is numbered in the default series for simplified invoices of the company, created automatically the first time; an explicit series must be a simplified-invoice series (`invoice_kind: simplified`), otherwise `422` `series_invoice_kind_mismatch`. Identify the operation by `external_id`: a late retry returns the invoice already issued instead of duplicating it. The response carries the `verifactu` block (huella and QR), the `pdf` block and `public_url`.",
                 "value": {
                     "type": "F2",
-                    "series_id": "019e5584-7a72-7038-a8f6-561ed180b699",
                     "issued_on": "2026-06-01",
                     "due_on": "2026-06-01",
                     "external_id": "KIOSK-0042-20260601-000187",
                     "prices_include_tax": true,
                     "lines": [
                         {
-                            "description": "Aparcamiento 2 h 30 min",
+                            "description": "Lavado expr\u00e9s",
                             "quantity": 1,
                             "unit_price": 5,
                             "tax_rate": 21
@@ -296233,7 +297086,6 @@
                 "value": {
                     "type": "F2",
                     "client_id": "f58fbf7f-333f-499b-affc-c0d396cbd83f",
-                    "series_id": "019e5584-7a72-7038-a8f6-561ed180b699",
                     "issued_on": "2026-06-02",
                     "due_on": "2026-06-02",
                     "operation_on": "2026-06-01",
@@ -296241,7 +297093,7 @@
                     "prices_include_tax": true,
                     "lines": [
                         {
-                            "description": "Peaje autopista \u00b7 tramo A-7",
+                            "description": "Recarga de taquilla",
                             "quantity": 1,
                             "unit_price": 12.4,
                             "tax_rate": 21
@@ -296261,14 +297113,13 @@
                 "description": "The SAME body sent again after a network cut. Because `external_id` already belongs to an issued invoice with the same type and total, the API answers `200` with `Idempotent-Replayed: true` and the invoice already issued, completing the alta and the payment if they were missing. If the type or the total differ, it answers `409` `unattended_replay_mismatch`.",
                 "value": {
                     "type": "F2",
-                    "series_id": "019e5584-7a72-7038-a8f6-561ed180b699",
                     "issued_on": "2026-06-01",
                     "due_on": "2026-06-01",
                     "external_id": "KIOSK-0042-20260601-000187",
                     "prices_include_tax": true,
                     "lines": [
                         {
-                            "description": "Aparcamiento 2 h 30 min",
+                            "description": "Lavado expr\u00e9s",
                             "quantity": 1,
                             "unit_price": 5,
                             "tax_rate": 21
@@ -296287,7 +297138,7 @@
             },
             "corrective_r1_error_fundado": {
                 "summary": "R1 \u00b7 well-founded error in law",
-                "description": "R1 corrective invoice (well-founded error in law / cancellation), `correction_code: R1`, `correction_type: full`. Applies to full invoices F1/F3.",
+                "description": "R1 corrective invoice (well-founded error in law) that voids the whole invoice: `correction_code: R1`, `correction_type: full` and no `lines` (by differences, `TipoRectificativa I`: every original line copied back negated). Applies to full invoices F1/F3.",
                 "value": {
                     "correction_reason": "error_fundado",
                     "correction_type": "full",
@@ -296320,7 +297171,7 @@
             },
             "corrective_r4_otras": {
                 "summary": "R4 \u00b7 other reasons",
-                "description": "R4 corrective invoice (other reasons), `correction_code: R4`, full or partial (`correction_type: partial` with `lines`). Applies to full invoices F1/F3.",
+                "description": "R4 corrective invoice (other reasons) that corrects some amounts by differences: `correction_code: R4`, `correction_type: partial` and the adjustment `lines` (a negative quantity subtracts). Applies to full invoices F1/F3.",
                 "value": {
                     "correction_reason": "descuento",
                     "correction_type": "partial",
@@ -296329,11 +297180,28 @@
                     "notes": "Rectificativa parcial por descuento",
                     "lines": [
                         {
-                            "description": "Servicio de consultor\u00eda con descuento comercial posterior",
+                            "description": "Descuento comercial posterior sobre el servicio de consultor\u00eda",
+                            "quantity": -1,
+                            "unit_price": 15,
+                            "tax_rate": 21
+                        }
+                    ]
+                }
+            },
+            "corrective_substitution": {
+                "summary": "Substitution \u00b7 replace with the correct version",
+                "description": "Corrective invoice by SUBSTITUTION: `correction_type: full` and the FINAL `lines` of the correct invoice (no negative quantity). `correction_nature: S` is optional here \u2014 `full` with `lines` is a substitution by default \u2014 and is shown for clarity. VeriFactu registers it as `TipoRectificativa S` with `ImporteRectificacion` (base and tax of the original).",
+                "value": {
+                    "correction_reason": "error_importe",
+                    "correction_type": "full",
+                    "correction_nature": "S",
+                    "notes": "Sustituye a la factura original: el precio pactado era 120 \u20ac, no 150 \u20ac",
+                    "lines": [
+                        {
+                            "description": "Servicio de consultor\u00eda",
                             "quantity": 1,
-                            "unit_price": 150,
-                            "tax_rate": 21,
-                            "discount_percent": 10
+                            "unit_price": 120,
+                            "tax_rate": 21
                         }
                     ]
                 }
