@@ -283118,20 +283118,20 @@
                 "properties": {
                     "name": {
                         "type": "string",
-                        "description": "Nombre de la serie (1-100 caracteres).",
+                        "description": "Series name (1-100 characters).",
                         "minLength": 1,
                         "maxLength": 100
                     },
                     "code": {
                         "type": "string",
-                        "description": "Prefijo de la serie (1-10 caracteres: letras, n\u00fameros, `-` y `_`). Solo editable mientras la serie no tiene documentos (`series_code_immutable_with_documents`).",
+                        "description": "Series prefix (1-10 characters: letters, digits, `-` and `_`). Editable only while the series has no documents (`series_code_immutable_with_documents`); it cannot repeat the code of another series of the same document type.",
                         "pattern": "^[A-Za-z0-9\\-_]+$",
                         "minLength": 1,
                         "maxLength": 10
                     },
                     "counter_reset": {
                         "type": "string",
-                        "description": "Pol\u00edtica de reinicio del contador: `never`, `annual` o `monthly` (`monthly` exige el token `{MM}` en la m\u00e1scara). Cambio prospectivo.",
+                        "description": "Counter reset policy: `never`, `annual` or `monthly` (`monthly` requires the `{MM}` token in the mask). Prospective change: numbers already issued are not renumbered.",
                         "enum": [
                             "never",
                             "annual",
@@ -283140,21 +283140,21 @@
                     },
                     "year_reset": {
                         "type": "boolean",
-                        "description": "DEPRECADO: alias booleano de `counter_reset` (`true` = `annual`, `false` = `never`). `counter_reset` manda si llegan los dos."
+                        "description": "DEPRECATED: boolean alias of `counter_reset` (`true` = `annual`, `false` = `never`). `counter_reset` wins when both are sent."
                     },
                     "number_format": {
                         "type": "string",
-                        "description": "M\u00e1scara de numeraci\u00f3n (p. ej. `{code}-{YYYY}-{000}`). Solo editable hasta la primera emisi\u00f3n (`series_format_immutable_with_documents`).",
+                        "description": "Numbering mask (e.g. `{code}-{YYYY}-{000}`). Editable only until the first document is issued (`series_format_immutable_with_documents`).",
                         "maxLength": 32
                     },
                     "initial_number": {
                         "type": "integer",
-                        "description": "N\u00famero inicial del contador (>= 1). Sin saltos con documentos del a\u00f1o en curso (`series_initial_number_creates_gap`).",
+                        "description": "Initial counter number (>= 1). With documents in the current year it cannot leave a gap (`series_initial_number_creates_gap`).",
                         "minimum": 1
                     },
                     "invoice_kind": {
                         "type": "string",
-                        "description": "Prop\u00f3sito de una serie de facturas: `complete`, `simplified`, `corrective` o `simplified_corrective`. Fijo con la primera factura (`series_invoice_kind_locked`).",
+                        "description": "Purpose of an invoice series: `complete`, `simplified`, `corrective` or `simplified_corrective`. Fixed once the series has invoices (`series_invoice_kind_locked`).",
                         "enum": [
                             "complete",
                             "simplified",
@@ -283164,7 +283164,7 @@
                     },
                     "document_type": {
                         "type": "string",
-                        "description": "El tipo de documento de una serie no se puede cambiar."
+                        "description": "Not accepted: the document type of a series cannot be changed."
                     }
                 },
                 "title": "UpdateSeriesRequest"
