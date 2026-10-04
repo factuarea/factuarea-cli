@@ -41,6 +41,7 @@ func TestHelpShowsTheRealFlagType(t *testing.T) {
 	}{
 		{[]string{"series", "active", "--help"}, []string{"--invoice_kind string", "'series_invoice_kind_invalid'"}, "invoice_kind series_invoice_kind_invalid"},
 		{[]string{"invoices", "create", "--help"}, []string{"--prices-include-tax", "--payment.method string"}, "`"},
+		{[]string{"series", "update", "--help"}, []string{"--counter-reset string", "--number-format string", "--initial-number int", "--invoice-kind string"}, "`"},
 		{[]string{"invoices", "corrective", "--help"}, []string{"--correction-nature string", "--series-id string"}, "`"},
 	}
 	for _, tc := range cases {

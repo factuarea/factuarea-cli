@@ -9084,7 +9084,7 @@
         "/series/{series}/archive": {
             "post": {
                 "operationId": "public-api.v1.series.archive",
-                "description": "Archive a series so it stops appearing as available for new documents. Fails with 409 if the series is the default and the only active series of its type. Returns 204 on success.",
+                "description": "Archive a series so it stops appearing as available for new documents. Returns 422 `business_rule_violation` with subcode `cannot_archive_last_default_series` if the series is the default and the only active series of its type, and with `series_already_archived` if it is already archived. Returns 204 on success.",
                 "summary": "Archive a series",
                 "tags": [
                     "Series"
@@ -46629,7 +46629,8 @@
                                                 "aeat_error_code": null,
                                                 "is_blocked": false,
                                                 "block_reason": null,
-                                                "can_subsanar": false
+                                                "can_subsanar": false,
+                                                "aeat_warning_requires_subsanation": null
                                             }
                                         }
                                     }
@@ -47052,7 +47053,8 @@
                                                 "aeat_error_code": null,
                                                 "is_blocked": false,
                                                 "block_reason": null,
-                                                "can_subsanar": false
+                                                "can_subsanar": false,
+                                                "aeat_warning_requires_subsanation": null
                                             },
                                             "verifactu_enabled": true
                                         }
@@ -57738,7 +57740,7 @@
         "/series": {
             "post": {
                 "operationId": "public-api.v1.series.create",
-                "description": "Create a document numbering series. Optional `number_format` sets the numbering mask (e.g. `{code}-{YYYY}-{00000}`) and `initial_number` (\u22651) starts the counter to continue an existing numbering. The same code may be reused across document types (multi-series). A series is immutable once created per AEAT (`PUT` returns 405), so these can only be set here.",
+                "description": "Create a document numbering series. Optional `number_format` sets the numbering mask (e.g. `{code}-{YYYY}-{00000}`) and `initial_number` (\u22651) starts the counter to continue an existing numbering. The same code may be reused across document types (multi-series), but not within the same document type. Code, mask and purpose can still be changed with `PUT /v1/series/{id}` until the first document is issued; after that they are fixed.",
                 "summary": "Create a series",
                 "tags": [
                     "Series"
@@ -111145,7 +111147,8 @@
                                                 "aeat_error_code": null,
                                                 "is_blocked": false,
                                                 "block_reason": null,
-                                                "can_subsanar": true
+                                                "can_subsanar": true,
+                                                "aeat_warning_requires_subsanation": null
                                             }
                                         }
                                     }
@@ -111504,7 +111507,8 @@
                                                 "aeat_error_code": null,
                                                 "is_blocked": false,
                                                 "block_reason": null,
-                                                "can_subsanar": true
+                                                "can_subsanar": true,
+                                                "aeat_warning_requires_subsanation": null
                                             }
                                         }
                                     }
@@ -111904,7 +111908,8 @@
                                                 "aeat_error_code": null,
                                                 "is_blocked": false,
                                                 "block_reason": null,
-                                                "can_subsanar": true
+                                                "can_subsanar": true,
+                                                "aeat_warning_requires_subsanation": null
                                             }
                                         }
                                     }
@@ -152642,7 +152647,7 @@
         "/invoices/{invoice}/activities": {
             "get": {
                 "operationId": "public-api.v1.invoices.activities",
-                "description": "Returns the cursor-paginated activity timeline (audit log) of a single invoice: status transitions, emails, reminders, and metadata changes.",
+                "description": "Returns the cursor-paginated activity timeline (audit log) of a single invoice: status transitions, emails (including the ones that could not be delivered, `invoice.email_failed`), reminders, metadata changes, the result of every submission of its VeriFactu records to AEAT (`verifactu.record_accepted`, `verifactu.record_rejected`, `verifactu.transmission_failed` \u2014 one per incident, not per attempt \u2014 and `verifactu.transmission_blocked`) the first visit of each day to its public link (`invoice.public_link_viewed`) and its payments (`payment.payment_created`, `payment.payment_reversed` and `payment.payment_updated`, also the ones recorded before they appeared here, with the payment origin in `metadata.provider`). The `metadata` of those types follows the exact contract described in the `InvoiceActivity` schema.",
                 "summary": "List invoice activity",
                 "tags": [
                     "Invoices"
@@ -168020,7 +168025,8 @@
                                                     "aeat_error_code": null,
                                                     "is_blocked": false,
                                                     "block_reason": null,
-                                                    "can_subsanar": true
+                                                    "can_subsanar": true,
+                                                    "aeat_warning_requires_subsanation": null
                                                 }
                                             ],
                                             "has_more": false,
@@ -172117,7 +172123,7 @@
         "/series/{series}": {
             "get": {
                 "operationId": "public-api.v1.series.show",
-                "description": "Retrieve a series by its `uuid`.\n\nSeries are **immutable** for fiscal compliance (AEAT VeriFactu \u2014 legal numbering continuity): `PUT`, `PATCH` and `DELETE` on `/v1/series/{uuid}` return `405 Method Not Allowed` with `error.code = \"series_immutable\"` and header `Allow: GET, POST`. To \"delete\" a series use `POST /v1/series/{uuid}/archive`; to change the numbering, create a new series and mark it as default.",
+                "description": "Retrieve a series by its `uuid`.\n\nA series is **never deleted** through the API: `DELETE` and `PATCH` on `/v1/series/{uuid}` return `405 Method Not Allowed` with `error.code = \"series_immutable\"` and header `Allow: GET, PUT`. To retire a series use `POST /v1/series/{uuid}/archive`; to change it, use `PUT /v1/series/{uuid}`, which keeps the fiscal guards of the numbering.",
                 "summary": "Retrieve a series",
                 "tags": [
                     "Series"
@@ -172444,6 +172450,172 @@
                     "retryConnectionErrors": true
                 },
                 "x-required-scope": "series:read"
+            },
+            "put": {
+                "operationId": "public-api.v1.series.update",
+                "description": "Partially update a series: only the fields you send change (`name`, `code`, `counter_reset`, `number_format`, `initial_number`, `invoice_kind`; `year_reset` is the deprecated alias of `counter_reset`). The same fiscal guards as the web app apply, each one as a 422 `business_rule_violation` with its own `subcode` and nothing changed: `code` and `number_format` only while the series has no documents (`series_code_immutable_with_documents`, `series_format_immutable_with_documents`); once AEAT has accepted a record of one of its invoices, `code`, `number_format` and `initial_number` are locked (`series_locked_by_verifactu`); `initial_number` cannot open a gap (`series_initial_number_creates_gap`); `invoice_kind` is fixed with the first invoice (`series_invoice_kind_locked`) and the default series of a purpose cannot change purpose (`series_default_kind_change`). A `code` already used by another series of the same document type returns 422 with `param=code`; `document_type` cannot be changed. Returns 200 with the updated series, and 404 `series_not_found` if it does not belong to your company.",
+                "summary": "Update a series",
+                "tags": [
+                    "Series"
+                ],
+                "parameters": [
+                    {
+                        "name": "series",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateSeriesRequest"
+                            },
+                            "example": {
+                                "name": "Facturas Harvest 2026",
+                                "code": "HARV26",
+                                "number_format": "{code}-{YYYY}-{00000}",
+                                "counter_reset": "annual"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Series"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                },
+                                "example": {
+                                    "data": {
+                                        "id": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a0e",
+                                        "object": "series",
+                                        "code": "F-2026",
+                                        "name": "Facturas 2026",
+                                        "document_type": "invoice",
+                                        "invoice_kind": "complete",
+                                        "prefix": "F-2026-",
+                                        "number_format": "{code}-{YYYY}-{000}",
+                                        "next_number": 46,
+                                        "current_number": 45,
+                                        "initial_number": 1,
+                                        "counter_reset": "annual",
+                                        "year_reset": true,
+                                        "is_default": true,
+                                        "is_active": true,
+                                        "created_at": "2026-01-01T00:00:00Z",
+                                        "updated_at": "2026-01-20T11:30:00Z"
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds). Omitted when the API key has no cap (unlimited tier).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            },
+                            "Idempotent-Replayed": {
+                                "description": "Present with value `\"true\"` only when this response was replayed from the idempotency cache for a repeated `Idempotency-Key` (same key, same request fingerprint). Absent on the first, freshly executed request.",
+                                "schema": {
+                                    "type": "string",
+                                    "examples": [
+                                        "true"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    }
+                },
+                "x-speakeasy-group": "series",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "series:write"
             }
         },
         "/tasks/{task}/reposition": {
@@ -211724,7 +211896,8 @@
                                                 "aeat_error_code": null,
                                                 "is_blocked": false,
                                                 "block_reason": null,
-                                                "can_subsanar": true
+                                                "can_subsanar": true,
+                                                "aeat_warning_requires_subsanation": null
                                             }
                                         }
                                     },
@@ -211751,7 +211924,8 @@
                                                 "aeat_error_code": "MISSING_REPRESENTATION",
                                                 "is_blocked": true,
                                                 "block_reason": "MISSING_REPRESENTATION",
-                                                "can_subsanar": false
+                                                "can_subsanar": false,
+                                                "aeat_warning_requires_subsanation": null
                                             }
                                         }
                                     }
@@ -253337,7 +253511,7 @@
             },
             "InvoiceActivity": {
                 "type": "object",
-                "description": "An event in the activity timeline of an invoice. Groups domain events originated by changes to the invoice itself (creation, sending, payment, correction, etc.).",
+                "description": "An event in the activity timeline of an invoice. Groups domain events originated by changes to the invoice itself (creation, sending, payment, correction, etc.), the result of every submission of its VeriFactu records to AEAT, emails that could not be delivered, the first visit of each day to its public link and the payments registered, edited or reversed on it.",
                 "properties": {
                     "object": {
                         "type": "string",
@@ -253351,32 +253525,130 @@
                     },
                     "event_type": {
                         "type": "string",
-                        "description": "Domain event type (e.g. `invoice.created`, `invoice.paid`).",
-                        "example": "invoice.paid",
+                        "description": "Domain event type (e.g. `invoice.created`, `invoice.paid`). These types have an exact `metadata` contract (see `metadata`): `verifactu.record_accepted` (AEAT accepted a record of the invoice \u2014 the alta, a subsanation or the annulment \u2014, with or without admissible errors), `verifactu.record_rejected` (AEAT rejected a record), `verifactu.transmission_failed` (the submission failed because of AEAT or the network and is retried automatically; ONE per incident, not one per attempt), `verifactu.transmission_blocked` (the submission is stopped with no automatic retry until someone fixes the cause), `invoice.email_failed` (the invoice email could not be delivered after its retries) and `invoice.public_link_viewed` (first visit of the day, Europe/Madrid, to the public link; later visits that day do not add another entry), `payment.payment_created` (a payment was registered), `payment.payment_reversed` (a payment was reversed) and `payment.payment_updated` (a payment was edited). Payment events also cover the payments recorded before they were published here.",
+                        "example": "payment.payment_created",
                         "examples": [
-                            "invoice.paid"
+                            "payment.payment_created"
                         ]
                     },
                     "description": {
                         "type": "string",
                         "description": "Human-readable description of the event in Spanish.",
-                        "example": "La factura se marc\u00f3 como cobrada por transferencia bancaria.",
+                        "example": "Cobro registrado",
                         "examples": [
-                            "La factura se marc\u00f3 como cobrada por transferencia bancaria."
+                            "Cobro registrado"
                         ]
                     },
                     "metadata": {
                         "type": "object",
                         "additionalProperties": true,
-                        "description": "Event metadata. Internal identifiers (PKs) are stripped; `*_uuid` values are preserved.",
+                        "description": "Event metadata. Internal identifiers (PKs) are stripped; `*_uuid` values are preserved. The event types listed in `event_type` publish EXACTLY these keys: `verifactu.record_accepted` \u2192 `record_type`, `csv`, `aeat_error_code`, `requires_subsanation`, `attempt`; `verifactu.record_rejected` \u2192 `record_type`, `aeat_error_code`, `aeat_error_message`, `attempt`; `verifactu.transmission_failed` \u2192 `record_type`, `reason`, `attempt`, `next_retry_at`; `verifactu.transmission_blocked` \u2192 `record_type`, `block_reason`; `invoice.email_failed` \u2192 `recipient`, `reason`; `invoice.public_link_viewed` \u2192 `views_today` and, only when known, `downloaded_pdf`; `payment.payment_created` \u2192 `amount`, `method`, `provider`; `payment.payment_reversed` \u2192 `amount`, `reason`, `provider`; `payment.payment_updated` \u2192 `changed_fields`, `provider`.",
+                        "properties": {
+                            "record_type": {
+                                "type": "string",
+                                "enum": [
+                                    "alta",
+                                    "subsanacion",
+                                    "anulacion"
+                                ],
+                                "description": "`verifactu.*` events: which record was submitted \u2014 the initial `alta`, a `subsanacion` (a new alta that corrects a previous one) or the `anulacion`."
+                            },
+                            "csv": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "`verifactu.record_accepted`: secure verification code (CSV) AEAT returned. `null` when AEAT confirmed the record as a duplicate of an earlier submission (the CSV belongs to that one)."
+                            },
+                            "aeat_error_code": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "`verifactu.record_accepted`: code of the admissible error (`2xxx`) or warning AEAT accepted the record with, `null` when it was accepted without errors. `verifactu.record_rejected`: code of the rejection (`SCHEMA_INVALID` when the record was rejected without being sent because it breaks the AEAT XML schema)."
+                            },
+                            "requires_subsanation": {
+                                "type": "boolean",
+                                "description": "`verifactu.record_accepted`: whether AEAT requires a subsanation of `aeat_error_code`. Every admissible error does except `2004` (FechaHoraHusoGenRegistro) and `2009` (ClaveRegimen with IPSI), which AEAT exempts (AEAT \u00abValidaciones\u00bb v1.2.2, \u00a74.3.1). `false` when there is no error."
+                            },
+                            "aeat_error_message": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "`verifactu.record_rejected`: description of the rejection given by AEAT."
+                            },
+                            "attempt": {
+                                "type": "integer",
+                                "description": "`verifactu.record_accepted`, `verifactu.record_rejected` and `verifactu.transmission_failed`: number of submission attempts of the record so far."
+                            },
+                            "reason": {
+                                "type": "string",
+                                "description": "`verifactu.transmission_failed`: why the submission failed \u2014 `AEAT_UNREACHABLE` (AEAT did not answer, timed out or the network failed), `UNMATCHED_RESPONSE_LINE` (the AEAT answer did not include this record) or `SYSTEM_CERTIFICATE_UNAVAILABLE` (the Factuarea certificate used in third-party remission is not available). `invoice.email_failed`: readable reason in Spanish, without sensitive data (never the raw text of the mail server). `payment.payment_reversed`: key of the reversal reason (e.g. `issued_in_error`, `direct_debit_return`, `card_dispute`)."
+                            },
+                            "next_retry_at": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "format": "date-time",
+                                "description": "`verifactu.transmission_failed`: when the automatic retry is scheduled (ISO 8601), or `null`."
+                            },
+                            "block_reason": {
+                                "type": "string",
+                                "enum": [
+                                    "MISSING_CERTIFICATE",
+                                    "MISSING_REPRESENTATION",
+                                    "PRESENTER_NOT_ENABLED",
+                                    "SUBMISSION_REJECTED"
+                                ],
+                                "description": "`verifactu.transmission_blocked`: why the submission is stopped. It does not go out again until the cause is fixed and the record is reactivated (`POST /v1/verifactu/records/retry-blocked`)."
+                            },
+                            "recipient": {
+                                "type": "string",
+                                "description": "`invoice.email_failed`: email address the invoice was sent to."
+                            },
+                            "views_today": {
+                                "type": "integer",
+                                "description": "`invoice.public_link_viewed`: visits of that day when the entry was recorded. The entry is written on the first visit and not rewritten, so it is `1`."
+                            },
+                            "amount": {
+                                "type": "number",
+                                "description": "`payment.payment_created` and `payment.payment_reversed`: amount of the payment in euros."
+                            },
+                            "method": {
+                                "type": "string",
+                                "description": "`payment.payment_created`: payment method key, from the catalog of `GET /v1/payment-methods` (e.g. `bank_transfer`, `cash`, `credit_card`)."
+                            },
+                            "provider": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "description": "`payment.*`: origin of the payment when it was collected automatically \u2014 `stripe`, `gocardless`, `monei`, `woocommerce` or `shopify` \u2014 or `null` for a payment registered by hand. Read from the payment itself, so it is also present on events recorded before it existed. When `performed_by` is `null` and `provider` is set, the payment came from that gateway."
+                            },
+                            "changed_fields": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "description": "`payment.payment_updated`: names of the payment fields that changed (`amount`, `date`, `method`, `reference`, `notes`)."
+                            },
+                            "downloaded_pdf": {
+                                "type": "boolean",
+                                "description": "`invoice.public_link_viewed`: `true` when the visit that opened the day was the PDF download. Absent when it is not known (a visit to the page)."
+                            }
+                        },
                         "example": {
-                            "payment_method": "bank_transfer",
-                            "paid_amount": "1210.00"
+                            "amount": 1210,
+                            "method": "bank_transfer",
+                            "provider": null
                         },
                         "examples": [
                             {
-                                "payment_method": "bank_transfer",
-                                "paid_amount": "1210.00"
+                                "amount": 1210,
+                                "method": "bank_transfer",
+                                "provider": null
                             }
                         ]
                     },
@@ -271668,7 +271940,7 @@
             },
             "Series": {
                 "type": "object",
-                "description": "A document numbering series. Immutable per AEAT compliance.",
+                "description": "A document numbering series. It can be edited with `PUT /v1/series/{id}` under the fiscal guards of the numbering (code, mask and purpose are fixed once documents exist) and it is never deleted: archive it instead.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -271717,7 +271989,7 @@
                             "simplified_corrective",
                             null
                         ],
-                        "description": "Fixed purpose of an invoice series (RD 1619/2012 arts. 6.1.a, 7.1.a and 15): `complete` (complete invoices `F1` and the `F3` that replaces simplified invoices \u2014 the usual series), `simplified` (simplified invoices `F2`), `corrective` (corrective invoices `R1`\u2013`R4`) or `simplified_corrective` (corrective invoices of simplified invoices `R5`). An invoice can only be issued in a series of its own purpose, otherwise issuing fails with `series_invoice_kind_mismatch`. Set on creation (default `complete`) and immutable once the series has any invoice (`series_invoice_kind_locked`). `null` for series of other document types.",
+                        "description": "Fixed purpose of an invoice series (RD 1619/2012 arts. 6.1.a, 7.1.a and 15): `complete` (complete invoices `F1` and the `F3` that replaces simplified invoices \u2014 the usual series), `simplified` (simplified invoices `F2`), `corrective` (corrective invoices `R1`\u2013`R4`) or `simplified_corrective` (corrective invoices of simplified invoices `R5`). An invoice can only be issued in a series of its own purpose, otherwise issuing fails with `series_invoice_kind_mismatch`. Set on creation (default `complete`), editable with `PUT /v1/series/{id}` until the series has any invoice (`series_invoice_kind_locked`) and never on the default series of its purpose (`series_default_kind_change`). `null` for series of other document types.",
                         "example": "complete",
                         "examples": [
                             "complete"
@@ -271733,7 +272005,7 @@
                     },
                     "number_format": {
                         "type": "string",
-                        "description": "Canonical numbering mask describing how the document number is rendered: padding (the block of zeros), year token (`{YYYY}` 4 digits / `{YY}` 2 digits / omitted for no year), optional month token (`{MM}` 2 digits) and separator. Example: `{code}-{YYYY}-{000}` (default) or `{code}-{YYYY}-{00000}` for 5-digit padding. When `counter_reset` is `monthly`, the mask must include the `{MM}` token (e.g. `F-{YYYY}-{MM}-{000}`) so the rendered number stays unique across months; otherwise two months would both start at `1`. Set on creation and immutable afterwards. Mirrors Holded's `format`.",
+                        "description": "Canonical numbering mask describing how the document number is rendered: padding (the block of zeros), year token (`{YYYY}` 4 digits / `{YY}` 2 digits / omitted for no year), optional month token (`{MM}` 2 digits) and separator. Example: `{code}-{YYYY}-{000}` (default) or `{code}-{YYYY}-{00000}` for 5-digit padding. When `counter_reset` is `monthly`, the mask must include the `{MM}` token (e.g. `F-{YYYY}-{MM}-{000}`) so the rendered number stays unique across months; otherwise two months would both start at `1`. Set on creation and editable with `PUT /v1/series/{id}` until the first document is issued; fixed afterwards (`series_format_immutable_with_documents`). Mirrors Holded's `format`.",
                         "example": "{code}-{YYYY}-{000}",
                         "examples": [
                             "{code}-{YYYY}-{000}"
@@ -271757,7 +272029,7 @@
                     },
                     "initial_number": {
                         "type": "integer",
-                        "description": "Number the counter starts from. Set on creation to continue an existing numbering when migrating (e.g. 235). Defaults to 1.",
+                        "description": "Number the counter starts from. Set on creation to continue an existing numbering when migrating (e.g. 235). Defaults to 1. It can be changed with `PUT /v1/series/{id}` as long as it does not open a gap after documents of the current year (`series_initial_number_creates_gap`) and no record of the series has been accepted by AEAT.",
                         "example": 1,
                         "examples": [
                             1
@@ -282841,6 +283113,62 @@
                 },
                 "title": "UpdateRecurringInvoiceRequest"
             },
+            "UpdateSeriesRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Nombre de la serie (1-100 caracteres).",
+                        "minLength": 1,
+                        "maxLength": 100
+                    },
+                    "code": {
+                        "type": "string",
+                        "description": "Prefijo de la serie (1-10 caracteres: letras, n\u00fameros, `-` y `_`). Solo editable mientras la serie no tiene documentos (`series_code_immutable_with_documents`).",
+                        "pattern": "^[A-Za-z0-9\\-_]+$",
+                        "minLength": 1,
+                        "maxLength": 10
+                    },
+                    "counter_reset": {
+                        "type": "string",
+                        "description": "Pol\u00edtica de reinicio del contador: `never`, `annual` o `monthly` (`monthly` exige el token `{MM}` en la m\u00e1scara). Cambio prospectivo.",
+                        "enum": [
+                            "never",
+                            "annual",
+                            "monthly"
+                        ]
+                    },
+                    "year_reset": {
+                        "type": "boolean",
+                        "description": "DEPRECADO: alias booleano de `counter_reset` (`true` = `annual`, `false` = `never`). `counter_reset` manda si llegan los dos."
+                    },
+                    "number_format": {
+                        "type": "string",
+                        "description": "M\u00e1scara de numeraci\u00f3n (p. ej. `{code}-{YYYY}-{000}`). Solo editable hasta la primera emisi\u00f3n (`series_format_immutable_with_documents`).",
+                        "maxLength": 32
+                    },
+                    "initial_number": {
+                        "type": "integer",
+                        "description": "N\u00famero inicial del contador (>= 1). Sin saltos con documentos del a\u00f1o en curso (`series_initial_number_creates_gap`).",
+                        "minimum": 1
+                    },
+                    "invoice_kind": {
+                        "type": "string",
+                        "description": "Prop\u00f3sito de una serie de facturas: `complete`, `simplified`, `corrective` o `simplified_corrective`. Fijo con la primera factura (`series_invoice_kind_locked`).",
+                        "enum": [
+                            "complete",
+                            "simplified",
+                            "corrective",
+                            "simplified_corrective"
+                        ]
+                    },
+                    "document_type": {
+                        "type": "string",
+                        "description": "El tipo de documento de una serie no se puede cambiar."
+                    }
+                },
+                "title": "UpdateSeriesRequest"
+            },
             "UpdateStoreV1Request": {
                 "type": "object",
                 "description": "Public REST API v1 \u2014 PUT /v1/stores/{store}.\n\nPartial update of the settings of a connected store: every field is optional\nand a field you do not send keeps its current value. The identity of the\nstore \u2014its provider connection, its provider and the identifier of the remote\nshop\u2014 cannot be changed here: pointing an existing store at a different shop\nwould keep the invoicing history of the old one.\n\nTwo fields accept an explicit `null` and it means something: `series_id: null`\ngoes back to the default series of your company, and `remote_base_url: null`\nremoves the declared address. Omitting either one leaves it untouched.\n`simplified_threshold` is expressed in EUROS and capped at the legal maximum\nfor a simplified invoice.",
@@ -284717,6 +285045,17 @@
                         "examples": [
                             true
                         ]
+                    },
+                    "aeat_warning_requires_subsanation": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ],
+                        "description": "For a record AEAT accepted with errors (`status` `accepted` with an `aeat_error_code`), whether AEAT requires a subsanation of that admissible error: every `2xxx` code does except `2004` (FechaHoraHusoGenRegistro) and `2009` (ClaveRegimen with IPSI), which AEAT exempts (AEAT \u00abValidaciones\u00bb v1.2.2, \u00a74.3.1). `false` for a warning that is not an AEAT code (`duplicate_annulled`: review the invoice instead). `null` when the record is not accepted with a warning.",
+                        "example": null,
+                        "examples": [
+                            null
+                        ]
                     }
                 },
                 "required": [
@@ -284739,7 +285078,8 @@
                     "aeat_error_code",
                     "is_blocked",
                     "block_reason",
-                    "can_subsanar"
+                    "can_subsanar",
+                    "aeat_warning_requires_subsanation"
                 ],
                 "title": "VeriFactuRecord"
             },

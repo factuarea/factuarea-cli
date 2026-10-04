@@ -3872,6 +3872,16 @@ func generatedOps() []genOp {
 			QueryParams:         []genParam{},
 		},
 		{
+			OperationID: "public-api.v1.series.update", Method: "PUT", Path: "/series/{series}",
+			Action: "update", Summary: "Update a series", Deprecated: false,
+			Irreversible: false, RequiredScope: "series:write",
+			IdempotencyRequired: false,
+			Groups:              []string{"series"},
+			PathParams:          []genParam{{Name: "series", In: "path", Type: "string", Description: "", Required: true}},
+			QueryParams:         []genParam{},
+			Body:                &genBody{Kind: "json", Example: "{\"code\":\"HARV26\",\"counter_reset\":\"annual\",\"name\":\"Facturas Harvest 2026\",\"number_format\":\"{code}-{YYYY}-{00000}\"}", FileFields: []string{}, HasObjectArray: false, Fields: []genBodyField{{Name: "name", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "code", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "counter_reset", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"never", "annual", "monthly"}, Children: []genBodyField{}}, {Name: "year_reset", Type: "boolean", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "number_format", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "initial_number", Type: "integer", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}, {Name: "invoice_kind", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{"complete", "simplified", "corrective", "simplified_corrective"}, Children: []genBodyField{}}, {Name: "document_type", Type: "string", Kind: "scalar", Required: false, Nullable: false, Enum: []string{}, Children: []genBodyField{}}}},
+		},
+		{
 			OperationID: "public-api.v1.series.activities", Method: "GET", Path: "/series/{series}/activities",
 			Action: "activities", Summary: "List series activity timeline", Deprecated: false,
 			Irreversible: false, RequiredScope: "series:read",
