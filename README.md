@@ -108,6 +108,53 @@ ni `suppliers`: se opera sobre `contacts` y se filtra o asigna el rol
 `factuarea contacts list --roles supplier`, `factuarea contacts assign-contact-role <uuid> supplier`.
 El `client_id` que piden los documentos es el UUID del contacto con rol `customer`.
 
+### Escáner de documentos
+
+El escáner conserva originales y permite revisar la extracción antes de convertirla en un **borrador de gasto**. Requiere el módulo OCR de la empresa y los scopes `purchase_invoices:read`, `purchase_invoices:write` o `purchase_invoices:delete` según la operación.
+
+```bash
+# Hasta 20 archivos PDF/JPEG/PNG; repite el flag, incluso si la ruta lleva comas.
+factuarea purchase-scans create \
+  --file-files factura.pdf --file-files ticket.png \
+  --idempotency-key compra-lote-2026-001 --json
+
+# La lectura es asíncrona: consulta estado, incidencias y available_actions.
+factuarea purchase-scans list --paginate --json
+factuarea purchase-scans show <uuid> --json
+factuarea purchase-scans stats --json
+factuarea purchase-scan-emails list --paginate --json
+
+# Categorías de gasto para clasificar la conversión (purchase-invoices, no purchase-scans).
+factuarea purchase-invoices expense-categories --json
+
+# Guarda solo los cambios; sustituye expected_version por la versión observada.
+factuarea purchase-scans review <uuid> --json -d '{
+  "expected_version": 3,
+  "fields": {"notes": {"value": "Documento revisado"}}
+}'
+
+# Convierte usando la nueva versión devuelta por review.
+factuarea purchase-scans convert <uuid> \
+  --expected-version 4 --idempotency-key compra-conversion-001 --json
+
+# Original sin alterar; archivado reversible con control de versión.
+factuarea purchase-scans source <uuid> -o original.pdf
+factuarea purchase-scans archive <uuid> --expected-version 5 --json
+factuarea purchase-scans restore <uuid> --expected-version 6 --json
+```
+
+Cada archivo admite 20 MiB y el lote 100 MiB. La respuesta `202` incluye aceptados y rechazados por índice; si todos se rechazan, el CLI conserva `data.rejected` en el error JSON y termina con código de validación. Reutiliza la misma `--idempotency-key` y el mismo orden de archivos al reintentar un lote. Las mutaciones generan una clave automáticamente si no la proporcionas.
+
+`retry` inicia los documentos `received` cuando la lectura automática está desactivada, o reintenta fallos recuperables según `available_actions`. Una versión obsoleta produce `409`: vuelve a consultar antes de aplicar cambios. Los errores de revisión mantienen `error.details.field_errors` con los campos pendientes. `duplicate-resolution` acepta `link_existing` (con `purchase_invoice_id`) o `archive`; el override y el alta automática de proveedor requieren administrador interactivo en la aplicación.
+
+La conversión devuelve `purchase_invoice_id`, mantiene el original adjunto y nunca emite una factura ni registra un pago. Usa importes decimales como cadenas en el JSON de revisión; los campos omitidos se conservan y `null` borra explícitamente el valor.
+
+**Descubrimiento.** El manifiesto de `commands --json` trae un campo `operation_id` (el `operationId` del OpenAPI, p. ej. `public-api.v1.purchase_scans.create`) además del `command` de la CLI: útil para que un agente relacione un endpoint del spec con su comando sin adivinar el mapeo de nombres.
+
+```bash
+factuarea commands --json | jq '.[] | select(.operation_id | startswith("public-api.v1.purchase_scan"))'
+```
+
 ### Control horario (workforce)
 
 Con el add-on de **control horario** activo (módulo `control_horario`), el CLI
@@ -514,6 +561,66 @@ factuarea account request-logs list --only_errors true --json
 factuarea account request-logs show <request_id> --json
 ```
 
+### Tareas y proyectos (tasks)
+
+Con el módulo **tareas** (`tasks`, incluido en todos los planes), el CLI expone los proyectos con su tablero de columnas, las tareas, las etiquetas, el tiempo imputado y la agenda: 80 comandos en siete grupos, cada uno con su scope fino. Los scopes son `projects:read|write|delete`, `tasks:read|write|delete`, `users:read` y `notifications:read|write`; la factura de horas de un proyecto (`projects time-invoices create`) pide además `invoices:write`, porque crea una factura.
+
+| Grupo | Qué cubre |
+| --- | --- |
+| `projects` | proyectos, columnas (`projects columns`), campos personalizados, exportar e importar tareas (`projects tasks`), resumen de tiempo y factura de horas |
+| `tasks` | tareas y sus subrecursos: comentarios, adjuntos, entradas de tiempo (`tasks time-entries`), etiquetas, relaciones, vínculos con documentos y contactos, actividad |
+| `task-labels` | etiquetas de tarea de la empresa |
+| `task-timers` | el temporizador en marcha del titular de la key |
+| `users` | miembros de la empresa a los que se puede asignar una tarea |
+| `notifications` | avisos del titular de la key |
+| `agenda` | agenda combinada: tareas con vencimiento, vencimientos de documentos, plazos fiscales y ausencias |
+
+```bash
+# Un proyecto: su clave (una letra y hasta nueve letras o números) prefija la de sus tareas (WEB-1, WEB-2…).
+factuarea projects create --name "Web corporativa" --key WEB --json
+factuarea projects columns list <project_id> --json
+
+# Crear una tarea. El cuerpo completo permite, además, vincularla a un documento o contacto
+# en la misma petición con `entity_link` (invoice, quote, contact, product…).
+factuarea tasks create --json -d '{
+  "project_id": "<project_id>",
+  "title": "Preparar el presupuesto",
+  "priority": "high",
+  "due_on": "2026-10-15",
+  "entity_link": {"type": "quote", "id": "<quote_id>"}
+}'
+
+# Los comandos piden el UUID; con la clave de la tarea se resuelve primero.
+factuarea tasks find-by-key WEB-1 --json
+
+# Cambiar su estado: a una columna del proyecto o a un estado virtual (`planned` es el backlog).
+factuarea tasks status <task_id> --column-id <column_id>
+factuarea tasks status <task_id> --status planned
+
+# Buscar y recorrer el cursor de forma transparente.
+factuarea tasks search --project_id <project_id> --status active --paginate --json
+
+# Imputar tiempo: un periodo cerrado (ISO 8601 con zona horaria)…
+factuarea tasks time-entries create <task_id> \
+  --started-at 2026-09-28T09:00:00+02:00 --ended-at 2026-09-28T10:30:00+02:00 \
+  --description "Revisión del presupuesto"
+
+# …o con el temporizador del titular de la key, que solo admite uno en marcha.
+factuarea tasks timer start <task_id>
+factuarea task-timers current --json      # `{"data": null}` si no hay ninguno
+factuarea task-timers stop --json
+
+# Borrar una columna con tareas exige decir dónde van. Es irreversible: sin terminal
+# interactiva hay que confirmar con --confirm, y lo que se confirma es el ÚLTIMO
+# argumento posicional (aquí, la columna borrada).
+factuarea projects columns delete <project_id> <column_id> \
+  --move_to_column_id <other_column_id> --confirm <column_id>
+```
+
+Los borrados de proyectos, columnas, campos personalizados, etiquetas, tareas (también `tasks bulk-delete`), comentarios, adjuntos y entradas de tiempo son irreversibles y piden `--confirm`; las mutaciones generan la cabecera `Idempotency-Key` si no pasas `--idempotency-key`.
+
+**`task-timers` no es el fichaje de jornada.** El temporizador y las entradas de `tasks time-entries` registran el tiempo dedicado a una tarea, para medirlo y facturarlo; no son el registro de jornada del módulo de control horario (`factuarea time-entries clock-in`, arriba), que tiene su propio scope y su propio registro inalterable.
+
 ## Devloop (webhooks)
 
 Prueba tus webhooks en local sin desplegar ni ngrok, al estilo del CLI de Stripe:
@@ -568,3 +675,5 @@ API pública, SDKs y MCP: [docs.factuarea.com](https://docs.factuarea.com).
 ## Licencia
 
 MIT.
+
+To discover expense categories for scanner review, run `factuarea purchase-invoices expense-categories`. Use the returned `id` in the `expense_category` field.

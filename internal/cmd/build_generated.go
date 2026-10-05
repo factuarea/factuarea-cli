@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/factuarea/factuarea-cli/internal/apierr"
+	"github.com/factuarea/factuarea-cli/internal/client"
 	"github.com/factuarea/factuarea-cli/internal/output"
 	"github.com/factuarea/factuarea-cli/internal/safety"
 	"github.com/spf13/cobra"
@@ -21,7 +22,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	var confirmFlag string
 	var skipScopeCheck bool
 	var dryRun, skeleton bool
+	var idempotencyKey string
 	fileFlags := map[string]*string{}
+	fileArrayFlags := map[string]*[]string{}
 
 	// `axisFillIndex` —no el índice del path— es lo que manda aquí: cubre el eje
 	// de empresa y el de cuenta, que un comando nunca tiene a la vez.
@@ -44,7 +47,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	long += bodyFieldsHelp(op)
 	if op.Body != nil && op.Body.Kind == "multipart" {
 		long += "\n\nSubida multipart: pasa el fichero con --file-<campo> y los" +
-			" campos de texto con --data como objeto JSON plano."
+			" campos de texto con --data como objeto JSON plano. En lotes, repite --file-<campo> por archivo."
 	}
 
 	posField, hasPosField := singlePositionalField(op)
@@ -232,7 +235,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			q := url.Values{}
 			for _, p := range op.QueryParams {
 				if strings.HasSuffix(p.Name, "[]") {
-					values, _ := cmd.Flags().GetStringSlice(strings.TrimSuffix(p.Name, "[]"))
+					values, _ := cmd.Flags().GetStringSlice(op.arrayQueryFlag(p.Name))
 					for _, value := range values {
 						q.Add(p.Name, value)
 					}
@@ -259,7 +262,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					}
 					resolvedData = string(b)
 				}
-				body, headers, err = op.buildBody(resolvedData, dataFile, fileFlags)
+				body, headers, err = op.buildBody(resolvedData, dataFile, fileFlags, fileArrayFlags)
 				if err != nil {
 					return err
 				}
@@ -277,6 +280,26 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			full := path
 			if len(q) > 0 {
 				full += "?" + q.Encode()
+			}
+			if idempotencyKey != "" {
+				if headers == nil {
+					headers = map[string]string{}
+				}
+				headers["Idempotency-Key"] = idempotencyKey
+			}
+			// El spec exige `Idempotency-Key` en esta operación y el método no
+			// es POST: `client.Do` ya la autogenera para todo verbo mutador
+			// (POST/PUT/PATCH/DELETE, ver `design.md` D6 y el hallazgo de
+			// `anchors/contract.md`), así que esto es aditivo y nunca pisa una
+			// cabecera ya presente (ni la del flag de arriba, ni una explícita
+			// de `--data`/multipart).
+			if op.IdempotencyRequired && op.Method != "POST" {
+				if headers == nil {
+					headers = map[string]string{}
+				}
+				if _, present := headers["Idempotency-Key"]; !present {
+					headers["Idempotency-Key"] = client.NewIdempotencyKey()
+				}
 			}
 			resp, err := cc.client.Do(context.Background(), op.Method, full, body, headers)
 			if err != nil {
@@ -300,14 +323,21 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	}
 
 	for _, p := range op.QueryParams {
-		desc := p.Description
+		desc := flagUsage(p.Description)
 		if p.Required {
 			desc = strings.TrimSpace("(requerido) " + desc)
 		}
 		if strings.HasSuffix(p.Name, "[]") {
-			c.Flags().StringSlice(strings.TrimSuffix(p.Name, "[]"), nil, desc)
+			name := op.arrayQueryFlag(p.Name)
+			c.Flags().StringSlice(name, nil, desc)
+			if name == p.Name {
+				continue
+			}
 		}
 		c.Flags().String(p.Name, "", desc)
+	}
+	if op.isMutating() {
+		c.Flags().StringVar(&idempotencyKey, "idempotency-key", "", "clave estable para repetir esta misma operación sin duplicarla")
 	}
 	if op.Body != nil && op.Body.Kind == "json" {
 		c.Flags().StringVarP(&data, "data", "d", "", "cuerpo JSON de la petición (@fichero o - para stdin)")
@@ -324,6 +354,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			v := c.Flags().String("file-"+ff, "", "ruta al fichero para el campo "+ff)
 			fileFlags[ff] = v
 		}
+		for _, ff := range op.Body.FileArrayFields {
+			fileArrayFlags[ff] = c.Flags().StringArray("file-"+ff, nil, "ruta al fichero para "+ff+" (repite el flag por archivo)")
+		}
 	}
 	if op.BinaryContentType != "" {
 		c.Flags().StringVarP(&outputPath, "output", "o", "", "escribe la respuesta binaria a este fichero")
@@ -336,7 +369,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		if len(op.PathParams) == 0 {
 			confirmHelp = "confirma la operación irreversible pasando el token literal " + op.Action
 		}
-		c.Flags().StringVar(&confirmFlag, "confirm", "", confirmHelp)
+		c.Flags().StringVar(&confirmFlag, "confirm", "", flagUsage(confirmHelp))
 	}
 	if op.RequiredScope != "" {
 		c.Flags().BoolVar(&skipScopeCheck, "skip-scope-check", false, "no verificar scopes localmente antes de la llamada")
@@ -416,4 +449,13 @@ func shortUsage(op genOp, use string, axisIdx int) string {
 	}
 	slot := " [" + op.PathParams[axisIdx].Name + "]"
 	return strings.Replace(use, slot, "", 1)
+}
+
+// flagUsage prepara un texto para el uso de un flag. pflag (UnquoteUsage) toma la
+// primera palabra entre comillas invertidas como NOMBRE DEL TIPO del flag, así que
+// una descripción del spec con `código` hacía que la ayuda mostrara «--flag código»
+// en vez de su tipo real. Se sustituyen por comillas simples: el texto se lee igual
+// y el tipo sale del valor del flag.
+func flagUsage(s string) string {
+	return strings.ReplaceAll(s, "`", "'")
 }

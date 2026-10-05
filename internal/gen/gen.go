@@ -53,6 +53,7 @@ type genBodyField struct {
 type genBody struct {
 	Kind, Example string
 	FileFields    []string
+	FileArrayFields []string
 	Fields        []genBodyField
 	HasObjectArray bool
 }
@@ -61,6 +62,7 @@ type genOp struct {
 	Deprecated                                 bool
 	Irreversible                               bool
 	RequiredScope                              string
+	IdempotencyRequired                        bool
 	Groups                                     []string
 	PathParams, QueryParams                    []genParam
 	Body                                       *genBody
@@ -74,10 +76,11 @@ func generatedOps() []genOp {
 			OperationID: {{q .OperationID}}, Method: {{q .Method}}, Path: {{q .Path}},
 			Action: {{q .Action}}, Summary: {{q .Summary}}, Deprecated: {{.Deprecated}},
 			Irreversible: {{.Irreversible}}, RequiredScope: {{q .RequiredScope}},
+			IdempotencyRequired: {{.IdempotencyRequired}},
 			Groups: []string{ {{range .Groups}}{{q .}}, {{end}} },
 			PathParams: []genParam{ {{range .PathParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },
 			QueryParams: []genParam{ {{range .QueryParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },
-			{{if .Body}}Body: &genBody{Kind: {{q .Body.Kind}}, Example: {{q .Body.Example}}, FileFields: []string{ {{range .Body.FileFields}}{{q .}}, {{end}} }, HasObjectArray: {{hasObjectArray .Body.Fields}}, Fields: []genBodyField{ {{template "fields" .Body.Fields}} }},{{end}}
+			{{if .Body}}Body: &genBody{Kind: {{q .Body.Kind}}, Example: {{q .Body.Example}}, FileFields: []string{ {{range .Body.FileFields}}{{q .}}, {{end}} }, {{if .Body.FileArrayFields}}FileArrayFields: []string{ {{range .Body.FileArrayFields}}{{q .}}, {{end}} },{{end}} HasObjectArray: {{hasObjectArray .Body.Fields}}, Fields: []genBodyField{ {{template "fields" .Body.Fields}} }},{{end}}
 			{{if .BinaryResponse}}BinaryContentType: {{q .BinaryResponse.ContentType}},{{end}}
 		},
 {{- end}}
