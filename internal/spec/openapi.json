@@ -64941,7 +64941,7 @@
         "/companies/{company}/series": {
             "post": {
                 "operationId": "public-api.v1.series.create",
-                "description": "Create a document numbering series. Optional `number_format` sets the numbering mask (e.g. `{code}-{YYYY}-{00000}`) and `initial_number` (\u22651) starts the counter to continue an existing numbering. The same code may be reused across document types (multi-series), but not within the same document type. Code, mask and purpose can still be changed with `PUT /v1/companies/{company}/series/{series}` until the first document is issued; after that they are fixed.",
+                "description": "Create a document numbering series. Optional `number_format` sets the numbering mask (e.g. `{code}-{YYYY}-{00000}`) and `initial_number` (\u22651) starts the counter to continue an existing numbering. The same code may be reused across document types (multi-series), but not within the same document type. Code, mask and purpose can still be changed with `PATCH /v1/companies/{company}/series/{series}` until the first document is issued; after that they are fixed.",
                 "summary": "Create a series",
                 "tags": [
                     "Series"
@@ -305715,7 +305715,7 @@
             },
             "Series": {
                 "type": "object",
-                "description": "A document numbering series. It can be edited with `PUT /v1/companies/{company}/series/{series}` under the fiscal guards of the numbering (code, mask and purpose are fixed once documents exist) and it is never deleted: archive it instead.",
+                "description": "A document numbering series. It can be edited with `PATCH /v1/companies/{company}/series/{series}` under the fiscal guards of the numbering (code, mask and purpose are fixed once documents exist) and it is never deleted: archive it instead.",
                 "properties": {
                     "id": {
                         "type": "string",
@@ -305764,7 +305764,7 @@
                             "simplified_corrective",
                             null
                         ],
-                        "description": "Fixed purpose of an invoice series (RD 1619/2012 arts. 6.1.a, 7.1.a and 15): `complete` (complete invoices `F1` and the `F3` that replaces simplified invoices \u2014 the usual series), `simplified` (simplified invoices `F2`), `corrective` (corrective invoices `R1`\u2013`R4`) or `simplified_corrective` (corrective invoices of simplified invoices `R5`). An invoice can only be issued in a series of its own purpose, otherwise issuing fails with `series_invoice_kind_mismatch`. Set on creation (default `complete`), editable with `PUT /v1/companies/{company}/series/{series}` until the series has any invoice (`series_invoice_kind_locked`) and never on the default series of its purpose (`series_default_kind_change`). `null` for series of other document types.",
+                        "description": "Fixed purpose of an invoice series (RD 1619/2012 arts. 6.1.a, 7.1.a and 15): `complete` (complete invoices `F1` and the `F3` that replaces simplified invoices \u2014 the usual series), `simplified` (simplified invoices `F2`), `corrective` (corrective invoices `R1`\u2013`R4`) or `simplified_corrective` (corrective invoices of simplified invoices `R5`). An invoice can only be issued in a series of its own purpose, otherwise issuing fails with `series_invoice_kind_mismatch`. Set on creation (default `complete`), editable with `PATCH /v1/companies/{company}/series/{series}` until the series has any invoice (`series_invoice_kind_locked`) and never on the default series of its purpose (`series_default_kind_change`). `null` for series of other document types.",
                         "example": "complete",
                         "examples": [
                             "complete"
@@ -305780,7 +305780,7 @@
                     },
                     "number_format": {
                         "type": "string",
-                        "description": "Canonical numbering mask describing how the document number is rendered: padding (the block of zeros), year token (`{YYYY}` 4 digits / `{YY}` 2 digits / omitted for no year), optional month token (`{MM}` 2 digits) and separator. Example: `{code}-{YYYY}-{000}` (default) or `{code}-{YYYY}-{00000}` for 5-digit padding. When `counter_reset` is `monthly`, the mask must include the `{MM}` token (e.g. `F-{YYYY}-{MM}-{000}`) so the rendered number stays unique across months; otherwise two months would both start at `1`. Set on creation and editable with `PUT /v1/companies/{company}/series/{series}` until the first document is issued; fixed afterwards (`series_format_immutable_with_documents`). Mirrors Holded's `format`.",
+                        "description": "Canonical numbering mask describing how the document number is rendered: padding (the block of zeros), year token (`{YYYY}` 4 digits / `{YY}` 2 digits / omitted for no year), optional month token (`{MM}` 2 digits) and separator. Example: `{code}-{YYYY}-{000}` (default) or `{code}-{YYYY}-{00000}` for 5-digit padding. When `counter_reset` is `monthly`, the mask must include the `{MM}` token (e.g. `F-{YYYY}-{MM}-{000}`) so the rendered number stays unique across months; otherwise two months would both start at `1`. Set on creation and editable with `PATCH /v1/companies/{company}/series/{series}` until the first document is issued; fixed afterwards (`series_format_immutable_with_documents`). Mirrors Holded's `format`.",
                         "example": "{code}-{YYYY}-{000}",
                         "examples": [
                             "{code}-{YYYY}-{000}"
@@ -305804,7 +305804,7 @@
                     },
                     "initial_number": {
                         "type": "integer",
-                        "description": "Number the counter starts from. Set on creation to continue an existing numbering when migrating (e.g. 235). Defaults to 1. It can be changed with `PUT /v1/companies/{company}/series/{series}` as long as it does not open a gap after documents of the current year (`series_initial_number_creates_gap`) and no record of the series has been accepted by AEAT.",
+                        "description": "Number the counter starts from. Set on creation to continue an existing numbering when migrating (e.g. 235). Defaults to 1. It can be changed with `PATCH /v1/companies/{company}/series/{series}` as long as it does not open a gap after documents of the current year (`series_initial_number_creates_gap`) and no record of the series has been accepted by AEAT.",
                         "example": 1,
                         "examples": [
                             1
