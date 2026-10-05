@@ -70,20 +70,20 @@ func init() {
 		return err
 	}
 
-	registry["project.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		_, err := createProject(ctx, c, ov)
+	registry["project.created"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		_, err := createProject(ctx, c, base, ov)
 		return err
 	}
 
 	// Una tarea vive siempre dentro de un proyecto: el fixture crea uno nuevo (su
 	// propia clave, sin depender de ninguno previo de la cuenta sandbox) y una
 	// tarea en él. Por eso este evento también emite `project.created`.
-	registry["task.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		projectID, err := createProject(ctx, c, ov)
+	registry["task.created"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		projectID, err := createProject(ctx, c, base, ov)
 		if err != nil {
 			return err
 		}
-		_, err = c.Do(ctx, http.MethodPost, "/v1/tasks", mustJSON(map[string]any{
+		_, err = c.Do(ctx, http.MethodPost, base+"/tasks", mustJSON(map[string]any{
 			"project_id": projectID,
 			"title":      orDefault(ov, "title", "Tarea de prueba (trigger)"),
 		}), nil)
@@ -94,8 +94,8 @@ func init() {
 // createProject crea un proyecto de tareas con el mínimo que exige la API
 // (nombre y clave). La clave es única por empresa y no se puede repetir, así que
 // por defecto se deriva del reloj: una letra y hasta nueve letras o números.
-func createProject(ctx context.Context, c *client.Client, ov map[string]string) (string, error) {
-	resp, err := c.Do(ctx, http.MethodPost, "/v1/projects", mustJSON(map[string]any{
+func createProject(ctx context.Context, c *client.Client, base string, ov map[string]string) (string, error) {
+	resp, err := c.Do(ctx, http.MethodPost, base+"/projects", mustJSON(map[string]any{
 		"name": orDefault(ov, "name", "Proyecto de prueba (trigger)"),
 		"key":  orDefault(ov, "key", uniqueProjectKey(time.Now())),
 	}), nil)

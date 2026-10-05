@@ -523,7 +523,7 @@ func TestUnionTypedFlagSendsTextAndPointsToTheRawBody(t *testing.T) {
 	}
 }
 
-func TestSeriesUpdateSendsAPartialPut(t *testing.T) {
+func TestSeriesUpdateSendsAPartialPatch(t *testing.T) {
 	var got map[string]any
 	var method, path string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -535,13 +535,13 @@ func TestSeriesUpdateSendsAPartialPut(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := runCmd(t, srv.URL, "series", "update", "ser_1", "--skip-scope-check",
+	_, err := runCmd(t, srv.URL, "series", "update", "ser_1", "--company", "acme_co", "--skip-scope-check",
 		"--name", "Tickets 2026", "--counter-reset", "monthly", "--initial-number", "10", "--json")
 	if err != nil {
 		t.Fatalf("execute: %v", err)
 	}
-	if method != http.MethodPut || !strings.HasSuffix(path, "/series/ser_1") {
-		t.Errorf("debe ser PUT /series/ser_1: %s %s", method, path)
+	if method != http.MethodPatch || !strings.HasSuffix(path, "/series/ser_1") {
+		t.Errorf("debe ser PATCH /series/ser_1: %s %s", method, path)
 	}
 	if got["name"] != "Tickets 2026" || got["counter_reset"] != "monthly" {
 		t.Errorf("strings mal mapeados: %v", got)

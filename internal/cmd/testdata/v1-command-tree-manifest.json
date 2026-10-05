@@ -1,10 +1,10 @@
 {
   "$meta": {
-    "source_digest": "811b3091237099073e8b5bbd0aa5c60ae8ff7c97202508c7c3cc2516ce0ad64e",
+    "source_digest": "74d827c4eb105e045a32b151d4079228be730c7a450c341ca62f5222eea997ee",
     "measured_commit": "c98c25d129",
     "generated_by": "desde la raiz del repo (factuarea), con el documento congelado en backend/api.json:  python3 -c 'import json;O=\"backend/docs/api/v1-command-tree-manifest.json\";m=json.load(open(O))[\"$meta\"];d=json.load(open(\"backend/api.json\"));M=[\"get\",\"post\",\"put\",\"patch\",\"delete\"];ops=[{\"operation_id\":o[\"operationId\"],\"method\":x.upper(),\"path\":p,\"path_params\":[q[\"name\"] for q in o.get(\"parameters\",[]) if q.get(\"in\")==\"path\"],\"command\":\" \".join([\"factuarea\"]+[s.replace(\"_\",\"-\") for s in o[\"operationId\"].removeprefix(\"public-api.v1.\").split(\".\")])} for p,it in d[\"paths\"].items() for x in M if it.get(x) for o in [it[x]]];m[\"operations\"]=len(ops);m[\"paths\"]=len(d[\"paths\"]);json.dump({\"$meta\":m,\"operations\":ops},open(O,\"w\"),indent=2,ensure_ascii=False);open(O,\"a\").write(\"\\n\")'  -- el programa RECONSTRUYE operations[] desde backend/api.json y CONSERVA literalmente $meta.source_digest, $meta.measured_commit y $meta.generated_by del fichero existente, asi que regenerarlo es idempotente. source_digest es el sha256 CANONICO del documento (parsear -> ordenar claves recursivamente -> descartar x-codeSamples -> serializar sin espacios -> sha256; `canonicalize` de ../factuarea-node/scripts/spec-sync.mjs), NUNCA el sha256 crudo del fichero, que para el mismo contrato cambia con el sangrado. NO EDITAR A MANO: el gate ../factuarea-cli/internal/cmd/axis_tree_test.go compara este manifiesto contra el arbol de comandos de la CLI y re-deriva cada `command` desde su `operation_id`.",
-    "operations": 508,
-    "paths": 418
+    "operations": 613,
+    "paths": 494
   },
   "operations": [
     {
@@ -104,6 +104,64 @@
       "command": "factuarea account members create"
     },
     {
+      "operation_id": "public-api.v1.account.connect_return_domains.list",
+      "method": "GET",
+      "path": "/accounts/{account}/connected-accounts/return-domains",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account connect-return-domains list"
+    },
+    {
+      "operation_id": "public-api.v1.account.connect_return_domains.create",
+      "method": "POST",
+      "path": "/accounts/{account}/connected-accounts/return-domains",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account connect-return-domains create"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.comments.list",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}/comments",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks comments list"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.comments.create",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/comments",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks comments create"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.external_links.list",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}/external-links",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks external-links list"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.external_links.create",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/external-links",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks external-links create"
+    },
+    {
       "operation_id": "public-api.v1.invoices.annul",
       "method": "POST",
       "path": "/companies/{company}/invoices/{invoice}/annul",
@@ -169,6 +227,36 @@
         "contact"
       ],
       "command": "factuarea contacts archive"
+    },
+    {
+      "operation_id": "public-api.v1.projects.archive",
+      "method": "POST",
+      "path": "/companies/{company}/projects/{project}/archive",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects archive"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_scans.show",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-scans/{purchase_scan}",
+      "path_params": [
+        "company",
+        "purchase_scan"
+      ],
+      "command": "factuarea purchase-scans show"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_scans.archive",
+      "method": "DELETE",
+      "path": "/companies/{company}/purchase-scans/{purchase_scan}",
+      "path_params": [
+        "company",
+        "purchase_scan"
+      ],
+      "command": "factuarea purchase-scans archive"
     },
     {
       "operation_id": "public-api.v1.series.archive",
@@ -243,6 +331,26 @@
       "command": "factuarea work-schedules assign"
     },
     {
+      "operation_id": "public-api.v1.tasks.labels.assign",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/labels",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks labels assign"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.assign",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/assign",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks assign"
+    },
+    {
       "operation_id": "public-api.v1.purchase_invoices.attach_file",
       "method": "POST",
       "path": "/companies/{company}/purchase-invoices/{purchase_invoice}/attach-file",
@@ -278,6 +386,15 @@
         "company"
       ],
       "command": "factuarea contacts bulk-change-contact-role-status"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.bulk_status",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/bulk-status",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tasks bulk-status"
     },
     {
       "operation_id": "public-api.v1.contacts.bulk_create",
@@ -368,6 +485,15 @@
         "company"
       ],
       "command": "factuarea recurring-invoices bulk-delete"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.bulk_delete",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/bulk-delete",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tasks bulk-delete"
     },
     {
       "operation_id": "public-api.v1.delivery_notes.bulk_pdf",
@@ -512,6 +638,15 @@
         "company"
       ],
       "command": "factuarea products bulk-update-stock"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.bulk_update",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/bulk-update",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tasks bulk-update"
     },
     {
       "operation_id": "public-api.v1.taxes.calculate",
@@ -689,6 +824,16 @@
       "command": "factuarea managed-accounts plan update"
     },
     {
+      "operation_id": "public-api.v1.tasks.status",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/status",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks status"
+    },
+    {
       "operation_id": "public-api.v1.invoices.simplified_eligibility",
       "method": "POST",
       "path": "/companies/{company}/invoices/simplified-eligibility",
@@ -790,6 +935,16 @@
         "proforma"
       ],
       "command": "factuarea proformas convert"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_scans.convert",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-scans/{purchase_scan}/convert",
+      "path_params": [
+        "company",
+        "purchase_scan"
+      ],
+      "command": "factuarea purchase-scans convert"
     },
     {
       "operation_id": "public-api.v1.quotes.convert",
@@ -1124,6 +1279,44 @@
       "command": "factuarea proformas create"
     },
     {
+      "operation_id": "public-api.v1.projects.columns.list",
+      "method": "GET",
+      "path": "/companies/{company}/projects/{project}/columns",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects columns list"
+    },
+    {
+      "operation_id": "public-api.v1.projects.columns.create",
+      "method": "POST",
+      "path": "/companies/{company}/projects/{project}/columns",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects columns create"
+    },
+    {
+      "operation_id": "public-api.v1.projects.list",
+      "method": "GET",
+      "path": "/companies/{company}/projects",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea projects list"
+    },
+    {
+      "operation_id": "public-api.v1.projects.create",
+      "method": "POST",
+      "path": "/companies/{company}/projects",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea projects create"
+    },
+    {
       "operation_id": "public-api.v1.purchase_invoices.list",
       "method": "GET",
       "path": "/companies/{company}/purchase-invoices",
@@ -1224,6 +1417,92 @@
         "product"
       ],
       "command": "factuarea products supplier-offers create"
+    },
+    {
+      "operation_id": "public-api.v1.projects.custom_fields.list",
+      "method": "GET",
+      "path": "/companies/{company}/projects/{project}/custom-fields",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects custom-fields list"
+    },
+    {
+      "operation_id": "public-api.v1.projects.custom_fields.create",
+      "method": "POST",
+      "path": "/companies/{company}/projects/{project}/custom-fields",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects custom-fields create"
+    },
+    {
+      "operation_id": "public-api.v1.task_labels.list",
+      "method": "GET",
+      "path": "/companies/{company}/task-labels",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea task-labels list"
+    },
+    {
+      "operation_id": "public-api.v1.task_labels.create",
+      "method": "POST",
+      "path": "/companies/{company}/task-labels",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea task-labels create"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.relations.list",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}/relations",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks relations list"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.relations.create",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/relations",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks relations create"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.upload_links.create",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/upload-links",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks upload-links create"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.search",
+      "method": "GET",
+      "path": "/companies/{company}/tasks",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tasks search"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.create",
+      "method": "POST",
+      "path": "/companies/{company}/tasks",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tasks create"
     },
     {
       "operation_id": "public-api.v1.webhook_endpoints.list",
@@ -1638,6 +1917,58 @@
       "command": "factuarea proformas delete"
     },
     {
+      "operation_id": "public-api.v1.projects.columns.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/projects/{project}/columns/{column}",
+      "path_params": [
+        "company",
+        "project",
+        "column"
+      ],
+      "command": "factuarea projects columns update"
+    },
+    {
+      "operation_id": "public-api.v1.projects.columns.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/projects/{project}/columns/{column}",
+      "path_params": [
+        "company",
+        "project",
+        "column"
+      ],
+      "command": "factuarea projects columns delete"
+    },
+    {
+      "operation_id": "public-api.v1.projects.show",
+      "method": "GET",
+      "path": "/companies/{company}/projects/{project}",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects show"
+    },
+    {
+      "operation_id": "public-api.v1.projects.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/projects/{project}",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects update"
+    },
+    {
+      "operation_id": "public-api.v1.projects.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/projects/{project}",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects delete"
+    },
+    {
       "operation_id": "public-api.v1.purchase_invoices.show",
       "method": "GET",
       "path": "/companies/{company}/purchase-invoices/{purchase_invoice}",
@@ -1770,6 +2101,176 @@
       "command": "factuarea products supplier-offers delete"
     },
     {
+      "operation_id": "public-api.v1.tasks.attachments.show",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}/attachments/{attachment}",
+      "path_params": [
+        "company",
+        "task",
+        "attachment"
+      ],
+      "command": "factuarea tasks attachments show"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.attachments.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/tasks/{task}/attachments/{attachment}",
+      "path_params": [
+        "company",
+        "task",
+        "attachment"
+      ],
+      "command": "factuarea tasks attachments delete"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.comments.update",
+      "method": "PUT",
+      "path": "/companies/{company}/tasks/{task}/comments/{comment}",
+      "path_params": [
+        "company",
+        "task",
+        "comment"
+      ],
+      "command": "factuarea tasks comments update"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.comments.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/tasks/{task}/comments/{comment}",
+      "path_params": [
+        "company",
+        "task",
+        "comment"
+      ],
+      "command": "factuarea tasks comments delete"
+    },
+    {
+      "operation_id": "public-api.v1.projects.custom_fields.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/projects/{project}/custom-fields/{field}",
+      "path_params": [
+        "company",
+        "project",
+        "field"
+      ],
+      "command": "factuarea projects custom-fields update"
+    },
+    {
+      "operation_id": "public-api.v1.projects.custom_fields.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/projects/{project}/custom-fields/{field}",
+      "path_params": [
+        "company",
+        "project",
+        "field"
+      ],
+      "command": "factuarea projects custom-fields delete"
+    },
+    {
+      "operation_id": "public-api.v1.task_labels.show",
+      "method": "GET",
+      "path": "/companies/{company}/task-labels/{label}",
+      "path_params": [
+        "company",
+        "label"
+      ],
+      "command": "factuarea task-labels show"
+    },
+    {
+      "operation_id": "public-api.v1.task_labels.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/task-labels/{label}",
+      "path_params": [
+        "company",
+        "label"
+      ],
+      "command": "factuarea task-labels update"
+    },
+    {
+      "operation_id": "public-api.v1.task_labels.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/task-labels/{label}",
+      "path_params": [
+        "company",
+        "label"
+      ],
+      "command": "factuarea task-labels delete"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.relations.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/tasks/{task}/relations/{relation}",
+      "path_params": [
+        "company",
+        "task",
+        "relation"
+      ],
+      "command": "factuarea tasks relations delete"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.time_entries.show",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}/time-entries/{time_entry}",
+      "path_params": [
+        "company",
+        "task",
+        "time_entry"
+      ],
+      "command": "factuarea tasks time-entries show"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.time_entries.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/tasks/{task}/time-entries/{time_entry}",
+      "path_params": [
+        "company",
+        "task",
+        "time_entry"
+      ],
+      "command": "factuarea tasks time-entries update"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.time_entries.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/tasks/{task}/time-entries/{time_entry}",
+      "path_params": [
+        "company",
+        "task",
+        "time_entry"
+      ],
+      "command": "factuarea tasks time-entries delete"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.show",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks show"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/tasks/{task}",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks update"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/tasks/{task}",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks delete"
+    },
+    {
       "operation_id": "public-api.v1.webhook_endpoints.show",
       "method": "GET",
       "path": "/companies/{company}/webhook-endpoints/{webhook_endpoint}",
@@ -1858,6 +2359,16 @@
         "store"
       ],
       "command": "factuarea stores disconnect"
+    },
+    {
+      "operation_id": "public-api.v1.contacts.imports.errors",
+      "method": "GET",
+      "path": "/companies/{company}/contacts/imports/{id}/errors.csv",
+      "path_params": [
+        "company",
+        "id"
+      ],
+      "command": "factuarea contacts imports errors"
     },
     {
       "operation_id": "public-api.v1.contacts.import_template",
@@ -1967,6 +2478,16 @@
       "command": "factuarea purchase-invoices payment-receipt"
     },
     {
+      "operation_id": "public-api.v1.purchase_scans.source",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-scans/{purchase_scan}/source",
+      "path_params": [
+        "company",
+        "purchase_scan"
+      ],
+      "command": "factuarea purchase-scans source"
+    },
+    {
       "operation_id": "public-api.v1.quotes.pdf",
       "method": "GET",
       "path": "/companies/{company}/quotes/{quote}/pdf",
@@ -1975,6 +2496,17 @@
         "quote"
       ],
       "command": "factuarea quotes pdf"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.attachments.download",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}/attachments/{attachment}/download",
+      "path_params": [
+        "company",
+        "task",
+        "attachment"
+      ],
+      "command": "factuarea tasks attachments download"
     },
     {
       "operation_id": "public-api.v1.tax_reports.download",
@@ -2037,6 +2569,16 @@
       "command": "factuarea quotes duplicate"
     },
     {
+      "operation_id": "public-api.v1.tasks.duplicate",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/duplicate",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks duplicate"
+    },
+    {
       "operation_id": "public-api.v1.managed_accounts.management.end",
       "method": "DELETE",
       "path": "/accounts/{account}/management",
@@ -2053,6 +2595,16 @@
         "company"
       ],
       "command": "factuarea invoices export-excel"
+    },
+    {
+      "operation_id": "public-api.v1.projects.tasks.export",
+      "method": "GET",
+      "path": "/companies/{company}/projects/{project}/tasks/export",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects tasks export"
     },
     {
       "operation_id": "public-api.v1.contacts.find_by_external_id",
@@ -2136,6 +2688,15 @@
       "command": "factuarea proformas find-by-external-id"
     },
     {
+      "operation_id": "public-api.v1.projects.find_by_key",
+      "method": "POST",
+      "path": "/companies/{company}/projects/find-by-key",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea projects find-by-key"
+    },
+    {
       "operation_id": "public-api.v1.purchase_invoices.find_by_external_id",
       "method": "POST",
       "path": "/companies/{company}/purchase-invoices/find-by-external-id",
@@ -2197,6 +2758,15 @@
         "company"
       ],
       "command": "factuarea series find-by-code"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.find_by_key",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/find-by-key",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tasks find-by-key"
     },
     {
       "operation_id": "public-api.v1.tax_reports.find_by_period",
@@ -2320,6 +2890,15 @@
       "command": "factuarea taxes active"
     },
     {
+      "operation_id": "public-api.v1.agenda.list",
+      "method": "GET",
+      "path": "/companies/{company}/agenda",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea agenda list"
+    },
+    {
       "operation_id": "public-api.v1.automations.catalog.show",
       "method": "GET",
       "path": "/companies/{company}/automations/catalog",
@@ -2358,6 +2937,16 @@
       "command": "factuarea contacts activities"
     },
     {
+      "operation_id": "public-api.v1.contacts.imports.show",
+      "method": "GET",
+      "path": "/companies/{company}/contacts/imports/{id}",
+      "path_params": [
+        "company",
+        "id"
+      ],
+      "command": "factuarea contacts imports show"
+    },
+    {
       "operation_id": "public-api.v1.contacts.options",
       "method": "GET",
       "path": "/companies/{company}/contacts/options",
@@ -2386,6 +2975,33 @@
       "command": "factuarea companies creation-status"
     },
     {
+      "operation_id": "public-api.v1.verifactu.representation.show",
+      "method": "GET",
+      "path": "/companies/{company}/verifactu/representation",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu representation show"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.representation.register",
+      "method": "POST",
+      "path": "/companies/{company}/verifactu/representation",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu representation register"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.representation.revoke",
+      "method": "DELETE",
+      "path": "/companies/{company}/verifactu/representation",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu representation revoke"
+    },
+    {
       "operation_id": "public-api.v1.gestoria.workforce_summary",
       "method": "GET",
       "path": "/accounts/{account}/gestoria/workforce-summary",
@@ -2402,6 +3018,15 @@
         "company"
       ],
       "command": "factuarea time-entries current"
+    },
+    {
+      "operation_id": "public-api.v1.users.me",
+      "method": "GET",
+      "path": "/companies/{company}/users/me",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea users me"
     },
     {
       "operation_id": "public-api.v1.verifactu.declaracion.history",
@@ -2697,6 +3322,16 @@
       "command": "factuarea proformas stats"
     },
     {
+      "operation_id": "public-api.v1.projects.time_summary.show",
+      "method": "GET",
+      "path": "/companies/{company}/projects/{project}/time-summary",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects time-summary show"
+    },
+    {
       "operation_id": "public-api.v1.account.provisioning_usage",
       "method": "GET",
       "path": "/accounts/{account}/provisioning-usage",
@@ -2713,6 +3348,15 @@
         "company"
       ],
       "command": "factuarea purchase-invoices stats"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_scans.stats",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-scans/stats",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-scans stats"
     },
     {
       "operation_id": "public-api.v1.quotes.public_link_get",
@@ -2751,6 +3395,15 @@
         "company"
       ],
       "command": "factuarea recurring-invoices stats"
+    },
+    {
+      "operation_id": "public-api.v1.task_timers.current",
+      "method": "GET",
+      "path": "/companies/{company}/task-timers/current",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea task-timers current"
     },
     {
       "operation_id": "public-api.v1.companies.seat_charge_preview",
@@ -2797,6 +3450,16 @@
         "company"
       ],
       "command": "factuarea stripe-autoinvoicing config update"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.activities.list",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}/activities",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks activities list"
     },
     {
       "operation_id": "public-api.v1.tax-catalog.show",
@@ -2962,6 +3625,16 @@
       "command": "factuarea contacts import"
     },
     {
+      "operation_id": "public-api.v1.projects.tasks.import",
+      "method": "POST",
+      "path": "/companies/{company}/projects/{project}/tasks/import",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects tasks import"
+    },
+    {
       "operation_id": "public-api.v1.account.invitations.list",
       "method": "GET",
       "path": "/accounts/{account}/invitations",
@@ -2978,6 +3651,46 @@
         "account"
       ],
       "command": "factuarea account invitations create"
+    },
+    {
+      "operation_id": "public-api.v1.projects.time_invoices.create",
+      "method": "POST",
+      "path": "/companies/{company}/projects/{project}/time-invoices",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects time-invoices create"
+    },
+    {
+      "operation_id": "public-api.v1.invoices.issue",
+      "method": "POST",
+      "path": "/companies/{company}/invoices/{invoice}/issue",
+      "path_params": [
+        "company",
+        "invoice"
+      ],
+      "command": "factuarea invoices issue"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.entity_links.list",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}/entity-links",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks entity-links list"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.entity_links.create",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/entity-links",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks entity-links create"
     },
     {
       "operation_id": "public-api.v1.absence-balances.list",
@@ -3199,6 +3912,15 @@
       "command": "factuarea events list"
     },
     {
+      "operation_id": "public-api.v1.purchase_invoices.expense_categories",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-invoices/expense-categories",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-invoices expense-categories"
+    },
+    {
       "operation_id": "public-api.v1.holidays.list",
       "method": "GET",
       "path": "/companies/{company}/holidays",
@@ -3298,6 +4020,15 @@
       "path": "/accounts",
       "path_params": [],
       "command": "factuarea managed-accounts create"
+    },
+    {
+      "operation_id": "public-api.v1.notifications.list",
+      "method": "GET",
+      "path": "/companies/{company}/notifications",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea notifications list"
     },
     {
       "operation_id": "public-api.v1.purchase_invoices.overdue",
@@ -3429,6 +4160,15 @@
       "command": "factuarea purchase-invoices register-payment"
     },
     {
+      "operation_id": "public-api.v1.purchase_scan_emails.list",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-scan-emails",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-scan-emails list"
+    },
+    {
       "operation_id": "public-api.v1.invoices.quarterly.available",
       "method": "GET",
       "path": "/companies/{company}/invoices/quarterly/available-quarters",
@@ -3493,6 +4233,55 @@
         "company"
       ],
       "command": "factuarea stripe-autoinvoicing payments list"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.attachments.list",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}/attachments",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks attachments list"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.attachments.create",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/attachments",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks attachments create"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.time_entries.list",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/{task}/time-entries",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks time-entries list"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.time_entries.create",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/time-entries",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks time-entries create"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.linked",
+      "method": "GET",
+      "path": "/companies/{company}/tasks/linked",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea tasks linked"
     },
     {
       "operation_id": "public-api.v1.tax_reports.history",
@@ -3568,6 +4357,15 @@
       "command": "factuarea webhook-endpoints deliveries list"
     },
     {
+      "operation_id": "public-api.v1.notifications.mark_all_read",
+      "method": "POST",
+      "path": "/companies/{company}/notifications/mark-all-read",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea notifications mark-all-read"
+    },
+    {
       "operation_id": "public-api.v1.delivery_notes.mark_delivered",
       "method": "POST",
       "path": "/companies/{company}/delivery-notes/{delivery_note}/mark-delivered",
@@ -3598,6 +4396,16 @@
       "command": "factuarea invoices mark-sent"
     },
     {
+      "operation_id": "public-api.v1.notifications.read",
+      "method": "POST",
+      "path": "/companies/{company}/notifications/{notification}/read",
+      "path_params": [
+        "company",
+        "notification"
+      ],
+      "command": "factuarea notifications read"
+    },
+    {
       "operation_id": "public-api.v1.purchase_invoices.mark_paid",
       "method": "POST",
       "path": "/companies/{company}/purchase-invoices/{purchase_invoice}/mark-paid",
@@ -3626,6 +4434,36 @@
         "series"
       ],
       "command": "factuarea series show"
+    },
+    {
+      "operation_id": "public-api.v1.series.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/series/{series}",
+      "path_params": [
+        "company",
+        "series"
+      ],
+      "command": "factuarea series update"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.reposition",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/reposition",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks reposition"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.move",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/move",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks move"
     },
     {
       "operation_id": "public-api.v1.automations.rules.pause",
@@ -3740,6 +4578,16 @@
         "recurring_invoice"
       ],
       "command": "factuarea recurring-invoices preview"
+    },
+    {
+      "operation_id": "public-api.v1.projects.time_invoices.preview",
+      "method": "POST",
+      "path": "/companies/{company}/projects/{project}/time-invoices/preview",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects time-invoices preview"
     },
     {
       "operation_id": "public-api.v1.tax_reports.preview",
@@ -3859,6 +4707,27 @@
       "command": "factuarea time-corrections reject"
     },
     {
+      "operation_id": "public-api.v1.account.connect_return_domains.delete",
+      "method": "DELETE",
+      "path": "/accounts/{account}/connected-accounts/return-domains/{return_domain}",
+      "path_params": [
+        "account",
+        "return_domain"
+      ],
+      "command": "factuarea account connect-return-domains delete"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.external_links.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/tasks/{task}/external-links/{link}",
+      "path_params": [
+        "company",
+        "task",
+        "link"
+      ],
+      "command": "factuarea tasks external-links delete"
+    },
+    {
       "operation_id": "public-api.v1.monthly_time_record_closes.reopen",
       "method": "POST",
       "path": "/companies/{company}/monthly-time-record-closes/{monthly_time_record_close}/reopen",
@@ -3867,6 +4736,16 @@
         "monthly_time_record_close"
       ],
       "command": "factuarea monthly-time-record-closes reopen"
+    },
+    {
+      "operation_id": "public-api.v1.projects.columns.reorder",
+      "method": "PUT",
+      "path": "/companies/{company}/projects/{project}/columns/reorder",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects columns reorder"
     },
     {
       "operation_id": "public-api.v1.automations.runs.replay",
@@ -3978,6 +4857,16 @@
       "command": "factuarea price-lists resolve-many"
     },
     {
+      "operation_id": "public-api.v1.purchase_scans.duplicate_resolution",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-scans/{purchase_scan}/duplicate-resolution",
+      "path_params": [
+        "company",
+        "purchase_scan"
+      ],
+      "command": "factuarea purchase-scans duplicate-resolution"
+    },
+    {
       "operation_id": "public-api.v1.contacts.restore",
       "method": "POST",
       "path": "/companies/{company}/contacts/{contact}/restore",
@@ -3986,6 +4875,16 @@
         "contact"
       ],
       "command": "factuarea contacts restore"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_scans.restore",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-scans/{purchase_scan}/restore",
+      "path_params": [
+        "company",
+        "purchase_scan"
+      ],
+      "command": "factuarea purchase-scans restore"
     },
     {
       "operation_id": "public-api.v1.recurring_invoices.resume",
@@ -4016,6 +4915,25 @@
         "delivery"
       ],
       "command": "factuarea account webhooks deliveries retry"
+    },
+    {
+      "operation_id": "public-api.v1.verifactu.records.retry_blocked",
+      "method": "POST",
+      "path": "/companies/{company}/verifactu/records/retry-blocked",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea verifactu records retry-blocked"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_scans.retry",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-scans/{purchase_scan}/retry",
+      "path_params": [
+        "company",
+        "purchase_scan"
+      ],
+      "command": "factuarea purchase-scans retry"
     },
     {
       "operation_id": "public-api.v1.verifactu.events.retry",
@@ -4142,6 +5060,16 @@
       "command": "factuarea webhook-endpoints rotate-secret"
     },
     {
+      "operation_id": "public-api.v1.purchase_scans.review",
+      "method": "PATCH",
+      "path": "/companies/{company}/purchase-scans/{purchase_scan}/review",
+      "path_params": [
+        "company",
+        "purchase_scan"
+      ],
+      "command": "factuarea purchase-scans review"
+    },
+    {
       "operation_id": "public-api.v1.invoices.schedule",
       "method": "POST",
       "path": "/companies/{company}/invoices/{invoice}/schedule",
@@ -4188,6 +5116,33 @@
         "company"
       ],
       "command": "factuarea products search"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_scans.list",
+      "method": "GET",
+      "path": "/companies/{company}/purchase-scans",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-scans list"
+    },
+    {
+      "operation_id": "public-api.v1.purchase_scans.create",
+      "method": "POST",
+      "path": "/companies/{company}/purchase-scans",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea purchase-scans create"
+    },
+    {
+      "operation_id": "public-api.v1.users.list",
+      "method": "GET",
+      "path": "/companies/{company}/users",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea users list"
     },
     {
       "operation_id": "public-api.v1.account.webhooks.test",
@@ -4269,6 +5224,17 @@
         "offer"
       ],
       "command": "factuarea products supplier-offers preferred"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.custom_fields.set",
+      "method": "PUT",
+      "path": "/companies/{company}/tasks/{task}/custom-fields/{field}",
+      "path_params": [
+        "company",
+        "task",
+        "field"
+      ],
+      "command": "factuarea tasks custom-fields set"
     },
     {
       "operation_id": "public-api.v1.absence-balances.show",
@@ -4583,6 +5549,34 @@
       "command": "factuarea recurring-invoices skip"
     },
     {
+      "operation_id": "public-api.v1.stripe_autoinvoicing.authorizations.create",
+      "method": "POST",
+      "path": "/companies/{company}/connected-accounts/authorizations",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea stripe-autoinvoicing authorizations create"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.timer.start",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/timer/start",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks timer start"
+    },
+    {
+      "operation_id": "public-api.v1.task_timers.stop",
+      "method": "POST",
+      "path": "/companies/{company}/task-timers/stop",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea task-timers stop"
+    },
+    {
       "operation_id": "public-api.v1.verifactu.records.subsanar",
       "method": "POST",
       "path": "/companies/{company}/verifactu/records/{record}/subsanar",
@@ -4670,6 +5664,16 @@
       "command": "factuarea absence-types unarchive"
     },
     {
+      "operation_id": "public-api.v1.projects.unarchive",
+      "method": "POST",
+      "path": "/companies/{company}/projects/{project}/unarchive",
+      "path_params": [
+        "company",
+        "project"
+      ],
+      "command": "factuarea projects unarchive"
+    },
+    {
       "operation_id": "public-api.v1.series.unarchive",
       "method": "POST",
       "path": "/companies/{company}/series/{series}/unarchive",
@@ -4708,6 +5712,38 @@
         "schedule"
       ],
       "command": "factuarea work-schedules unassign"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.labels.unassign",
+      "method": "DELETE",
+      "path": "/companies/{company}/tasks/{task}/labels/{label}",
+      "path_params": [
+        "company",
+        "task",
+        "label"
+      ],
+      "command": "factuarea tasks labels unassign"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.unassign",
+      "method": "POST",
+      "path": "/companies/{company}/tasks/{task}/unassign",
+      "path_params": [
+        "company",
+        "task"
+      ],
+      "command": "factuarea tasks unassign"
+    },
+    {
+      "operation_id": "public-api.v1.tasks.entity_links.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/tasks/{task}/entity-links/{link}",
+      "path_params": [
+        "company",
+        "task",
+        "link"
+      ],
+      "command": "factuarea tasks entity-links delete"
     },
     {
       "operation_id": "public-api.v1.invoices.unschedule",
