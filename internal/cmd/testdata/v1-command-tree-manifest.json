@@ -1,20 +1,20 @@
 {
   "$meta": {
-    "source_digest": "e34a48dd5dd7f3cfc6a878ac06cb7f86f93c207641962fd72b98426f588fcf71",
-    "measured_commit": "8b7a0ea1c3",
+    "source_digest": "811b3091237099073e8b5bbd0aa5c60ae8ff7c97202508c7c3cc2516ce0ad64e",
+    "measured_commit": "c98c25d129",
     "generated_by": "desde la raiz del repo (factuarea), con el documento congelado en backend/api.json:  python3 -c 'import json;O=\"backend/docs/api/v1-command-tree-manifest.json\";m=json.load(open(O))[\"$meta\"];d=json.load(open(\"backend/api.json\"));M=[\"get\",\"post\",\"put\",\"patch\",\"delete\"];ops=[{\"operation_id\":o[\"operationId\"],\"method\":x.upper(),\"path\":p,\"path_params\":[q[\"name\"] for q in o.get(\"parameters\",[]) if q.get(\"in\")==\"path\"],\"command\":\" \".join([\"factuarea\"]+[s.replace(\"_\",\"-\") for s in o[\"operationId\"].removeprefix(\"public-api.v1.\").split(\".\")])} for p,it in d[\"paths\"].items() for x in M if it.get(x) for o in [it[x]]];m[\"operations\"]=len(ops);m[\"paths\"]=len(d[\"paths\"]);json.dump({\"$meta\":m,\"operations\":ops},open(O,\"w\"),indent=2,ensure_ascii=False);open(O,\"a\").write(\"\\n\")'  -- el programa RECONSTRUYE operations[] desde backend/api.json y CONSERVA literalmente $meta.source_digest, $meta.measured_commit y $meta.generated_by del fichero existente, asi que regenerarlo es idempotente. source_digest es el sha256 CANONICO del documento (parsear -> ordenar claves recursivamente -> descartar x-codeSamples -> serializar sin espacios -> sha256; `canonicalize` de ../factuarea-node/scripts/spec-sync.mjs), NUNCA el sha256 crudo del fichero, que para el mismo contrato cambia con el sangrado. NO EDITAR A MANO: el gate ../factuarea-cli/internal/cmd/axis_tree_test.go compara este manifiesto contra el arbol de comandos de la CLI y re-deriva cada `command` desde su `operation_id`.",
-    "operations": 481,
-    "paths": 396
+    "operations": 508,
+    "paths": 418
   },
   "operations": [
     {
-      "operation_id": "public-api.v1.account.claim_tokens.accept",
+      "operation_id": "public-api.v1.account.nif_transfers.accept",
       "method": "POST",
-      "path": "/accounts/{account}/claim-tokens/accept",
+      "path": "/accounts/{account}/nif-transfers/accept",
       "path_params": [
         "account"
       ],
-      "command": "factuarea account claim-tokens accept"
+      "command": "factuarea account nif-transfers accept"
     },
     {
       "operation_id": "public-api.v1.proformas.accept",
@@ -112,6 +112,13 @@
         "invoice"
       ],
       "command": "factuarea invoices annul"
+    },
+    {
+      "operation_id": "public-api.v1.managed_accounts.imports.create",
+      "method": "POST",
+      "path": "/accounts/imports",
+      "path_params": [],
+      "command": "factuarea managed-accounts imports create"
     },
     {
       "operation_id": "public-api.v1.absence-requests.approve",
@@ -545,6 +552,16 @@
       "command": "factuarea absence-requests cancel"
     },
     {
+      "operation_id": "public-api.v1.account.invitations.show",
+      "method": "GET",
+      "path": "/accounts/{account}/invitations/{invitation}",
+      "path_params": [
+        "account",
+        "invitation"
+      ],
+      "command": "factuarea account invitations show"
+    },
+    {
       "operation_id": "public-api.v1.account.invitations.cancel",
       "method": "DELETE",
       "path": "/accounts/{account}/invitations/{invitation}",
@@ -604,6 +621,16 @@
       "command": "factuarea recurring-invoices cancel"
     },
     {
+      "operation_id": "public-api.v1.account.members.show",
+      "method": "GET",
+      "path": "/accounts/{account}/members/{member}",
+      "path_params": [
+        "account",
+        "member"
+      ],
+      "command": "factuarea account members show"
+    },
+    {
       "operation_id": "public-api.v1.account.members.update",
       "method": "PATCH",
       "path": "/accounts/{account}/members/{member}",
@@ -642,6 +669,24 @@
         "account"
       ],
       "command": "factuarea employee-seats change-quantity"
+    },
+    {
+      "operation_id": "public-api.v1.managed_accounts.access_level.update",
+      "method": "PATCH",
+      "path": "/accounts/{account}/access-level",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea managed-accounts access-level update"
+    },
+    {
+      "operation_id": "public-api.v1.managed_accounts.plan.update",
+      "method": "PATCH",
+      "path": "/accounts/{account}/plan",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea managed-accounts plan update"
     },
     {
       "operation_id": "public-api.v1.invoices.simplified_eligibility",
@@ -811,22 +856,22 @@
       "command": "factuarea absence-types create"
     },
     {
-      "operation_id": "public-api.v1.account.claim_tokens.list",
+      "operation_id": "public-api.v1.account.webhooks.list",
       "method": "GET",
-      "path": "/accounts/{account}/claim-tokens",
+      "path": "/accounts/{account}/webhooks",
       "path_params": [
         "account"
       ],
-      "command": "factuarea account claim-tokens list"
+      "command": "factuarea account webhooks list"
     },
     {
-      "operation_id": "public-api.v1.account.claim_tokens.create",
+      "operation_id": "public-api.v1.account.webhooks.create",
       "method": "POST",
-      "path": "/accounts/{account}/claim-tokens",
+      "path": "/accounts/{account}/webhooks",
       "path_params": [
         "account"
       ],
-      "command": "factuarea account claim-tokens create"
+      "command": "factuarea account webhooks create"
     },
     {
       "operation_id": "public-api.v1.account.api_keys.list",
@@ -965,6 +1010,24 @@
         "invoice"
       ],
       "command": "factuarea invoices verifactu-create"
+    },
+    {
+      "operation_id": "public-api.v1.account.nif_transfers.list",
+      "method": "GET",
+      "path": "/accounts/{account}/nif-transfers",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account nif-transfers list"
+    },
+    {
+      "operation_id": "public-api.v1.account.nif_transfers.create",
+      "method": "POST",
+      "path": "/accounts/{account}/nif-transfers",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account nif-transfers create"
     },
     {
       "operation_id": "public-api.v1.price-lists.list",
@@ -1163,24 +1226,6 @@
       "command": "factuarea products supplier-offers create"
     },
     {
-      "operation_id": "public-api.v1.taxes.list",
-      "method": "GET",
-      "path": "/companies/{company}/taxes",
-      "path_params": [
-        "company"
-      ],
-      "command": "factuarea taxes list"
-    },
-    {
-      "operation_id": "public-api.v1.taxes.create",
-      "method": "POST",
-      "path": "/companies/{company}/taxes",
-      "path_params": [
-        "company"
-      ],
-      "command": "factuarea taxes create"
-    },
-    {
       "operation_id": "public-api.v1.webhook_endpoints.list",
       "method": "GET",
       "path": "/companies/{company}/webhook-endpoints",
@@ -1235,6 +1280,36 @@
         "employee"
       ],
       "command": "factuarea employees deactivate"
+    },
+    {
+      "operation_id": "public-api.v1.account.webhooks.show",
+      "method": "GET",
+      "path": "/accounts/{account}/webhooks/{webhook}",
+      "path_params": [
+        "account",
+        "webhook"
+      ],
+      "command": "factuarea account webhooks show"
+    },
+    {
+      "operation_id": "public-api.v1.account.webhooks.update",
+      "method": "PATCH",
+      "path": "/accounts/{account}/webhooks/{webhook}",
+      "path_params": [
+        "account",
+        "webhook"
+      ],
+      "command": "factuarea account webhooks update"
+    },
+    {
+      "operation_id": "public-api.v1.account.webhooks.delete",
+      "method": "DELETE",
+      "path": "/accounts/{account}/webhooks/{webhook}",
+      "path_params": [
+        "account",
+        "webhook"
+      ],
+      "command": "factuarea account webhooks delete"
     },
     {
       "operation_id": "public-api.v1.automations.rules.show",
@@ -1654,7 +1729,7 @@
     },
     {
       "operation_id": "public-api.v1.recurring_invoices.update",
-      "method": "PUT",
+      "method": "PATCH",
       "path": "/companies/{company}/recurring-invoices/{recurring_invoice}",
       "path_params": [
         "company",
@@ -1693,36 +1768,6 @@
         "offer"
       ],
       "command": "factuarea products supplier-offers delete"
-    },
-    {
-      "operation_id": "public-api.v1.taxes.show",
-      "method": "GET",
-      "path": "/companies/{company}/taxes/{tax}",
-      "path_params": [
-        "company",
-        "tax"
-      ],
-      "command": "factuarea taxes show"
-    },
-    {
-      "operation_id": "public-api.v1.taxes.update",
-      "method": "PATCH",
-      "path": "/companies/{company}/taxes/{tax}",
-      "path_params": [
-        "company",
-        "tax"
-      ],
-      "command": "factuarea taxes update"
-    },
-    {
-      "operation_id": "public-api.v1.taxes.delete",
-      "method": "DELETE",
-      "path": "/companies/{company}/taxes/{tax}",
-      "path_params": [
-        "company",
-        "tax"
-      ],
-      "command": "factuarea taxes delete"
     },
     {
       "operation_id": "public-api.v1.webhook_endpoints.show",
@@ -1864,6 +1909,13 @@
       "command": "factuarea invoices pdf"
     },
     {
+      "operation_id": "public-api.v1.managed_accounts.imports.template",
+      "method": "GET",
+      "path": "/accounts/imports/template",
+      "path_params": [],
+      "command": "factuarea managed-accounts imports template"
+    },
+    {
       "operation_id": "public-api.v1.monthly_time_record_closes.payroll_export",
       "method": "GET",
       "path": "/companies/{company}/monthly-time-record-closes/{monthly_time_record_close}/payroll-export",
@@ -1983,6 +2035,15 @@
         "quote"
       ],
       "command": "factuarea quotes duplicate"
+    },
+    {
+      "operation_id": "public-api.v1.managed_accounts.management.end",
+      "method": "DELETE",
+      "path": "/accounts/{account}/management",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea managed-accounts management end"
     },
     {
       "operation_id": "public-api.v1.invoices.export_excel",
@@ -2221,6 +2282,15 @@
         "member"
       ],
       "command": "factuarea account members module-access update"
+    },
+    {
+      "operation_id": "public-api.v1.companies.stats",
+      "method": "GET",
+      "path": "/accounts/{account}/companies/stats",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea companies stats"
     },
     {
       "operation_id": "public-api.v1.account.usage",
@@ -2627,6 +2697,15 @@
       "command": "factuarea proformas stats"
     },
     {
+      "operation_id": "public-api.v1.account.provisioning_usage",
+      "method": "GET",
+      "path": "/accounts/{account}/provisioning-usage",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account provisioning-usage"
+    },
+    {
       "operation_id": "public-api.v1.purchase_invoices.stats",
       "method": "GET",
       "path": "/companies/{company}/purchase-invoices/stats",
@@ -2920,6 +2999,25 @@
       "command": "factuarea absence-policies assignments"
     },
     {
+      "operation_id": "public-api.v1.account.request_logs.list",
+      "method": "GET",
+      "path": "/accounts/{account}/request-logs",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea account request-logs list"
+    },
+    {
+      "operation_id": "public-api.v1.account.members.grants.list",
+      "method": "GET",
+      "path": "/accounts/{account}/members/{member}/grants",
+      "path_params": [
+        "account",
+        "member"
+      ],
+      "command": "factuarea account members grants list"
+    },
+    {
       "operation_id": "public-api.v1.account.personalization.templates",
       "method": "GET",
       "path": "/companies/{company}/personalization/templates",
@@ -2927,6 +3025,16 @@
         "company"
       ],
       "command": "factuarea account personalization templates"
+    },
+    {
+      "operation_id": "public-api.v1.account.webhooks.deliveries.list",
+      "method": "GET",
+      "path": "/accounts/{account}/webhooks/{webhook}/deliveries",
+      "path_params": [
+        "account",
+        "webhook"
+      ],
+      "command": "factuarea account webhooks deliveries list"
     },
     {
       "operation_id": "public-api.v1.series.active",
@@ -3178,6 +3286,20 @@
       "command": "factuarea invoices statuses"
     },
     {
+      "operation_id": "public-api.v1.managed_accounts.list",
+      "method": "GET",
+      "path": "/accounts",
+      "path_params": [],
+      "command": "factuarea managed-accounts list"
+    },
+    {
+      "operation_id": "public-api.v1.managed_accounts.create",
+      "method": "POST",
+      "path": "/accounts",
+      "path_params": [],
+      "command": "factuarea managed-accounts create"
+    },
+    {
       "operation_id": "public-api.v1.purchase_invoices.overdue",
       "method": "GET",
       "path": "/companies/{company}/purchase-invoices/overdue",
@@ -3382,6 +3504,15 @@
       "command": "factuarea tax-reports history"
     },
     {
+      "operation_id": "public-api.v1.taxes.list",
+      "method": "GET",
+      "path": "/companies/{company}/taxes",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea taxes list"
+    },
+    {
       "operation_id": "public-api.v1.time_corrections.list",
       "method": "GET",
       "path": "/companies/{company}/time-corrections",
@@ -3575,6 +3706,22 @@
       "command": "factuarea invoices reminder-preview"
     },
     {
+      "operation_id": "public-api.v1.managed_accounts.imports.preview",
+      "method": "POST",
+      "path": "/accounts/imports/preview",
+      "path_params": [],
+      "command": "factuarea managed-accounts imports preview"
+    },
+    {
+      "operation_id": "public-api.v1.managed_accounts.plan.preview",
+      "method": "GET",
+      "path": "/accounts/{account}/plan/preview",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea managed-accounts plan preview"
+    },
+    {
       "operation_id": "public-api.v1.invoices.payment_receipt",
       "method": "GET",
       "path": "/companies/{company}/invoices/{invoice}/payment-receipt",
@@ -3661,6 +3808,15 @@
         "company"
       ],
       "command": "factuarea time-entries manual"
+    },
+    {
+      "operation_id": "public-api.v1.managed_accounts.claim_tokens.create",
+      "method": "POST",
+      "path": "/accounts/{account}/claim-tokens",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea managed-accounts claim-tokens create"
     },
     {
       "operation_id": "public-api.v1.absence-requests.reject",
@@ -3823,7 +3979,7 @@
     },
     {
       "operation_id": "public-api.v1.contacts.restore",
-      "method": "PATCH",
+      "method": "POST",
       "path": "/companies/{company}/contacts/{contact}/restore",
       "path_params": [
         "company",
@@ -3849,6 +4005,17 @@
         "company"
       ],
       "command": "factuarea time-entries resume"
+    },
+    {
+      "operation_id": "public-api.v1.account.webhooks.deliveries.retry",
+      "method": "POST",
+      "path": "/accounts/{account}/webhooks/{webhook}/deliveries/{delivery}/retry",
+      "path_params": [
+        "account",
+        "webhook",
+        "delivery"
+      ],
+      "command": "factuarea account webhooks deliveries retry"
     },
     {
       "operation_id": "public-api.v1.verifactu.events.retry",
@@ -3882,6 +4049,39 @@
       "command": "factuarea invoices payments-revert"
     },
     {
+      "operation_id": "public-api.v1.account.members.grants.show",
+      "method": "GET",
+      "path": "/accounts/{account}/members/{member}/grants/{company}",
+      "path_params": [
+        "account",
+        "member",
+        "company"
+      ],
+      "command": "factuarea account members grants show"
+    },
+    {
+      "operation_id": "public-api.v1.account.members.grants.update",
+      "method": "PUT",
+      "path": "/accounts/{account}/members/{member}/grants/{company}",
+      "path_params": [
+        "account",
+        "member",
+        "company"
+      ],
+      "command": "factuarea account members grants update"
+    },
+    {
+      "operation_id": "public-api.v1.account.members.grants.delete",
+      "method": "DELETE",
+      "path": "/accounts/{account}/members/{member}/grants/{company}",
+      "path_params": [
+        "account",
+        "member",
+        "company"
+      ],
+      "command": "factuarea account members grants delete"
+    },
+    {
       "operation_id": "public-api.v1.account.api_keys.revoke",
       "method": "POST",
       "path": "/accounts/{account}/api-keys/{api_key}/revoke",
@@ -3900,6 +4100,26 @@
         "certificate"
       ],
       "command": "factuarea verifactu certificates revoke"
+    },
+    {
+      "operation_id": "public-api.v1.account.nif_transfers.revoke",
+      "method": "POST",
+      "path": "/accounts/{account}/nif-transfers/{nif_transfer}/revoke",
+      "path_params": [
+        "account",
+        "nif_transfer"
+      ],
+      "command": "factuarea account nif-transfers revoke"
+    },
+    {
+      "operation_id": "public-api.v1.account.webhooks.rotate_secret",
+      "method": "POST",
+      "path": "/accounts/{account}/webhooks/{webhook}/secret",
+      "path_params": [
+        "account",
+        "webhook"
+      ],
+      "command": "factuarea account webhooks rotate-secret"
     },
     {
       "operation_id": "public-api.v1.account.api_keys.rotate_secret",
@@ -3968,6 +4188,16 @@
         "company"
       ],
       "command": "factuarea products search"
+    },
+    {
+      "operation_id": "public-api.v1.account.webhooks.test",
+      "method": "POST",
+      "path": "/accounts/{account}/webhooks/{webhook}/test",
+      "path_params": [
+        "account",
+        "webhook"
+      ],
+      "command": "factuarea account webhooks test"
     },
     {
       "operation_id": "public-api.v1.delivery_notes.send",
@@ -4041,27 +4271,6 @@
       "command": "factuarea products supplier-offers preferred"
     },
     {
-      "operation_id": "public-api.v1.taxes.set_default",
-      "method": "POST",
-      "path": "/companies/{company}/taxes/{tax}/set-default",
-      "path_params": [
-        "company",
-        "tax"
-      ],
-      "command": "factuarea taxes set-default"
-    },
-    {
-      "operation_id": "public-api.v1.taxes.set_default_for_document",
-      "method": "PATCH",
-      "path": "/companies/{company}/taxes/{tax}/set-default/{docType}",
-      "path_params": [
-        "company",
-        "tax",
-        "docType"
-      ],
-      "command": "factuarea taxes set-default-for-document"
-    },
-    {
       "operation_id": "public-api.v1.absence-balances.show",
       "method": "GET",
       "path": "/companies/{company}/absence-balances/{absence_balance}",
@@ -4120,6 +4329,27 @@
         "absence_type"
       ],
       "command": "factuarea absence-types update"
+    },
+    {
+      "operation_id": "public-api.v1.account.request_logs.show",
+      "method": "GET",
+      "path": "/accounts/{account}/request-logs/{request_id}",
+      "path_params": [
+        "account",
+        "request_id"
+      ],
+      "command": "factuarea account request-logs show"
+    },
+    {
+      "operation_id": "public-api.v1.account.webhooks.deliveries.show",
+      "method": "GET",
+      "path": "/accounts/{account}/webhooks/{webhook}/deliveries/{delivery}",
+      "path_params": [
+        "account",
+        "webhook",
+        "delivery"
+      ],
+      "command": "factuarea account webhooks deliveries show"
     },
     {
       "operation_id": "public-api.v1.verifactu.aeat_access.show",
@@ -4233,6 +4463,15 @@
       "command": "factuarea integrations events show"
     },
     {
+      "operation_id": "public-api.v1.managed_accounts.show",
+      "method": "GET",
+      "path": "/accounts/{account}",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea managed-accounts show"
+    },
+    {
       "operation_id": "public-api.v1.monthly_time_record_closes.show",
       "method": "GET",
       "path": "/companies/{company}/monthly-time-record-closes/{monthly_time_record_close}",
@@ -4241,6 +4480,16 @@
         "monthly_time_record_close"
       ],
       "command": "factuarea monthly-time-record-closes show"
+    },
+    {
+      "operation_id": "public-api.v1.taxes.show",
+      "method": "GET",
+      "path": "/companies/{company}/taxes/{tax}",
+      "path_params": [
+        "company",
+        "tax"
+      ],
+      "command": "factuarea taxes show"
     },
     {
       "operation_id": "public-api.v1.time_corrections.show",
@@ -4392,16 +4641,6 @@
       "command": "factuarea products toggle-active"
     },
     {
-      "operation_id": "public-api.v1.taxes.toggle",
-      "method": "POST",
-      "path": "/companies/{company}/taxes/{tax}/toggle",
-      "path_params": [
-        "company",
-        "tax"
-      ],
-      "command": "factuarea taxes toggle"
-    },
-    {
       "operation_id": "public-api.v1.account.owner.transfer",
       "method": "PATCH",
       "path": "/accounts/{account}/owner",
@@ -4498,6 +4737,16 @@
         "company"
       ],
       "command": "factuarea account personalization update"
+    },
+    {
+      "operation_id": "public-api.v1.account.api_keys.update_nif_scope",
+      "method": "PATCH",
+      "path": "/accounts/{account}/api-keys/{api_key}/nif-scope",
+      "path_params": [
+        "account",
+        "api_key"
+      ],
+      "command": "factuarea account api-keys update-nif-scope"
     },
     {
       "operation_id": "public-api.v1.contacts.update_bank_accounts",

@@ -23,14 +23,15 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	var dryRun, skeleton bool
 	fileFlags := map[string]*string{}
 
-	// `companyFillIndex` —no `companyPathParamIndex`— es lo que manda aquí.
-	companyIdx := op.companyFillIndex()
+	// `axisFillIndex` —no el índice del path— es lo que manda aquí: cubre el eje
+	// de empresa y el de cuenta, que un comando nunca tiene a la vez.
+	axisIdx := op.axisFillIndex()
 	use := op.Action
 	for i, p := range op.PathParams {
-		// El eje de empresa se declara OPCIONAL en el uso porque la flag
-		// persistente `--company` puede aportarlo; el resto sigue siendo
-		// obligatorio exactamente como antes.
-		if i == companyIdx {
+		// El eje (de empresa o de cuenta) se declara OPCIONAL en el uso porque la
+		// flag persistente `--company` o `--account` puede aportarlo; el resto
+		// sigue siendo obligatorio exactamente como antes.
+		if i == axisIdx {
 			use += " [" + p.Name + "]"
 			continue
 		}
@@ -55,14 +56,22 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	// se desambigua por la FORMA del argumento. Hoy el universo es vacío:
 	// `singlePositionalField` exige cero parámetros de ruta.
 	minArgs, maxArgs := nPath, nPath
-	if companyIdx >= 0 {
+	if axisIdx >= 0 {
 		minArgs--
-		long += "\n\nPuedes fijar la empresa con la flag persistente --company en vez de" +
-			" pasarla como argumento posicional. Aportarla por las dos vías a la vez es un error de uso." +
-			"\n\nForma canónica:  factuarea " + strings.Join(op.Groups, " ") + " " + use +
-			"\nForma corta:     factuarea " + strings.Join(op.Groups, " ") + " " + shortUsage(op, use, companyIdx) +
-			" --company <" + op.PathParams[companyIdx].Name + ">" +
-			"\nSi tu credencial alcanza una sola empresa, ni siquiera hace falta --company: se resuelve sola."
+		if op.accountFillIndex() >= 0 {
+			long += accountAxisHelp(op, use, axisIdx)
+		} else {
+			long += "\n\nPuedes fijar la empresa con la flag persistente --company en vez de" +
+				" pasarla como argumento posicional. Aportarla por las dos vías a la vez es un error de uso." +
+				"\n\nForma canónica:  factuarea " + strings.Join(op.Groups, " ") + " " + use +
+				"\nForma corta:     factuarea " + strings.Join(op.Groups, " ") + " " + shortUsage(op, use, axisIdx) +
+				" --company <" + op.PathParams[axisIdx].Name + ">" +
+				"\nSi tu credencial alcanza una sola empresa, ni siquiera hace falta --company: se resuelve sola."
+		}
+	}
+	if op.requiresExplicitAccount() {
+		long += "\n\nEsta operación es irreversible y nombra la cuenta como último argumento (en una transferencia de NIF es la cuenta que cede o recibe el NIF, no solo la que opera): la cuenta se escribe siempre como" +
+			" argumento posicional <" + accountPathParam + ">. La flag persistente --account no la rellena a propósito."
 	}
 	if hasPosField {
 		maxArgs++
@@ -73,14 +82,18 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	if maxArgs != minArgs {
 		argsRule = cobra.RangeArgs(minArgs, maxArgs)
 	}
-	if op.requiresExplicitCompany() {
+	if op.requiresExplicitCompany() || op.requiresExplicitAccount() {
 		// La aridad exacta ya obliga a escribir el eje; lo que falta es DECIR por
 		// qué, porque el usuario que viene de otra operación del eje espera que
-		// `--company` se lo rellene.
+		// `--company` o `--account` se lo rellene.
 		base := argsRule
+		explicitErr := op.explicitCompanyError
+		if op.requiresExplicitAccount() {
+			explicitErr = op.explicitAccountError
+		}
 		argsRule = func(cmd *cobra.Command, args []string) error {
 			if len(args) < nPath {
-				return op.explicitCompanyError()
+				return explicitErr()
 			}
 			return base(cmd, args)
 		}
@@ -101,11 +114,11 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				extra = op.extraPositionals(args)
 			} else {
 				// La lista de argumentos se NORMALIZA antes de que nadie la lea.
-				company, err := op.resolveCompanyForArgs(cmd.Context(), globalsFrom(cmd), args)
+				axis, err := op.resolveAxisForArgs(cmd.Context(), globalsFrom(cmd), args)
 				if err != nil {
 					return err
 				}
-				if _, extra, err = op.splitPositionals(args, company); err != nil {
+				if _, extra, err = op.splitAxisPositionals(args, axis); err != nil {
 					return err
 				}
 			}
@@ -154,11 +167,11 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			// vuelve, así que no hay path que componer ni empresa que resolver.
 			var pathValues []string
 			if !(dryRun && op.typedBody()) {
-				company, err := op.resolveCompanyForArgs(cmd.Context(), g, args)
+				axis, err := op.resolveAxisForArgs(cmd.Context(), g, args)
 				if err != nil {
 					return err
 				}
-				values, _, serr := op.splitPositionals(args, company)
+				values, _, serr := op.splitAxisPositionals(args, axis)
 				if serr != nil {
 					return serr
 				}
@@ -362,12 +375,45 @@ func deprecatedMsg(op genOp) string {
 	return ""
 }
 
+// resolveAxisForArgs resuelve los dos ejes de UNA invocación. Cada resolución
+// devuelve sin tocar la red cuando la operación no tiene su slot rellenable, así
+// que solo la del eje que la operación tiene puede consultar la identidad.
+func (op genOp) resolveAxisForArgs(ctx context.Context, g *GlobalFlags, args []string) (axisValues, error) {
+	company, err := op.resolveCompanyForArgs(ctx, g, args)
+	if err != nil {
+		return axisValues{}, err
+	}
+	account, err := op.resolveAccountForArgs(ctx, g, args)
+	if err != nil {
+		return axisValues{}, err
+	}
+	return axisValues{Company: company, Account: account}, nil
+}
+
+// accountAxisHelp es el párrafo de la ayuda larga de los comandos con slot de
+// cuenta rellenable: explica `--account` y la regla de escrituras.
+func accountAxisHelp(op genOp, use string, axisIdx int) string {
+	groups := strings.Join(op.Groups, " ")
+	help := "\n\nPuedes fijar la cuenta con la flag persistente --account en vez de" +
+		" pasarla como argumento posicional. Aportarla por las dos vías a la vez es un error de uso." +
+		"\n\nForma canónica:  factuarea " + groups + " " + use +
+		"\nForma corta:     factuarea " + groups + " " + shortUsage(op, use, axisIdx) +
+		" --account <" + op.PathParams[axisIdx].Name + ">"
+	if op.autoResolvesAccount() {
+		help += "\nEs una lectura: si no pasas la cuenta, se deduce de la identidad de tu credencial."
+	} else {
+		help += "\nEs una escritura: la cuenta no se deduce, hay que nombrarla (como argumento posicional o con --account)." +
+			" Sin ella, la CLI termina con un error de uso, sin enviar nada, y te dice cuál es la cuenta de tu credencial."
+	}
+	return help
+}
+
 // shortUsage compone el literal del uso SIN el slot de eje, para enseñar en
 // la ayuda larga la forma corta junto a la canónica.
-func shortUsage(op genOp, use string, companyIdx int) string {
-	if companyIdx < 0 {
+func shortUsage(op genOp, use string, axisIdx int) string {
+	if axisIdx < 0 {
 		return use
 	}
-	slot := " [" + op.PathParams[companyIdx].Name + "]"
+	slot := " [" + op.PathParams[axisIdx].Name + "]"
 	return strings.Replace(use, slot, "", 1)
 }

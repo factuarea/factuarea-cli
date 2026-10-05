@@ -11,7 +11,7 @@ anteriores (hasta `v0.4.0`) no tienen entrada aquí.
 
 ## [Unreleased]
 
-El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spec/openapi.json` embebe el documento de **481 operaciones** en **396 paths** (digest canónico `e34a48dd5dd7f3cfc6a878ac06cb7f86f93c207641962fd72b98426f588fcf71`) y `internal/cmd/resources_gen.go` se ha regenerado entero desde él.
+El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spec/openapi.json` embebe el documento de **508 operaciones** en **418 paths** (digest canónico `811b3091237099073e8b5bbd0aa5c60ae8ff7c97202508c7c3cc2516ce0ad64e`) y `internal/cmd/resources_gen.go` se ha regenerado entero desde él.
 
 ### Cambiado — rotura
 
@@ -28,15 +28,17 @@ El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spe
   $ factuarea invoices list acme_co --json
   ```
 
-  Alcance: de las **481** operaciones del contrato, **438** cuelgan del eje de
-  empresa, **38** del eje de cuenta (`/v1/accounts/{account}/…`, la cartera de
-  una gestoría) y **5** no cuelgan de ninguno, así que la rotura toca casi todo
-  el árbol. **Ningún comando cambia de nombre**: lo que cambia es cómo se
-  invoca. Lo que se escribe en ese segmento es el `id` de la empresa —el que
+  Alcance: de las **508** operaciones del contrato, **432** cuelgan del eje de
+  empresa, **60** del eje de cuenta (`/v1/accounts/{account}/…`, la cuenta
+  propia), **6** son de cuentas gestionadas (la cuenta es el recurso), **5** son
+  rutas raíz de provisión e importación y **5** son catálogos e identidad de
+  raíz (432 + 60 + 6 + 5 + 5 = 508), así que la rotura toca casi todo el árbol. **Ningún comando se renombra**: los que dejan de existir se RETIRAN
+  (las bajas se listan más abajo, cada una con su sustituto cuando lo hay) y
+  los demás conservan su nombre; lo que cambia es cómo se invoca. Lo que se escribe en ese segmento es el `id` de la empresa —el que
   publica `factuarea account show` en `data.scope[].id`—, nunca su NIF.
 
   Ojo con el marcador: en las **8** operaciones de
-  `/v1/accounts/{account}/companies/{company}` —las empresas de una cartera—
+  `/v1/accounts/{account}/companies/{company}` —los NIF de la cuenta—
   `{company}` es el **recurso** y no el eje, así que ahí se escribe siempre. La
   CLI las distingue por el path, nunca por el nombre del parámetro.
 
@@ -49,6 +51,30 @@ El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spe
   anuncios ni dos migraciones: quien adapte su integración una vez, la adapta
   entera. La entrada la publica el portal de documentación, que va después de
   este trabajo; esta nota solo la referencia y no la reproduce.
+
+- **El modelo de cuentas: el vale de la cuenta se retira y lo sustituye el
+  traspaso de NIF.** Las tres operaciones de `account claim-tokens` desaparecen
+  del árbol y cada una tiene su pareja:
+
+  | Antes (retirada) | Ahora |
+  | --- | --- |
+  | `factuarea account claim-tokens accept` | `factuarea account nif-transfers accept` |
+  | `factuarea account claim-tokens create` | `factuarea account nif-transfers create` |
+  | `factuarea account claim-tokens list`   | `factuarea account nif-transfers list` |
+
+  `create` y `accept` son irreversibles y nombran la cuenta como último
+  argumento: se escribe como argumento posicional, `--account` no la rellena. Se
+  retiran además, sin pareja, las seis operaciones de impuestos de empresa
+  `taxes create`, `taxes update`, `taxes delete`, `taxes set-default`,
+  `taxes set-default-for-document` y `taxes toggle`. En total, **9 bajas** (las 3 de `claim-tokens`, que tienen
+  pareja, y las 6 de impuestos, que no) y **36 altas**; son retiradas y altas
+  del árbol, no renombres: el árbol pasa de 481 a **508** comandos (**432** del eje de empresa,
+  **60** del de cuenta, **6** de cuentas gestionadas, **5** de provisión raíz y
+  **5** de catálogos e identidad).
+
+  Una sola ventana de rotura: ver https://docs.factuarea.com/docs/changelog/axis-and-payload-breaking-window
+
+  Novedades del modelo de cuentas: https://docs.factuarea.com/docs/changelog/account-model
 
 ### Añadido
 
@@ -108,11 +134,13 @@ El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spe
   (`{"company": "--company"}`), sin mover el orden ni los nombres de `args`.
 
 - **Superficie nueva del contrato del eje: 17 operaciones** respecto al contrato
-  anterior (15 del eje de cuenta —`members`, `invitations`, `claim-tokens`,
+  de 469 (15 del eje de cuenta —`members`, `invitations`, `nif-transfers`,
   `owner transfer`, `usage`, `module-access`—, más
-  `companies issuing-readiness` y `recurring-invoices bulk-status`). Es
-  superficie **añadida**: no consume ventana de rotura, y ya está en el árbol de
-  comandos.
+  `companies issuing-readiness` y `recurring-invoices bulk-status`), que con 5
+  bajas dejó 481. Encima van las **36 altas** del modelo de cuentas (cuentas
+  gestionadas, webhooks y request logs de cuenta, entre otras; 481
+  + 36 − 9 = 508). Es superficie **añadida**: no consume ventana de rotura, y
+  ya está en el árbol de comandos.
 
 - **Las cinco operaciones de API keys se mudan al eje de cuenta.** Desaparecen
   `factuarea companies api-keys {list,create,show,revoke,rotate-secret}` y las
@@ -125,5 +153,27 @@ El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spe
   lee del propio contrato embebido, no de un literal), y el feed de eventos y los
   fixtures de `trigger` cuelgan ya de `/v1/companies/{company}/…`, resolviendo la
   empresa por la MISMA cadena de precedencia que el árbol generado.
+
+- **El eje de cuenta tiene su propia flag, `--account`**, persistente como
+  `--company`. Rellena el `{account}` de `/v1/accounts/{account}/…` y hace opcional
+  su posicional: `factuarea account members list --account <account>`. Precedencia:
+  posicional → `--account` → solo en las lecturas, la cuenta propia de tu credencial
+  (`GET /v1/me`, `data.account.id`; se recuerda por invocación y jamás se escribe
+  en disco). **Las escrituras no deducen la cuenta**: sin posicional ni `--account`
+  terminan con error de uso (código `2`) sin enviar nada, y el mensaje nombra la
+  cuenta de tu credencial. En las irreversibles cuyo último parámetro es la propia
+  cuenta (`account nif-transfers create|accept`, `account owner transfer`) ni la
+  flag vale. En `managed-accounts` la cuenta es el recurso y se escribe siempre;
+  las rutas raíz de provisión e importación no llevan cuenta, y `--company` nunca
+  rellena la cuenta. `factuarea commands --json` lo declara en `optional_args`
+  (`{"account": "--account"}`).
+
+- **Grupos nuevos**: `managed-accounts` (`list`, `create`, `show`, `access-level`,
+  `plan`, `management end`, `claim-tokens create` —el reemisor del vale de la
+  cuenta GESTIONADA, no el vale retirado de la cuenta propia— y `imports
+  {create,preview,template}`, con ficheros por `--file-accounts_file` y
+  `--file-customers_file` y las opciones por `-d`), `account webhooks` (con
+  `deliveries`), `account request-logs`, `account nif-transfers` y la hoja
+  `account provisioning-usage`.
 
 [Unreleased]: https://github.com/factuarea/factuarea-cli/compare/v0.4.0...HEAD

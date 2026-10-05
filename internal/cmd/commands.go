@@ -26,9 +26,10 @@ type manifestEntry struct {
 	Args    []string `json:"args"`
 	// OptionalArgs enumera los argumentos posicionales que pueden OMITIRSE
 	// porque una flag persistente aporta su valor, mapeando cada uno a la flag
-	// que lo rellena (hoy sólo `company` → `--company`). Va aparte de `Args`
-	// para que el orden y los nombres de los posicionales que un agente ya
-	// consume no cambien; un comando sin eje de empresa no lleva la clave.
+	// que lo rellena (`company` → `--company`, `account` → `--account`). Va
+	// aparte de `Args` para que el orden y los nombres de los posicionales que
+	// un agente ya consume no cambien; un comando sin eje de empresa ni slot de
+	// cuenta rellenable no lleva la clave.
 	OptionalArgs   map[string]string `json:"optional_args,omitempty"`
 	Flags          []flagInfo        `json:"flags"`
 	Mutating       bool              `json:"mutating"`
@@ -69,6 +70,8 @@ func newCommandsCmd() *cobra.Command {
 				}
 				if idx := op.companyPathParamIndex(); idx >= 0 {
 					e.OptionalArgs = map[string]string{op.PathParams[idx].Name: "--company"}
+				} else if idx := op.accountFillIndex(); idx >= 0 {
+					e.OptionalArgs = map[string]string{op.PathParams[idx].Name: "--account"}
 				}
 				for _, p := range op.QueryParams {
 					e.Flags = append(e.Flags, flagInfo{Name: p.Name, Type: p.Type})

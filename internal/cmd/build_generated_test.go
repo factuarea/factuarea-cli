@@ -353,14 +353,17 @@ func TestFrozenManagedCompanyIsResourceNotAxis(t *testing.T) {
 		t.Fatalf("companyPathParamIndex = %d, want -1: aquí {company} es el recurso, no el eje", idx)
 	}
 	c := buildGeneratedCommand(op)
-	if want := "delete <account> <company>"; c.Use != want {
-		t.Fatalf("Use = %q, want %q: los dos parámetros son obligatorios", c.Use, want)
+	if want := "delete [account] <company>"; c.Use != want {
+		t.Fatalf("Use = %q, want %q: la cuenta es el slot rellenable por --account y la empresa es el recurso obligatorio", c.Use, want)
 	}
 	if strings.Contains(c.Long, "--company") {
 		t.Errorf("la ayuda no debe ofrecer --company en una operación del eje de cuenta:\n%s", c.Long)
 	}
-	if err := c.Args(c, []string{frozenAccountID}); err == nil {
-		t.Error("con un solo posicional debe fallar: aquí no hay relleno por defecto")
+	if err := c.Args(c, []string{frozenCompanyID}); err != nil {
+		t.Errorf("con un solo posicional (la empresa, con la cuenta por --account) debe aceptarse: %v", err)
+	}
+	if err := c.Args(c, nil); err == nil {
+		t.Error("sin posicionales debe fallar: la empresa archivada es el recurso y no tiene relleno por defecto")
 	}
 	if err := c.Args(c, []string{frozenAccountID, frozenCompanyID}); err != nil {
 		t.Errorf("con los dos posicionales debe aceptarse: %v", err)

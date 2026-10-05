@@ -85,6 +85,18 @@ func (e frozenOperation) companyAxisParam() (string, bool) {
 	return e.PathParams[0], true
 }
 
+// hasAccountSlot decide sobre el MANIFIESTO si la operación cuelga del eje de
+// cuenta: el primer path param es `account` y ocupa el segmento inmediatamente
+// posterior a `/accounts`. Las rutas raíz (`/accounts`, `/accounts/imports…`)
+// no tienen slot.
+func (e frozenOperation) hasAccountSlot() bool {
+	rest, ok := strings.CutPrefix(e.Path, accountAxisPrefix)
+	if !ok || (rest != "" && !strings.HasPrefix(rest, "/")) {
+		return false
+	}
+	return len(e.PathParams) > 0 && e.PathParams[0] == accountPathParam
+}
+
 // ---------------------------------------------------------------------------
 // Canonicalización.
 
@@ -477,7 +489,60 @@ func TestCommandTreeCoversEveryFrozenOperation(t *testing.T) {
 	if axis == 0 {
 		t.Fatal("ninguna operación del manifiesto cuelga del eje de empresa: la aserción 8.6 sería vacua")
 	}
-	t.Logf("gate ARMADO: %d operaciones comparadas, %d de ellas del eje de empresa", len(m.Operations), axis)
+	// Cada operación del EJE DE CUENTA con slot rellenable publica `--account`
+	// en su entrada; el grupo `managed-accounts` (la cuenta es un RECURSO), las
+	// irreversibles cuyo último path param es la cuenta y las rutas raíz, no.
+	accountFill, accountNoFill := 0, 0
+	for _, op := range m.Operations {
+		entry, present := byCommand[op.Command]
+		if !present {
+			continue // ya lo denuncia la aserción de no-decrecimiento
+		}
+		optional, _ := entry["optional_args"].(map[string]any)
+		published, hasKey := optional[accountPathParam]
+
+		if !op.hasAccountSlot() {
+			// Ruta raíz de provisión o de importación, o fuera del eje de cuenta.
+			if hasKey && published == "--account" {
+				t.Errorf("%s (%s, %s) no tiene slot de cuenta y su entrada publica %q como relleno de %q",
+					op.Command, op.OperationID, op.Path, published, accountPathParam)
+			}
+			continue
+		}
+
+		groups, _, _ := spec.Resolve(op.OperationID)
+		irreversible, _ := entry["irreversible"].(bool)
+		lastIsAccount := op.PathParams[len(op.PathParams)-1] == accountPathParam
+
+		switch {
+		case len(groups) > 0 && groups[0] == managedAccountsGroup:
+			accountNoFill++
+			if hasKey {
+				t.Errorf("%s (%s) es de managed-accounts, donde {account} es el RECURSO: no puede publicar "+
+					"`optional_args[%q]` (publica %v)", op.Command, op.OperationID, accountPathParam, published)
+			}
+		case irreversible && lastIsAccount:
+			accountNoFill++
+			if hasKey {
+				t.Errorf("%s (%s) es irreversible con la cuenta como último path param: el valor se escribe "+
+					"y no puede publicar `optional_args[%q]` (publica %v)",
+					op.Command, op.OperationID, accountPathParam, published)
+			}
+		default:
+			accountFill++
+			if !hasKey || published != "--account" {
+				t.Errorf("%s (%s) tiene slot de cuenta rellenable y su entrada publica optional_args=%v "+
+					"en vez de {%q: \"--account\"}", op.Command, op.OperationID, optional, accountPathParam)
+			}
+		}
+	}
+	if accountFill == 0 || accountNoFill == 0 {
+		t.Fatalf("el manifiesto no ejercita las dos clases del eje de cuenta (rellenables=%d, sin relleno=%d): "+
+			"la aserción de `--account` sería vacua", accountFill, accountNoFill)
+	}
+
+	t.Logf("gate ARMADO: %d operaciones comparadas, %d de ellas del eje de empresa, %d del eje de cuenta con "+
+		"`--account` (y %d con el slot de cuenta sin relleno)", len(m.Operations), axis, accountFill, accountNoFill)
 }
 
 // ---------------------------------------------------------------------------
@@ -537,6 +602,49 @@ func TestCompanyFlagIsAGlobalOptionOfTheCommandTree(t *testing.T) {
 	}
 	t.Logf("--%s es opción global; %d entradas del árbol la publican como relleno del eje (hoja comprobada: %s)",
 		companyPathParam, withAxis, leaf)
+}
+
+// TestAccountFlagIsAGlobalOptionOfTheCommandTree comprueba que `--account`, el
+// flag que rellena el slot de cuenta, existe y es PERSISTENTE de la raíz, y
+// que lo hereda una hoja que lo anuncia en su manifiesto.
+func TestAccountFlagIsAGlobalOptionOfTheCommandTree(t *testing.T) {
+	root := NewRootCmd()
+	global := root.PersistentFlags().Lookup(accountPathParam)
+	if global == nil {
+		t.Fatalf("la raíz no declara el flag persistente --%s: sin él, el `optional_args` del manifiesto "+
+			"promete un valor que nadie puede aportar", accountPathParam)
+	}
+	if global.Usage == "" {
+		t.Errorf("--%s no documenta para qué sirve", accountPathParam)
+	}
+
+	withAccount := 0
+	var leaf string
+	for _, entry := range commandTreeManifest(t) {
+		optional, _ := entry["optional_args"].(map[string]any)
+		if flag, _ := optional[accountPathParam].(string); flag != "--"+accountPathParam {
+			continue
+		}
+		withAccount++
+		if leaf == "" {
+			leaf, _ = entry["command"].(string)
+		}
+	}
+	if withAccount == 0 {
+		t.Fatal("ninguna entrada del árbol publica `--account` en `optional_args`: la aserción sería vacua")
+	}
+
+	path := strings.Fields(leaf)
+	if len(path) < 2 {
+		t.Fatalf("no reconozco el comando %q del árbol", leaf)
+	}
+	c := findCommand(t, path[1:]...)
+	if c.InheritedFlags().Lookup(accountPathParam) == nil {
+		t.Errorf("%s anuncia --%s en su manifiesto pero no lo hereda: no sería una opción global",
+			leaf, accountPathParam)
+	}
+	t.Logf("--%s es opción global; %d entradas del árbol la publican como relleno del eje de cuenta (hoja comprobada: %s)",
+		accountPathParam, withAccount, leaf)
 }
 
 // ---------------------------------------------------------------------------

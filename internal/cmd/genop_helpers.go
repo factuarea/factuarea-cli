@@ -133,30 +133,133 @@ func (op genOp) automaticCompanyError() error {
 		companyPathParam)
 }
 
+// accountPathParam es el nombre del marcador de ruta del eje de cuenta.
+const accountPathParam = "account"
+
+// accountAxisPrefix es el prefijo de path del eje de cuenta del contrato v1.
+const accountAxisPrefix = "/accounts/{" + accountPathParam + "}"
+
+// managedAccountsGroup es el grupo de comandos de las cuentas GESTIONADAS
+// (`public-api.v1.managed_accounts.*`), donde `{account}` es el recurso.
+const managedAccountsGroup = "managed-accounts"
+
+// isAccountAxisPath decide si la operación cuelga del EJE de cuenta, y lo
+// decide por el PATH. `POST /accounts` y `/accounts/imports…` son raíz y no
+// llevan el marcador, así que no entran.
+func (op genOp) isAccountAxisPath() bool {
+	rest, ok := strings.CutPrefix(op.Path, accountAxisPrefix)
+	return ok && (rest == "" || strings.HasPrefix(rest, "/"))
+}
+
+// accountPathParamIndex devuelve la posición del slot de EJE de cuenta dentro
+// de los parámetros de ruta, o -1 si la operación no cuelga del eje o es del
+// grupo `managed-accounts`, donde `{account}` es la cuenta gestionada
+// (recurso: obligatoria, sin flag y sin relleno).
+func (op genOp) accountPathParamIndex() int {
+	if !op.isAccountAxisPath() {
+		return -1
+	}
+	if len(op.Groups) > 0 && op.Groups[0] == managedAccountsGroup {
+		return -1
+	}
+	if len(op.PathParams) == 0 || op.PathParams[0].Name != accountPathParam {
+		return -1
+	}
+	return 0
+}
+
+// requiresExplicitAccount es la SALVAGUARDA del eje de cuenta: en una
+// irreversible cuyo último parámetro de ruta es el propio slot, el valor se
+// escribe.
+func (op genOp) requiresExplicitAccount() bool {
+	idx := op.accountPathParamIndex()
+	return op.Irreversible && idx >= 0 && idx == len(op.PathParams)-1
+}
+
+// accountFillIndex devuelve la posición del slot de cuenta que `--account` —o
+// la resolución automática— puede rellenar, o -1 si esta operación no admite
+// relleno por defecto.
+func (op genOp) accountFillIndex() int {
+	if op.requiresExplicitAccount() {
+		return -1
+	}
+	return op.accountPathParamIndex()
+}
+
+// autoResolvesAccount: la cuenta propia solo se deduce en las lecturas.
+func (op genOp) autoResolvesAccount() bool {
+	return op.Method == "GET"
+}
+
+// axisValues son los valores de eje ya resueltos de una invocación. Un comando
+// nunca tiene los dos slots a la vez, así que solo uno se usa.
+type axisValues struct{ Company, Account string }
+
+// axisFillIndex devuelve la posición del slot de eje rellenable, sea de
+// empresa o de cuenta, o -1.
+func (op genOp) axisFillIndex() int {
+	if idx := op.companyFillIndex(); idx >= 0 {
+		return idx
+	}
+	return op.accountFillIndex()
+}
+
+// axisPathParamIndex devuelve la posición del slot de eje (empresa o cuenta),
+// rellenable o no, o -1.
+func (op genOp) axisPathParamIndex() int {
+	if idx := op.companyPathParamIndex(); idx >= 0 {
+		return idx
+	}
+	return op.accountPathParamIndex()
+}
+
 // splitPositionals reparte los argumentos posicionales de una invocación
 // entre los parámetros de RUTA (devueltos ya en el orden del contrato y con
 // el valor de empresa resuelto) y el resto, que es el atajo del campo único
-// de cuerpo.
+// de cuerpo. Es un envoltorio de `splitAxisPositionals` que conserva la firma
+// del eje de empresa.
 func (op genOp) splitPositionals(args []string, company string) (pathValues, extra []string, err error) {
+	return op.splitAxisPositionals(args, axisValues{Company: company})
+}
+
+// splitAxisPositionals reparte los posicionales entre los parámetros de RUTA
+// (en el orden del contrato y con el valor de eje resuelto insertado en su
+// sitio) y el resto.
+func (op genOp) splitAxisPositionals(args []string, axis axisValues) (pathValues, extra []string, err error) {
 	n := len(op.PathParams)
-	idx := op.companyFillIndex()
+	idx := op.axisFillIndex()
 	if idx < 0 {
 		if len(args) < n {
-			if op.requiresExplicitCompany() {
+			switch {
+			case op.requiresExplicitCompany():
 				return nil, nil, op.explicitCompanyError()
+			case op.requiresExplicitAccount():
+				return nil, nil, op.explicitAccountError()
 			}
 			return nil, nil, apierr.Usagef("faltan argumentos: esta operación necesita %d (%s)", n, strings.Join(pathParamNames(op), ", "))
 		}
 		return args[:n], args[n:], nil
 	}
 
-	resolved := strings.TrimSpace(company)
+	onAccount := op.companyFillIndex() < 0
+	resolved := strings.TrimSpace(axis.Company)
+	if onAccount {
+		resolved = strings.TrimSpace(axis.Account)
+	}
 	switch {
 	case resolved != "" && len(args) >= n:
+		if onAccount {
+			return nil, nil, apierr.Usagef(
+				"has aportado la cuenta por las dos vías: como argumento posicional (%q) y con la flag persistente --account (%q); quita una de las dos, no elijo por ti",
+				args[idx], resolved)
+		}
 		return nil, nil, apierr.Usagef(
 			"has aportado la empresa por las dos vías: como argumento posicional (%q) y con la flag persistente --company (%q); quita una de las dos, no elijo por ti",
 			args[idx], resolved)
 	case resolved == "" && len(args) < n:
+		if onAccount {
+			return nil, nil, missingAccountError()
+		}
 		return nil, nil, apierr.Usagef(
 			"falta la empresa: pásala como argumento posicional (<%s>) o fíjala con la flag persistente --company",
 			op.PathParams[idx].Name)
@@ -184,7 +287,7 @@ func (op genOp) splitPositionals(args []string, company string) (pathValues, ext
 // ruta, sin exigir el eje.
 func (op genOp) extraPositionals(args []string) []string {
 	n := len(op.PathParams)
-	if op.companyFillIndex() >= 0 {
+	if op.axisFillIndex() >= 0 {
 		n--
 	}
 	if n < 0 || len(args) <= n {
@@ -207,7 +310,7 @@ func opResourceID(op genOp, pathValues []string) string {
 	if len(op.PathParams) == 0 || len(pathValues) != len(op.PathParams) {
 		return ""
 	}
-	idx := op.companyPathParamIndex()
+	idx := op.axisPathParamIndex()
 	for i := len(pathValues) - 1; i >= 0; i-- {
 		if i == idx {
 			continue

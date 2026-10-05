@@ -71,7 +71,7 @@ La key se guarda en el **keyring del sistema** (con fallback a `~/.config/factua
 
 ## Uso
 
-El árbol de comandos cubre todos los recursos de la API (`factuarea <recurso> [<sub-recurso>] <acción>`), generado desde el OpenAPI (sin desincronización). Todo recurso de una empresa cuelga del **eje de empresa** (`/v1/companies/{company}/…`), así que su comando lleva la empresa delante: como primer argumento posicional, con la flag persistente `--company`, o sin escribirla si tu credencial alcanza una sola (ver «La empresa como eje», más abajo):
+El árbol de comandos cubre todos los recursos de la API (`factuarea <recurso> [<sub-recurso>] <acción>`), generado desde el OpenAPI (sin desincronización). Todo recurso de una empresa cuelga del **eje de empresa** (`/v1/companies/{company}/…`), así que su comando lleva la empresa delante: como primer argumento posicional, con la flag persistente `--company`, o sin escribirla si tu credencial alcanza una sola (ver «La empresa como eje», más abajo). Lo que cuelga de una cuenta (`account`: `api-keys`, `invitations`, `members`, `nif-transfers`, `owner`, `webhooks`, `request-logs`, `provisioning-usage`, `usage`) lleva la cuenta con la flag `--account`, y las cuentas gestionadas (`managed-accounts`, con `imports`, `plan`, `management`, `access-level` y `claim-tokens`) tienen su propia sección más abajo («La cuenta como eje», «Cuentas gestionadas»):
 
 ```bash
 # Listar (con paginación automática por cursor)
@@ -207,16 +207,24 @@ factuarea automations usage show --company acme_co --json
 ```
 
 El **alcance** se elige al crear la regla y no se puede cambiar después: `empresa`
-vigila sólo tu empresa, y `cartera` —para gestorías, con el módulo `gestoria`
-concedido— vigila las empresas que gestionas y te entrega a ti los avisos. En
-`cartera` sólo se admiten las cuatro acciones que avisan (`notify_in_app`,
-`notify_channel`, `emit_webhook`, `create_calendar_event`); las que actuarían
-sobre un documento de la empresa hija se rechazan al crear o editar la regla.
+vigila sólo tu empresa, y `cartera` vigila los OTROS NIF de tu cuenta y te entrega
+a ti los avisos. Sólo la **titular de su cuenta** puede crearlas, y con el módulo
+`gestoria` concedido (por plan o por override de empresa): un NIF adicional, sea
+cual sea su origen, nunca tiene cartera propia. Lo que vigilan son los NIF reales
+de la cuenta —el adscrito, uno comprado, uno traspasado— y los que otra cuenta te
+cede con nivel `operate`; nunca tu propia empresa. La regla se guarda con la
+empresa de la titular, sus avisos llegan a su buzón y cada ejecución lleva además
+la empresa sujeto, el NIF sobre el que actuó. En `cartera` sólo se admiten las
+cuatro acciones que avisan (`notify_in_app`, `notify_channel`, `emit_webhook`,
+`create_calendar_event`); las que actuarían en nombre de otro NIF
+(`send_document_email`, `send_payment_reminder`, `change_status`, `tag_entity`)
+se rechazan al crear o editar la regla.
 `factuarea automations rules list --company acme_co --scope cartera` las filtra,
 y `factuarea automations runs list --company acme_co --subject_company_id <uuid>`
-filtra sus ejecuciones por la empresa sobre la que actuaron. En las dos, la
-empresa del eje es la TUYA —la dueña de la regla—, no la empresa hija vigilada,
-que viaja en `--subject_company_id`.
+filtra sus ejecuciones por la empresa sobre la que actuaron (filtrar por una
+empresa fuera de la cartera devuelve una lista vacía, no un error). En las dos, la
+empresa del eje es la TUYA —la dueña de la regla—, no el NIF vigilado, que viaja
+en `--subject_company_id`.
 
 ### La empresa como eje: el segmento `{company}` y la flag `--company`
 
@@ -228,10 +236,15 @@ pasa a viajar en la URL, donde se ve, se registra y se puede auditar; una clave
 que alcanza dos empresas ya no puede acabar escribiendo en la que no era sin que
 quede rastro de a cuál se apuntó.
 
-De las **481** operaciones del contrato, **438** cuelgan del eje de empresa,
-**38** del eje de cuenta (`/v1/accounts/{account}/…`, la cartera de una
-gestoría) y **5** no cuelgan de ninguno: `/v1/me`, `/v1/event-catalog`,
-`/v1/tax-catalog`, `/v1/payment-methods` y `/v1/payroll-export-formats`.
+De las **508** operaciones del contrato, **432** cuelgan del eje de empresa y
+**60** del eje de cuenta (`/v1/accounts/{account}/…`: la cuenta propia, con su
+equipo, sus NIF, sus webhooks y sus request logs). Otras **16** no son de ninguno
+de los dos: **6** son las operaciones de cuentas gestionadas, donde `{account}`
+es la cuenta GESTIONADA y se trata como recurso; **5** son las rutas raíz de
+provisión e importación (`/v1/accounts` y `/v1/accounts/imports…`), sin cuenta en
+la ruta; y las **5** restantes son los catálogos y la identidad de raíz: `/v1/me`,
+`/v1/event-catalog`, `/v1/tax-catalog`, `/v1/payment-methods` y
+`/v1/payroll-export-formats` (6 + 5 + 5 = 16, y 432 + 60 + 16 = 508).
 
 Lo que se pasa en ese segmento es el **`id` de la empresa** —el que publica
 `factuarea account show` en `data.scope[].id`—, nunca su NIF ni su nombre. El
@@ -239,11 +252,12 @@ NIF aparece al lado en los mensajes de error porque es lo que tú reconoces de u
 vistazo, pero lo que la ruta come es el `id`.
 
 Ojo con el marcador: `{company}` **no siempre es el eje**. Las **8** operaciones
-de `/v1/accounts/{account}/companies/{company}` —crear, activar, archivar… las
-empresas de una cartera— declaran un parámetro que se llama igual pero que es el
+de `/v1/accounts/{account}/companies/{company}` —mostrar, activar, archivar… un
+NIF de la cuenta— declaran un parámetro que se llama igual pero que es el
 **recurso**, no el eje. El CLI las distingue por el PATH, nunca por el nombre del
-parámetro: en ellas `--company` no rellena nada y el identificador confirmado es
-el de la empresa que se archiva, no el de la cuenta.
+parámetro: en ellas `--company` no rellena nada (la cuenta se nombra con
+`--account`, ver más abajo) y el identificador confirmado es el de la empresa que
+se archiva, no el de la cuenta.
 
 #### Forma larga y forma corta
 
@@ -376,9 +390,7 @@ $ factuarea invoices bulk-delete --company acme_co
 Error: esta operación es irreversible y actúa sobre la empresa ENTERA: escribe su identificador como argumento posicional (<company>). La flag persistente --company no lo rellena por defecto a propósito, porque confirmar sobre un identificador que no has escrito no confirma nada
 ```
 
-El eje de **cuenta** (`/v1/accounts/{account}/…`) tampoco se rellena solo, y es a
-propósito: la ergonomía del NIF único cubre a quien tiene una empresa, no a una
-gestoría, que opera sobre una cartera y tiene que decir siempre sobre cuál actúa.
+`--company` no rellena nunca el hueco de la cuenta: cada eje tiene su flag.
 
 Las operaciones **irreversibles** del contrato (anular, sustituir, convertir,
 revocar, rotar, borrar en lote…) exigen `--confirm <id del recurso>` cuando no
@@ -390,6 +402,116 @@ marcas, sale del propio binario:
 ```bash
 factuarea commands --json | jq '.[] | select(.irreversible) | {command, required_scope}'
 factuarea commands --json | jq '.[] | select(.binary)       | .command'
+```
+
+### La cuenta como eje: el segmento `{account}` y la flag `--account`
+
+Las operaciones de la cuenta propia cuelgan de `/v1/accounts/{account}/…`, con el
+`id` de la cuenta (el que publica `factuarea account show --json`, es decir
+`GET /v1/me`, en `data.account.id`). El hueco de la cuenta se decide por el PATH: es el primer
+parámetro de ruta cuando la ruta empieza por `/accounts/{account}`. Hay dos
+excepciones, y en ninguna la flag `--account` rellena nada:
+
+- **Cuentas gestionadas (`managed-accounts`).** Ahí `{account}` es la cuenta
+  GESTIONADA sobre la que actúas: es el recurso, se escribe siempre como
+  argumento posicional y no hay flag ni relleno.
+- **Rutas raíz de provisión e importación** (`POST|GET /v1/accounts` y
+  `/v1/accounts/imports…`): no llevan cuenta en la ruta.
+
+Para el resto, el valor de la cuenta sale de esta cadena, de mayor a menor:
+
+1. el argumento posicional (`factuarea account members show <account> <member>`);
+2. la flag persistente `--account`, que también hace opcional ese posicional;
+3. solo en las **lecturas** (`GET`), la cuenta propia que publica tu credencial
+   (`GET /v1/me`, `data.account.id`), que se recuerda durante la invocación y
+   jamás se escribe en disco.
+
+En una **escritura** la cuenta no se deduce: sin posicional ni `--account`, la CLI
+termina con error de uso (código `2`) sin enviar la escritura, y el mensaje nombra
+la cuenta propia de tu credencial y las dos formas de pasarla (para nombrarla
+hace un único `GET /v1/me`, cuyo resultado no usa como destino). Una escritura no
+puede ir a parar a una cuenta que no has nombrado. Aportar la cuenta por el
+posicional y por la flag a la vez también es error de uso. Y en las operaciones
+irreversibles cuyo último parámetro de ruta es la propia cuenta —`account
+nif-transfers create`, `account nif-transfers accept` y `account owner
+transfer`— ni la flag vale: hay que escribir `<account>` como posicional.
+`factuarea commands --json` publica el hueco en `optional_args`
+(`{"account": "--account"}`) en los comandos donde la flag lo rellena.
+
+```bash
+# 1) Una lectura resuelve la cuenta sola (GET /v1/me → GET /v1/accounts/<tu cuenta>/members)
+factuarea account members list --json
+
+# 2) Una escritura exige nombrar la cuenta: sin ella falla con código 2 y sin enviar nada;
+#    con --account, la petición va a POST /v1/accounts/<account>/webhooks
+factuarea account webhooks create --url https://example.com/hooks --enabled-events account.member_added
+factuarea account webhooks create --account <account> --url https://example.com/hooks --enabled-events account.member_added
+
+# 3) Una cuenta gestionada es el recurso: va siempre como posicional (GET /v1/accounts/<managed_account>);
+#    --account no la rellena
+factuarea managed-accounts show <managed_account> --json
+
+# 4) Una provisión raíz no lleva cuenta (POST /v1/accounts), aunque pongas --account
+factuarea managed-accounts create --external-ref cliente-0042 --plan emprendedor \
+  --tax-id B12345674 --legal-name "Talleres García SL" --confirm create
+```
+
+### Cuentas gestionadas (`managed-accounts`)
+
+Para quien provisiona NIF o cuentas de terceros. El token de `--confirm` es el
+literal `create` en las operaciones raíz y el `id` del recurso en el resto:
+
+```bash
+factuarea managed-accounts list --json                          # GET  /v1/accounts
+factuarea managed-accounts show <managed_account>               # GET  /v1/accounts/{account}
+factuarea managed-accounts plan preview <managed_account>       # GET  /v1/accounts/{account}/plan/preview
+factuarea managed-accounts plan update <managed_account> --plan empresario --confirm <managed_account>
+factuarea managed-accounts access-level update <managed_account> --level view
+factuarea managed-accounts claim-tokens create <managed_account> --send-email --confirm <managed_account>
+factuarea managed-accounts management end <managed_account> --confirm <managed_account>
+```
+
+`managed-accounts claim-tokens create` reemite el vale de reclamación de una
+cuenta GESTIONADA; no tiene relación con el vale de la cuenta propia, que se
+sustituyó por el traspaso de NIF (`factuarea account nif-transfers
+{create,accept,list,revoke}`, ver el CHANGELOG).
+
+### Importación con ficheros
+
+`managed-accounts imports` es multipart: cada fichero va con `--file-<campo>`
+(`--file-accounts_file` y `--file-customers_file`) y las
+opciones, por `-d` como objeto JSON plano cuyas claves son los nombres de campo
+del formulario. Solo se aceptan `options[send_email]`,
+`options[apply_customers_to_own_company]` y `options[confirm_plan_changes]`
+(booleanas, `false` por defecto). La CLI solo comprueba que haya algún fichero;
+quien exige `accounts_file` es el BACKEND (`customers_file` es opcional). Si
+falta, el contrato declara para estas operaciones un 422 de validación, con el
+campo inválido en `error.param`, y la CLI lo muestra tal cual.
+
+```bash
+factuarea managed-accounts imports template -o plantilla.csv    # GET /v1/accounts/imports/template
+factuarea managed-accounts imports preview \
+  --file-accounts_file cuentas.csv --file-customers_file clientes.csv   # no escribe
+factuarea managed-accounts imports create \
+  --file-accounts_file cuentas.csv --file-customers_file clientes.csv \
+  -d '{"options[send_email]":true}' --confirm create            # irreversible
+```
+
+### Webhooks y request logs de cuenta
+
+Los endpoints de webhook de la cuenta (`account webhooks`, con sus entregas en
+`account webhooks deliveries`) y los registros de peticiones de la cuenta
+(`account request-logs`) usan el eje de cuenta de arriba: lecturas sin cuenta se
+deducen, escrituras la piden.
+
+```bash
+factuarea account webhooks list --json
+factuarea account webhooks create --account <account> --url https://example.com/hooks \
+  --enabled-events account.member_added --account-relationship own
+factuarea account webhooks deliveries list <webhook> --status failed --json
+factuarea account webhooks deliveries retry --account <account> <webhook> <delivery>
+factuarea account request-logs list --only_errors true --json
+factuarea account request-logs show <request_id> --json
 ```
 
 ## Devloop (webhooks)

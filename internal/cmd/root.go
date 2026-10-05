@@ -21,6 +21,10 @@ type GlobalFlags struct {
 	// cuando está vacío el binario se comporta exactamente como antes (el
 	// valor se sigue pasando como argumento posicional).
 	Company string
+	// Account es el eje de cuenta del contrato v1: rellena el parámetro de ruta
+	// {account} de las operaciones del eje de cuenta. Solo se deduce solo en las
+	// lecturas; en el grupo `managed-accounts` no aplica.
+	Account string
 }
 
 func NewRootCmd() *cobra.Command {
@@ -50,6 +54,8 @@ func NewRootCmd() *cobra.Command {
 	// Cuando la flag no se pasa, la cadena de `company.go` resuelve el valor
 	// desde el ámbito de la credencial si alcanza un solo NIF.
 	pf.StringVar(&g.Company, "company", "", "empresa sobre la que operar; rellena el parámetro de ruta {company} y hace opcional su argumento posicional. Si tu credencial alcanza una sola empresa, se deduce sola")
+
+	pf.StringVar(&g.Account, "account", "", "cuenta sobre la que operar; rellena el parámetro de ruta {account} y hace opcional su argumento posicional. Solo se deduce sola en las lecturas (de la identidad de tu credencial); en las escrituras hay que nombrarla. No aplica a las cuentas gestionadas (managed-accounts), donde la cuenta es el recurso y se escribe siempre")
 
 	root.PersistentPreRun = func(cmd *cobra.Command, _ []string) {
 		ctx := context.WithValue(cmd.Context(), globalsKey{}, g)
