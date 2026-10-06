@@ -18,10 +18,14 @@ func Load() (ops []Operation, nonConforming []string, err error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("parse spec: %w", err)
 	}
+	defer doc.Release()
 	model, err := doc.BuildV3Model()
 	if err != nil {
 		return nil, nil, fmt.Errorf("build v3 model: %w", err)
 	}
+	// Operations contain detached values; release the parser's index after
+	// extraction as well as the document to avoid retaining its YAML tree.
+	defer model.Index.Release()
 	if model.Model.Paths == nil || model.Model.Paths.PathItems == nil {
 		return nil, nil, fmt.Errorf("spec sin paths")
 	}
