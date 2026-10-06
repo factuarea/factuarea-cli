@@ -519,3 +519,34 @@ func TestUnionTypedFlagSendsTextAndPointsToTheRawBody(t *testing.T) {
 		t.Errorf("el flag envía texto: got %#v, quiero \"42\"", body["value"])
 	}
 }
+
+func TestSeriesUpdateSendsAPartialPut(t *testing.T) {
+	var got map[string]any
+	var method, path string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		method, path = r.Method, r.URL.Path
+		body, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(body, &got)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"data":{"id":"ser_1","counter_reset":"monthly"}}`))
+	}))
+	t.Cleanup(srv.Close)
+
+	_, err := runCmd(t, srv.URL, "series", "update", "ser_1", "--skip-scope-check",
+		"--name", "Tickets 2026", "--counter-reset", "monthly", "--initial-number", "10", "--json")
+	if err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	if method != http.MethodPut || !strings.HasSuffix(path, "/series/ser_1") {
+		t.Errorf("debe ser PUT /series/ser_1: %s %s", method, path)
+	}
+	if got["name"] != "Tickets 2026" || got["counter_reset"] != "monthly" {
+		t.Errorf("strings mal mapeados: %v", got)
+	}
+	if n, ok := got["initial_number"].(float64); !ok || n != 10 {
+		t.Errorf("initial_number debe ser el número 10: %v", got["initial_number"])
+	}
+	if _, present := got["code"]; present {
+		t.Errorf("un flag omitido no debe viajar en el cuerpo: %v", got)
+	}
+}

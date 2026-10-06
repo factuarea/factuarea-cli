@@ -237,7 +237,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	}
 
 	for _, p := range op.QueryParams {
-		desc := p.Description
+		desc := flagUsage(p.Description)
 		if p.Required {
 			desc = strings.TrimSpace("(requerido) " + desc)
 		}
@@ -283,7 +283,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		if len(op.PathParams) == 0 {
 			confirmHelp = "confirma la operación irreversible pasando el token literal " + op.Action
 		}
-		c.Flags().StringVar(&confirmFlag, "confirm", "", confirmHelp)
+		c.Flags().StringVar(&confirmFlag, "confirm", "", flagUsage(confirmHelp))
 	}
 	if op.RequiredScope != "" {
 		c.Flags().BoolVar(&skipScopeCheck, "skip-scope-check", false, "no verificar scopes localmente antes de la llamada")
@@ -320,4 +320,13 @@ func deprecatedMsg(op genOp) string {
 		return "esta operación está deprecada en la API"
 	}
 	return ""
+}
+
+// flagUsage prepara un texto para el uso de un flag. pflag (UnquoteUsage) toma la
+// primera palabra entre comillas invertidas como NOMBRE DEL TIPO del flag, así que
+// una descripción del spec con `código` hacía que la ayuda mostrara «--flag código»
+// en vez de su tipo real. Se sustituyen por comillas simples: el texto se lee igual
+// y el tipo sale del valor del flag.
+func flagUsage(s string) string {
+	return strings.ReplaceAll(s, "`", "'")
 }
