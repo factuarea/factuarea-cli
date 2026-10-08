@@ -140,8 +140,9 @@ factuarea commands --json | jq '.[] | select(.operation_id | startswith("public-
 
 ### Control horario (workforce)
 
-Con el add-on de **control horario** activo (módulo `control_horario`), el CLI
-expone los recursos de jornada, cada uno con su scope fino (`employees:*`,
+El módulo de **control horario** (`control_horario`) viene incluido en el plan
+desde Profesional; una clave solo puede llevar sus scopes si la empresa tiene el
+módulo. Con él, el CLI expone los recursos de jornada, cada uno con su scope fino (`employees:*`,
 `time_entries:*`, `absences:*`, `work_schedules:*`, `presence:read`,
 `holidays:read`, `payroll_exports:*`): `employees`, `employee-invitations`,
 `employee-seats`, `work-schedules`, `time-entries`, `time-corrections`,
@@ -149,6 +150,12 @@ expone los recursos de jornada, cada uno con su scope fino (`employees:*`,
 `payroll-export-formats`, `absence-types`, `absence-policies`,
 `absence-balances`, `absence-requests`, `absence-calendar`, `presence`,
 `holidays` y `gestoria workforce-summary`.
+
+`employee-seats` es el add-on de facturación por empleado: no concede el módulo,
+solo factura los asientos. Dar de alta o reactivar un empleado cobra su asiento
+siempre que el plan factura (quedan exentos Enterprise, las empresas gestionadas
+y el periodo de prueba) y, sin método de pago, responde `402`
+`employee_seat_payment_method_required`.
 
 ```bash
 # Fichar entrada y salida (cada asiento encadena su huella — RD-ley 8/2019)
