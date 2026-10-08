@@ -44647,6 +44647,327 @@
                 "x-required-scope": "contacts:read"
             }
         },
+        "/connected-accounts/{account}/charge-rules": {
+            "post": {
+                "operationId": "public-api.v1.stripe_autoinvoicing.accounts.charge_rules.create",
+                "description": "Create a charge treatment rule at the end of the account's list. A rule matches a charge by `condition` and either invoices it (optionally with a `concept` and a `vat_rate`) or excludes it from invoicing with a `non_invoice_reason` (`indemnity_not_subject`, `multipurpose_voucher` or `invoiced_elsewhere`). Responds 201 with the rule. Fails with `charge_rule_invalid` when a field breaks the contract and with `charge_rule_limit_reached` when the account already has the maximum number of rules.",
+                "summary": "Create a charge treatment rule",
+                "tags": [
+                    "Stripe"
+                ],
+                "parameters": [
+                    {
+                        "name": "account",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChargeRuleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The newly created rule, placed at the end of the list.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ChargeRule"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                },
+                                "examples": {
+                                    "success": {
+                                        "summary": "POST /v1/connected-accounts/{account}/charge-rules \u00b7 201",
+                                        "value": {
+                                            "data": {
+                                                "id": "0192e7d1-7a81-7c6e-9345-6f708192a3b4",
+                                                "object": "charge_rule",
+                                                "position": 2,
+                                                "condition": {
+                                                    "type": "description_contains",
+                                                    "key": null,
+                                                    "value": "vale regalo"
+                                                },
+                                                "outcome": "invoice",
+                                                "non_invoice_reason": null,
+                                                "concept": "Vale regalo",
+                                                "vat_rate": 10,
+                                                "created_at": "2026-09-20T09:20:00+00:00",
+                                                "updated_at": "2026-09-20T09:20:00+00:00"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            },
+                            "Idempotent-Replayed": {
+                                "description": "Present with value `\"true\"` only when this response was replayed from the idempotency cache for a repeated `Idempotency-Key` (same key, same request fingerprint). Absent on the first, freshly executed request.",
+                                "schema": {
+                                    "type": "string",
+                                    "examples": [
+                                        "true"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    }
+                },
+                "x-speakeasy-group": "stripeAutoinvoicing.accounts.chargeRules",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "stripe_autoinvoicing:write"
+            },
+            "get": {
+                "operationId": "public-api.v1.stripe_autoinvoicing.accounts.charge_rules.list",
+                "description": "List the charge treatment rules of a connected Stripe account, ordered by `position` (the first matching rule decides how a charge is treated). Each rule exposes its `id` (UUID v7), `condition` (`type`: `metadata_equals`, `description_contains` or `payment_link`, with `key` and `value`), `outcome` (`invoice` or `do_not_invoice`), `concept`, `vat_rate` and `non_invoice_reason`. Returns 404 if the account does not exist or belongs to another company.",
+                "summary": "List charge treatment rules of a connected Stripe account",
+                "tags": [
+                    "Stripe"
+                ],
+                "parameters": [
+                    {
+                        "name": "account",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The charge rules of the account, ordered by `position`. The list is not paginated.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ChargeRule"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                },
+                                "examples": {
+                                    "success": {
+                                        "summary": "GET /v1/connected-accounts/{account}/charge-rules \u00b7 200",
+                                        "value": {
+                                            "data": [
+                                                {
+                                                    "id": "0192e7d0-5e6f-7a4c-b123-4d5e6f708192",
+                                                    "object": "charge_rule",
+                                                    "position": 1,
+                                                    "condition": {
+                                                        "type": "metadata_equals",
+                                                        "key": "tipo",
+                                                        "value": "penalizacion"
+                                                    },
+                                                    "outcome": "do_not_invoice",
+                                                    "non_invoice_reason": "indemnity_not_subject",
+                                                    "concept": null,
+                                                    "vat_rate": null,
+                                                    "created_at": "2026-09-20T09:15:00+00:00",
+                                                    "updated_at": "2026-09-20T09:15:00+00:00"
+                                                },
+                                                {
+                                                    "id": "0192e7d1-7a81-7c6e-9345-6f708192a3b4",
+                                                    "object": "charge_rule",
+                                                    "position": 2,
+                                                    "condition": {
+                                                        "type": "description_contains",
+                                                        "key": null,
+                                                        "value": "vale regalo"
+                                                    },
+                                                    "outcome": "invoice",
+                                                    "non_invoice_reason": null,
+                                                    "concept": "Vale regalo",
+                                                    "vat_rate": 10,
+                                                    "created_at": "2026-09-20T09:20:00+00:00",
+                                                    "updated_at": "2026-09-20T09:20:00+00:00"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    }
+                },
+                "x-speakeasy-group": "stripeAutoinvoicing.accounts.chargeRules",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "stripe_autoinvoicing:read"
+            }
+        },
         "/companies/{company}/api-keys": {
             "post": {
                 "operationId": "public-api.v1.companies.api_keys.create",
@@ -48575,6 +48896,30 @@
                                 "schema": {
                                     "type": "string",
                                     "format": "uuid"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Reliable seat quote unavailable while employee batches are enabled; nobody was created or charged. Retry the same request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "employee_batch_quote_unavailable": {
+                                        "summary": "POST /v1/employees \u00b7 503 employee_batch_quote_unavailable",
+                                        "value": {
+                                            "error": {
+                                                "type": "service_unavailable_error",
+                                                "code": "employee_batch_quote_unavailable",
+                                                "message": "No se ha podido obtener un importe fiable. Vuelve a solicitar la cotizaci\u00f3n.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#employee_batch_quote_unavailable",
+                                                "request_id": "req_5f2a9c0e1b7d4a38c6e90d1234"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -72108,6 +72453,299 @@
                     "retryConnectionErrors": true
                 },
                 "x-required-scope": "contacts:write"
+            }
+        },
+        "/connected-accounts/{account}/charge-rules/{rule}": {
+            "delete": {
+                "operationId": "public-api.v1.stripe_autoinvoicing.accounts.charge_rules.delete",
+                "description": "Delete a charge treatment rule. Charges already excluded by it keep their record in the non-invoiced charges list. Responds 204 with no body. Returns 404 `charge_rule_not_found` if the rule does not exist in that account and company.",
+                "summary": "Delete a charge treatment rule",
+                "tags": [
+                    "Stripe"
+                ],
+                "parameters": [
+                    {
+                        "name": "account",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "rule",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content",
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            },
+                            "Idempotent-Replayed": {
+                                "description": "Present with value `\"true\"` only when this response was replayed from the idempotency cache for a repeated `Idempotency-Key` (same key, same request fingerprint). Absent on the first, freshly executed request.",
+                                "schema": {
+                                    "type": "string",
+                                    "examples": [
+                                        "true"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    }
+                },
+                "x-speakeasy-group": "stripeAutoinvoicing.accounts.chargeRules",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "stripe_autoinvoicing:write"
+            },
+            "put": {
+                "operationId": "public-api.v1.stripe_autoinvoicing.accounts.charge_rules.update",
+                "description": "Replace a charge treatment rule: `condition`, `outcome`, `concept`, `vat_rate` and `non_invoice_reason` are all sent again; its `position` does not change (use the reorder operation). Returns 404 `charge_rule_not_found` if the rule does not exist in that account and company, and 422 `charge_rule_invalid` when a field breaks the contract.",
+                "summary": "Update a charge treatment rule",
+                "tags": [
+                    "Stripe"
+                ],
+                "parameters": [
+                    {
+                        "name": "account",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "rule",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ChargeRuleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The replaced rule. Its position does not change.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ChargeRule"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                },
+                                "examples": {
+                                    "success": {
+                                        "summary": "PUT /v1/connected-accounts/{account}/charge-rules/{rule} \u00b7 200",
+                                        "value": {
+                                            "data": {
+                                                "id": "0192e7d0-5e6f-7a4c-b123-4d5e6f708192",
+                                                "object": "charge_rule",
+                                                "position": 1,
+                                                "condition": {
+                                                    "type": "metadata_equals",
+                                                    "key": "tipo",
+                                                    "value": "penalizacion"
+                                                },
+                                                "outcome": "do_not_invoice",
+                                                "non_invoice_reason": "indemnity_not_subject",
+                                                "concept": null,
+                                                "vat_rate": null,
+                                                "created_at": "2026-09-20T09:15:00+00:00",
+                                                "updated_at": "2026-09-21T11:00:00+00:00"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            },
+                            "Idempotent-Replayed": {
+                                "description": "Present with value `\"true\"` only when this response was replayed from the idempotency cache for a repeated `Idempotency-Key` (same key, same request fingerprint). Absent on the first, freshly executed request.",
+                                "schema": {
+                                    "type": "string",
+                                    "examples": [
+                                        "true"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    }
+                },
+                "x-speakeasy-group": "stripeAutoinvoicing.accounts.chargeRules",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "stripe_autoinvoicing:write"
             }
         },
         "/companies/{company}": {
@@ -100196,6 +100834,9 @@
                                                 "require_nif": false,
                                                 "refunds_enabled": true,
                                                 "subscription_autoinvoicing_enabled": false,
+                                                "default_line_concept": "Cobro Stripe",
+                                                "connection_method": "account_links",
+                                                "authorization_status": "authorized",
                                                 "status": "active",
                                                 "connected_at": "2026-06-15T10:30:00+00:00"
                                             }
@@ -100543,6 +101184,9 @@
                                                 "require_nif": false,
                                                 "refunds_enabled": true,
                                                 "subscription_autoinvoicing_enabled": false,
+                                                "default_line_concept": "Cobro Stripe",
+                                                "connection_method": "account_links",
+                                                "authorization_status": "authorized",
                                                 "status": "active",
                                                 "connected_at": "2026-06-15T10:30:00+00:00"
                                             }
@@ -153135,6 +153779,9 @@
                                                     "require_nif": false,
                                                     "refunds_enabled": true,
                                                     "subscription_autoinvoicing_enabled": false,
+                                                    "default_line_concept": "Cobro Stripe",
+                                                    "connection_method": "account_links",
+                                                    "authorization_status": "authorized",
                                                     "status": "active",
                                                     "connected_at": "2026-06-15T10:30:00+00:00"
                                                 }
@@ -157802,7 +158449,14 @@
                                 "order_line_amount_exceeds_column",
                                 "order_status_unknown",
                                 "refund_not_settled",
-                                "protected_customer_data_unavailable"
+                                "protected_customer_data_unavailable",
+                                "excluded_by_charge_rule",
+                                "handled_by_stripe_invoice",
+                                "stripe_authorization_required",
+                                "stripe_app_uninstalled",
+                                "refund_of_non_invoiced_charge",
+                                "stripe_invoice_without_amount",
+                                "deauthorization_not_applicable"
                             ]
                         }
                     },
@@ -160109,7 +160763,7 @@
             },
             "post": {
                 "operationId": "public-api.v1.invoices.payments_create",
-                "description": "Register a partial (or full) payment against an invoice. The invoice transitions to `partially_paid` while the cumulative paid amount is below the total, and to `paid` once it reaches it. Returns 422 if the invoice is in a status that does not accept payments.",
+                "description": "Register a partial (or full) payment against an invoice. The invoice transitions to `partially_paid` while the cumulative paid amount is below the total, and to `paid` once it reaches it. Returns 422 if the invoice is in a status that does not accept payments, or if `paid_on` is later than today. A `paid_on` earlier than the issue date is accepted: it records an advance payment.",
                 "summary": "Register a payment",
                 "tags": [
                     "Invoices"
@@ -160840,6 +161494,163 @@
                     "retryConnectionErrors": true
                 },
                 "x-required-scope": "invoices:read"
+            }
+        },
+        "/connected-accounts/{account}/non-invoiced-charges": {
+            "get": {
+                "operationId": "public-api.v1.stripe_autoinvoicing.accounts.non_invoiced_charges.list",
+                "description": "List the charges of a connected Stripe account that were deliberately not invoiced because a charge treatment rule excluded them. Each item exposes `id`, `connected_account_id`, `transaction_id`, `amount`, `currency`, `reason`, `charge_rule_id` (`null` if the rule was deleted), `description` and `occurred_at`. Cursor paginated (`limit` 1-100, `starting_after`, `ending_before`), newest first.",
+                "summary": "List non-invoiced charges of a connected Stripe account",
+                "tags": [
+                    "Stripe"
+                ],
+                "parameters": [
+                    {
+                        "name": "account",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Charges left out of invoicing by a rule, most recent first, with cursor pagination.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/NonInvoicedCharge"
+                                            }
+                                        },
+                                        "has_more": {
+                                            "type": "boolean",
+                                            "description": "Whether there are more results after this page."
+                                        },
+                                        "next_cursor": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ],
+                                            "format": "uuid",
+                                            "description": "Cursor to pass as `starting_after` to get the next page, or `null` on the last page."
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "has_more",
+                                        "next_cursor"
+                                    ]
+                                },
+                                "examples": {
+                                    "success": {
+                                        "summary": "GET /v1/connected-accounts/{account}/non-invoiced-charges \u00b7 200",
+                                        "value": {
+                                            "data": [
+                                                {
+                                                    "id": "0192e7e1-6f70-7b5d-8234-5e6f708192a3",
+                                                    "object": "non_invoiced_charge",
+                                                    "connected_account_id": "0192e7c2-4d5e-7f3b-a012-3c4d5e6f7081",
+                                                    "transaction_id": "pi_3QabcDEF2ghIJklm",
+                                                    "amount": 50,
+                                                    "currency": "EUR",
+                                                    "description": "Penalizaci\u00f3n por cancelaci\u00f3n tard\u00eda",
+                                                    "reason": "indemnity_not_subject",
+                                                    "charge_rule_id": "0192e7d0-5e6f-7a4c-b123-4d5e6f708192",
+                                                    "occurred_at": "2026-09-28T16:42:10+00:00"
+                                                }
+                                            ],
+                                            "has_more": false,
+                                            "next_cursor": null
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
+                    }
+                },
+                "x-speakeasy-group": "stripeAutoinvoicing.accounts.nonInvoicedCharges",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "stripe_autoinvoicing:read"
             }
         },
         "/notifications": {
@@ -166178,7 +166989,7 @@
             },
             "post": {
                 "operationId": "public-api.v1.purchase_invoices.register_payment",
-                "description": "Record a partial (or total) payment against an expense and append it to its ledger. Body: `amount`, `paid_on`, `payment_method`, plus the optional `bank_account_id`, `reference` and `notes`. Three invariants are enforced and return `422`: the amount must be greater than zero and no larger than the outstanding balance, `paid_on` must fall between the supplier document issue date and today, and a cancelled expense accepts no payments. Once the accumulated payments cover the total, the expense settles on its own \u2014 you do not need to call `mark_paid` as well. Returns `201` with the payment just created and a `Location` header pointing at the ledger.",
+                "description": "Record a partial (or total) payment against an expense and append it to its ledger. Body: `amount`, `paid_on`, `payment_method`, plus the optional `bank_account_id`, `reference` and `notes`. Three invariants are enforced and return `422`: the amount must be greater than zero and no larger than the outstanding balance, `paid_on` cannot be later than today (an earlier date than the supplier document issue date is accepted as an advance payment), and a cancelled expense accepts no payments. Once the accumulated payments cover the total, the expense settles on its own \u2014 you do not need to call `mark_paid` as well. Returns `201` with the payment just created and a `Location` header pointing at the ledger.",
                 "summary": "Register an expense payment",
                 "tags": [
                     "Purchase Invoices"
@@ -177529,7 +178340,7 @@
         "/invoices/{invoice}/mark-paid": {
             "post": {
                 "operationId": "public-api.v1.invoices.mark_paid",
-                "description": "Mark an invoice as fully paid. Idempotent: if already paid, returns the invoice unchanged. Returns 422 if the invoice is in a status that cannot transition to `paid`.",
+                "description": "Mark an invoice as fully paid. Idempotent: if already paid, returns the invoice unchanged. Returns 422 if the invoice is in a status that cannot transition to `paid`, or if `paid_on` is later than today. A `paid_on` earlier than the issue date is accepted: it records an advance payment.",
                 "summary": "Mark invoice as paid",
                 "tags": [
                     "Invoices"
@@ -179050,7 +179861,7 @@
         "/purchase_invoices/{purchase_invoice}/mark_paid": {
             "post": {
                 "operationId": "public-api.v1.purchase_invoices.mark_paid",
-                "description": "Record payment of an expense using the optional `paid_on` date. When a draft expense contains stock-managed catalog lines, this transition registers their frozen base quantities as inbound stock exactly once. A pending expense has already registered them, so marking it as paid never duplicates stock.",
+                "description": "Record payment of an expense using the optional `paid_on` date (defaults to today; it cannot be later than today, and an earlier date than the supplier document issue date is accepted as an advance payment). When a draft expense contains stock-managed catalog lines, this transition registers their frozen base quantities as inbound stock exactly once. A pending expense has already registered them, so marking it as paid never duplicates stock.",
                 "summary": "Mark expense as paid",
                 "tags": [
                     "Purchase Invoices"
@@ -187340,6 +188151,30 @@
                                 }
                             }
                         }
+                    },
+                    "503": {
+                        "description": "Reliable seat quote unavailable while employee batches are enabled; nobody was created or charged. Retry the same request.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "employee_batch_quote_unavailable": {
+                                        "summary": "POST /v1/employees/{employee}/reactivate \u00b7 503 employee_batch_quote_unavailable",
+                                        "value": {
+                                            "error": {
+                                                "type": "service_unavailable_error",
+                                                "code": "employee_batch_quote_unavailable",
+                                                "message": "No se ha podido obtener un importe fiable. Vuelve a solicitar la cotizaci\u00f3n.",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#employee_batch_quote_unavailable",
+                                                "request_id": "req_5f2a9c0e1b7d4a38c6e90d1234"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 },
                 "x-speakeasy-group": "employees",
@@ -192597,6 +193432,192 @@
                     "retryConnectionErrors": true
                 },
                 "x-required-scope": "time_entries:write"
+            }
+        },
+        "/connected-accounts/{account}/charge-rules/order": {
+            "put": {
+                "operationId": "public-api.v1.stripe_autoinvoicing.accounts.charge_rules.reorder",
+                "description": "Reorder the rules of a connected Stripe account by sending every rule `id` in `rule_ids` in the new order (the first one is evaluated first). The list must contain exactly the account's rules, with no repeats: otherwise it fails with 422 `charge_rule_invalid` and `param` `rule_ids`. Returns the rules in their new order.",
+                "summary": "Reorder the charge treatment rules",
+                "tags": [
+                    "Stripe"
+                ],
+                "parameters": [
+                    {
+                        "name": "account",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/IdempotencyKey"
+                    },
+                    {
+                        "$ref": "#/components/parameters/FactuareaVersion"
+                    },
+                    {
+                        "$ref": "#/components/parameters/XActiveProfile"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReorderChargeRulesRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "All the rules of the account in their new order.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ChargeRule"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                },
+                                "examples": {
+                                    "success": {
+                                        "summary": "PUT /v1/connected-accounts/{account}/charge-rules/order \u00b7 200",
+                                        "value": {
+                                            "data": [
+                                                {
+                                                    "id": "0192e7d1-7a81-7c6e-9345-6f708192a3b4",
+                                                    "object": "charge_rule",
+                                                    "position": 1,
+                                                    "condition": {
+                                                        "type": "description_contains",
+                                                        "key": null,
+                                                        "value": "vale regalo"
+                                                    },
+                                                    "outcome": "invoice",
+                                                    "non_invoice_reason": null,
+                                                    "concept": "Vale regalo",
+                                                    "vat_rate": 10,
+                                                    "created_at": "2026-09-20T09:20:00+00:00",
+                                                    "updated_at": "2026-09-20T09:20:00+00:00"
+                                                },
+                                                {
+                                                    "id": "0192e7d0-5e6f-7a4c-b123-4d5e6f708192",
+                                                    "object": "charge_rule",
+                                                    "position": 2,
+                                                    "condition": {
+                                                        "type": "metadata_equals",
+                                                        "key": "tipo",
+                                                        "value": "penalizacion"
+                                                    },
+                                                    "outcome": "do_not_invoice",
+                                                    "non_invoice_reason": "indemnity_not_subject",
+                                                    "concept": null,
+                                                    "vat_rate": null,
+                                                    "created_at": "2026-09-20T09:15:00+00:00",
+                                                    "updated_at": "2026-09-20T09:15:00+00:00"
+                                                }
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "headers": {
+                            "X-Request-Id": {
+                                "description": "Unique request identifier, propagated for log correlation and support.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "X-RateLimit-Reset": {
+                                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                                "schema": {
+                                    "type": "integer"
+                                }
+                            },
+                            "Factuarea-Version": {
+                                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                                "schema": {
+                                    "type": "string",
+                                    "format": "date",
+                                    "examples": [
+                                        "2026-06-01"
+                                    ]
+                                }
+                            },
+                            "Idempotent-Replayed": {
+                                "description": "Present with value `\"true\"` only when this response was replayed from the idempotency cache for a repeated `Idempotency-Key` (same key, same request fingerprint). Absent on the first, freshly executed request.",
+                                "schema": {
+                                    "type": "string",
+                                    "examples": [
+                                        "true"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Unauthorized"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Forbidden"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/TooManyRequests"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/InternalServerError"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/NotFound"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/UnprocessableEntity"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Conflict"
+                    }
+                },
+                "x-speakeasy-group": "stripeAutoinvoicing.accounts.chargeRules",
+                "x-speakeasy-retries": {
+                    "strategy": "backoff",
+                    "backoff": {
+                        "initialInterval": 500,
+                        "maxInterval": 60000,
+                        "maxElapsedTime": 3600000,
+                        "exponent": 1.5
+                    },
+                    "statusCodes": [
+                        "429",
+                        "5XX"
+                    ],
+                    "retryConnectionErrors": true
+                },
+                "x-required-scope": "stripe_autoinvoicing:write"
             }
         },
         "/projects/{project}/columns/reorder": {
@@ -247204,6 +248225,209 @@
                 },
                 "title": "ChangeTaskStatusV1Request"
             },
+            "ChargeRule": {
+                "type": "object",
+                "description": "A charge treatment rule of a connected Stripe account. Rules are evaluated in `position` order and the first one that matches decides whether the charge is invoiced or left out. The public `id` is the rule UUID (v7).",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "0192e7d0-5e6f-7a4c-b123-4d5e6f708192",
+                        "description": "UUID (v7) of the rule. Public identity (KEY `id`)."
+                    },
+                    "object": {
+                        "type": "string",
+                        "enum": [
+                            "charge_rule"
+                        ],
+                        "example": "charge_rule",
+                        "description": "Stripe-like discriminator. Always `charge_rule`."
+                    },
+                    "position": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "example": 1,
+                        "description": "Evaluation order within the account, starting at 1. Change it with `PUT /v1/connected-accounts/{account}/charge-rules/order`."
+                    },
+                    "condition": {
+                        "type": "object",
+                        "description": "Condition a charge must meet for the rule to apply.",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "metadata_equals",
+                                    "description_contains",
+                                    "payment_link"
+                                ],
+                                "example": "metadata_equals",
+                                "description": "Kind of condition: the charge metadata `key` equals `value`, the charge description contains `value`, or the charge comes from the payment link `value`."
+                            },
+                            "key": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 40,
+                                "example": "tipo",
+                                "description": "Metadata key. Only used (and required) with `metadata_equals`; `null` otherwise."
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 500,
+                                "example": "penalizacion",
+                                "description": "Value to compare against."
+                            }
+                        },
+                        "required": [
+                            "type",
+                            "key",
+                            "value"
+                        ]
+                    },
+                    "outcome": {
+                        "type": "string",
+                        "enum": [
+                            "invoice",
+                            "do_not_invoice"
+                        ],
+                        "example": "do_not_invoice",
+                        "description": "`invoice` issues the invoice (optionally with `concept` and `vat_rate`); `do_not_invoice` leaves the charge out and records it with `non_invoice_reason`."
+                    },
+                    "non_invoice_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "indemnity_not_subject",
+                            "multipurpose_voucher",
+                            "invoiced_elsewhere",
+                            null
+                        ],
+                        "example": "indemnity_not_subject",
+                        "description": "Reason recorded for charges left out. Only with `do_not_invoice`; `null` with `invoice`."
+                    },
+                    "concept": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "example": null,
+                        "description": "Concept of the invoice line. Only with `invoice`; `null` otherwise."
+                    },
+                    "vat_rate": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 100,
+                        "example": null,
+                        "description": "VAT rate in percent applied to the line. Only with `invoice`; `null` otherwise."
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-09-20T09:15:00+00:00",
+                        "description": "When the rule was created (ISO 8601)."
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-09-20T09:15:00+00:00",
+                        "description": "When the rule was last updated (ISO 8601)."
+                    }
+                },
+                "required": [
+                    "id",
+                    "object",
+                    "position",
+                    "condition",
+                    "outcome",
+                    "non_invoice_reason",
+                    "concept",
+                    "vat_rate",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "ChargeRule"
+            },
+            "ChargeRuleRequest": {
+                "type": "object",
+                "properties": {
+                    "condition": {
+                        "type": "object",
+                        "properties": {
+                            "type": {
+                                "type": "string",
+                                "enum": [
+                                    "metadata_equals",
+                                    "description_contains",
+                                    "payment_link"
+                                ]
+                            },
+                            "key": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ],
+                                "maxLength": 40
+                            },
+                            "value": {
+                                "type": "string",
+                                "maxLength": 500
+                            }
+                        },
+                        "required": [
+                            "type",
+                            "value"
+                        ]
+                    },
+                    "outcome": {
+                        "type": "string",
+                        "enum": [
+                            "invoice",
+                            "do_not_invoice"
+                        ]
+                    },
+                    "concept": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 1,
+                        "maxLength": 255
+                    },
+                    "vat_rate": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 100
+                    },
+                    "non_invoice_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "enum": [
+                            "indemnity_not_subject",
+                            "multipurpose_voucher",
+                            "invoiced_elsewhere",
+                            null
+                        ]
+                    }
+                },
+                "required": [
+                    "condition",
+                    "outcome"
+                ],
+                "title": "ChargeRuleRequest"
+            },
             "Client": {
                 "type": "object",
                 "description": "A customer of your company.",
@@ -248565,6 +249789,35 @@
                         "example": false,
                         "description": "Whether Stripe subscription cycles on this account are auto-invoiced. Defaults to `false`."
                     },
+                    "default_line_concept": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 1,
+                        "maxLength": 255,
+                        "example": "Cobro Stripe",
+                        "description": "Default concept of the single line created for charges whose lines cannot be recovered, or `null` if not configured. Editable with `PUT /v1/connected-accounts/{account}`."
+                    },
+                    "connection_method": {
+                        "type": "string",
+                        "enum": [
+                            "account_links",
+                            "stripe_app"
+                        ],
+                        "example": "account_links",
+                        "description": "How the account was linked to Stripe: `account_links` (Stripe Connect onboarding) or `stripe_app` (Stripe App). Read-only."
+                    },
+                    "authorization_status": {
+                        "type": "string",
+                        "enum": [
+                            "authorized",
+                            "reauthorization_required",
+                            "revoked"
+                        ],
+                        "example": "authorized",
+                        "description": "Authorization state of the link with Stripe: `authorized`, `reauthorization_required` (the account must be linked again) or `revoked`. Read-only."
+                    },
                     "status": {
                         "type": "string",
                         "enum": [
@@ -248596,6 +249849,9 @@
                     "require_nif",
                     "refunds_enabled",
                     "subscription_autoinvoicing_enabled",
+                    "default_line_concept",
+                    "connection_method",
+                    "authorization_status",
                     "status",
                     "connected_at"
                 ],
@@ -264810,6 +266066,13 @@
                             "order_status_unknown",
                             "refund_not_settled",
                             "protected_customer_data_unavailable",
+                            "excluded_by_charge_rule",
+                            "handled_by_stripe_invoice",
+                            "stripe_authorization_required",
+                            "stripe_app_uninstalled",
+                            "refund_of_non_invoiced_charge",
+                            "stripe_invoice_without_amount",
+                            "deauthorization_not_applicable",
                             null
                         ],
                         "example": "autoinvoicing_disabled",
@@ -268429,6 +269692,93 @@
                     "project_id"
                 ],
                 "title": "MoveTaskToProjectV1Request"
+            },
+            "NonInvoicedCharge": {
+                "type": "object",
+                "description": "A Stripe charge that a charge rule left out of invoicing. No invoice or VERI*FACTU record is generated, but the charge is kept with its reason. The public `id` is the UUID (v7); `transaction_id` (`pi_xxx`) is the external Stripe id.",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "0192e7e1-6f70-7b5d-8234-5e6f708192a3",
+                        "description": "UUID (v7) of the record. Public identity (KEY `id`)."
+                    },
+                    "object": {
+                        "type": "string",
+                        "enum": [
+                            "non_invoiced_charge"
+                        ],
+                        "example": "non_invoiced_charge",
+                        "description": "Stripe-like discriminator. Always `non_invoiced_charge`."
+                    },
+                    "connected_account_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "0192e7c2-4d5e-7f3b-a012-3c4d5e6f7081",
+                        "description": "UUID (v7) of the connected account."
+                    },
+                    "transaction_id": {
+                        "type": "string",
+                        "example": "pi_3QabcDEF2ghIJklm",
+                        "description": "External Stripe id of the charge (`pi_xxx`). NOT an internal UUID nor a foreign key."
+                    },
+                    "amount": {
+                        "type": "number",
+                        "example": 50,
+                        "description": "Amount in major units of `currency`, at Stripe's decimal scale for that currency (3,000 JPY \u2192 `3000`, 30.00 EUR \u2192 `30`, 5.124 KWD \u2192 `5.124`)."
+                    },
+                    "currency": {
+                        "type": "string",
+                        "example": "EUR",
+                        "description": "ISO 4217 currency code, uppercase."
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "example": "Penalizaci\u00f3n por cancelaci\u00f3n tard\u00eda",
+                        "description": "Charge description reported by Stripe, or `null`."
+                    },
+                    "reason": {
+                        "type": "string",
+                        "enum": [
+                            "indemnity_not_subject",
+                            "multipurpose_voucher",
+                            "invoiced_elsewhere"
+                        ],
+                        "example": "indemnity_not_subject",
+                        "description": "Why the charge was not invoiced."
+                    },
+                    "charge_rule_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid",
+                        "example": "0192e7d0-5e6f-7a4c-b123-4d5e6f708192",
+                        "description": "UUID (v7) of the rule that decided it, or `null` if the rule was deleted afterwards."
+                    },
+                    "occurred_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "example": "2026-09-28T16:42:10+00:00",
+                        "description": "When the charge happened (ISO 8601)."
+                    }
+                },
+                "required": [
+                    "id",
+                    "object",
+                    "connected_account_id",
+                    "transaction_id",
+                    "amount",
+                    "currency",
+                    "description",
+                    "reason",
+                    "charge_rule_id",
+                    "occurred_at"
+                ],
+                "title": "NonInvoicedCharge"
             },
             "Notification": {
                 "type": "object",
@@ -279067,7 +280417,7 @@
             },
             "RegisterInvoicePaymentRequest": {
                 "type": "object",
-                "description": "Register a partial (or full) payment against an invoice. Required: `amount` (> 0), `paid_on` (date) and `payment_method` (a value from the closed catalog). Optional: `reference`, `notes`.",
+                "description": "Register a partial (or full) payment against an invoice. Required: `amount` (> 0), `paid_on` (date) and `payment_method` (a value from the closed catalog). Optional: `reference`, `notes`. `paid_on` cannot be later than today (422); an earlier date than the issue date is accepted as an advance payment.",
                 "properties": {
                     "amount": {
                         "type": "number",
@@ -279116,7 +280466,7 @@
             },
             "RegisterPurchaseInvoicePaymentRequest": {
                 "type": "object",
-                "description": "Register a partial (or full) payment against an expense. Required: `amount` (> 0), `paid_on` (date) and `payment_method` (a value from the closed catalog). Optional: `bank_account_id`, `reference`, `notes`. The domain invariants (amount within the pending balance, issue date \u2264 payment date \u2264 today, expense not cancelled) are enforced with a 422.",
+                "description": "Register a partial (or full) payment against an expense. Required: `amount` (> 0), `paid_on` (date) and `payment_method` (a value from the closed catalog). Optional: `bank_account_id`, `reference`, `notes`. The domain invariants (amount within the pending balance, payment date not later than today \u2014 an earlier date than the issue date is an advance payment \u2014, expense not cancelled) are enforced with a 422.",
                 "properties": {
                     "amount": {
                         "type": "number",
@@ -279225,6 +280575,25 @@
                     "power_of_attorney"
                 ],
                 "title": "RemissionMode"
+            },
+            "ReorderChargeRulesRequest": {
+                "type": "object",
+                "properties": {
+                    "rule_ids": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "minItems": 1,
+                        "maxItems": 50,
+                        "uniqueItems": true
+                    }
+                },
+                "required": [
+                    "rule_ids"
+                ],
+                "title": "ReorderChargeRulesRequest"
             },
             "ReorderProjectColumnsV1Request": {
                 "type": "object",
@@ -292263,6 +293632,14 @@
                     },
                     "subscription_autoinvoicing_enabled": {
                         "type": "boolean"
+                    },
+                    "default_line_concept": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 1,
+                        "maxLength": 255
                     }
                 },
                 "title": "UpdateConnectedAccountRequest"
