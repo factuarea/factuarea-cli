@@ -59,5 +59,6 @@ func NewRootCmd() *cobra.Command {
 		newDocsCmd(),
 	)
 	registerGeneratedCommands(root)
+	registerServiceLevelCommands(root)
 	return root
 }
