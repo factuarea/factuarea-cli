@@ -14,6 +14,8 @@ type Operation struct {
 	BinaryResponse *BinaryResponse
 	RequiredScope  string // x-required-scope ("" si ausente)
 	Irreversible   bool   // x-irreversible (false si ausente)
+	CrmOperation   string // Original native x-crm-operation, never a grant.
+	Pagination     *Pagination
 	// IdempotencyRequired: cabecera `Idempotency-Key` requerida por el spec
 	// (parámetro `in: header`, `name: Idempotency-Key`, `required: true`).
 	IdempotencyRequired bool
@@ -25,6 +27,14 @@ type Param struct {
 	Required    bool
 	Type        string
 	Description string
+	Format      string
+	Pattern     string
+}
+
+type Pagination struct {
+	Kind, QueryParameter, ItemsPath, MorePath, CursorPath string
+	CurrentPagePath, LastPagePath                         string
+	IdentityPath                                          string
 }
 
 type Body struct {
@@ -56,6 +66,9 @@ func (o Operation) Mutating() bool {
 }
 
 func (o Operation) Paginated() bool {
+	if o.Pagination != nil {
+		return true
+	}
 	for _, p := range o.QueryParams {
 		if p.Name == "starting_after" {
 			return true

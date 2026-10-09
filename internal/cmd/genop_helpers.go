@@ -22,6 +22,7 @@ func validateRawJSONBody(body []byte, requireObject bool) ([]byte, error) {
 		return body, nil
 	}
 	dec := json.NewDecoder(bytes.NewReader(trimmed))
+	dec.UseNumber()
 	var v any
 	if err := dec.Decode(&v); err != nil {
 		return nil, apierr.Usagef("JSON inválido en --data: %v", err)
@@ -92,10 +93,13 @@ func validateResourceArgs(op genOp, args []string) error {
 			return apierr.Usagef("falta el id del recurso (%s)", op.PathParams[i].Name)
 		}
 	}
-	return nil
+	return validateCRMResourceArgs(op, args)
 }
 
 func (op genOp) isMutating() bool {
+	if op.CrmOperation != "" && op.Method == "GET" {
+		return false
+	}
 	if scope := op.RequiredScope; scope != "" {
 		return !strings.HasSuffix(scope, ":read")
 	}
@@ -107,6 +111,9 @@ func (op genOp) isMutating() bool {
 }
 
 func (op genOp) isPaginated() bool {
+	if op.Pagination != nil {
+		return true
+	}
 	for _, p := range op.QueryParams {
 		if p.Name == "starting_after" {
 			return true

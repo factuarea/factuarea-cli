@@ -38,6 +38,28 @@ func WithAPIVersion(v string) Option        { return func(c *Client) { c.apiVers
 
 func WithSleep(fn func(time.Duration)) Option { return func(c *Client) { c.sleep = fn } }
 
+// WithSingleAttempt disables the client's retry loop and the standard HTTP
+// transport's implicit replay on reused connections. The native client keeps
+// its credential, timeout and transport configuration; no effect is recreated.
+func WithSingleAttempt() Option {
+	return func(c *Client) {
+		c.maxRetries = 0
+		hc := *c.hc
+		// Redirects can replay a 307/308 body outside the explicit retry loop.
+		hc.CheckRedirect = func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }
+		transport := hc.Transport
+		if transport == nil {
+			transport = http.DefaultTransport
+		}
+		if native, ok := transport.(*http.Transport); ok {
+			isolated := native.Clone()
+			isolated.DisableKeepAlives = true
+			hc.Transport = isolated
+		}
+		c.hc = &hc
+	}
+}
+
 func New(apiKey string, opts ...Option) *Client {
 	c := &Client{
 		baseURL:    defaultBaseURL,
@@ -101,8 +123,11 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 			return nil, lastErr
 		}
 
-		respBody, _ := io.ReadAll(httpResp.Body)
+		respBody, readErr := io.ReadAll(httpResp.Body)
 		_ = httpResp.Body.Close()
+		if readErr != nil {
+			return nil, &apierr.TransportError{Err: readErr}
+		}
 		resp := &Response{
 			StatusCode:  httpResp.StatusCode,
 			Header:      httpResp.Header,

@@ -1,7 +1,9 @@
 package client
 
 import (
+	"bytes"
 	"encoding/json"
+	"io"
 	"strconv"
 	"strings"
 
@@ -14,7 +16,9 @@ func parseError(resp *Response) error {
 			Error map[string]any  `json:"error"`
 			Data  json.RawMessage `json:"data"`
 		}
-		if json.Unmarshal(resp.Body, &raw) == nil && (raw.Error != nil || len(raw.Data) > 0) {
+		decoder := json.NewDecoder(bytes.NewReader(resp.Body))
+		decoder.UseNumber()
+		if decoder.Decode(&raw) == nil && decoder.Decode(new(any)) == io.EOF && (raw.Error != nil || len(raw.Data) > 0) {
 			get := func(k string) string {
 				if v, ok := raw.Error[k].(string); ok {
 					return v

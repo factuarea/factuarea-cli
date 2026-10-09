@@ -138,6 +138,12 @@ La conversión devuelve `purchase_invoice_id`, mantiene el original adjunto y nu
 factuarea commands --json | jq '.[] | select(.operation_id | startswith("public-api.v1.purchase_scan"))'
 ```
 
+### CRM actual
+
+`factuarea crm` incluye las operaciones v1 actuales de ContactPeople, Lead y Pipeline, con sus scopes propios, UUID públicos, confirmación humana y cuerpos originales. Las listas recorren la paginación declarada por cada productor; no se convierte `page` en un cursor ni se inventan campos ocultos. Las escrituras conservan una sola clave de idempotencia y no se reenvían automáticamente ante un resultado incierto.
+
+Consulta [la guía de entrega CRM](docs/CRM-DELIVERY.md) y el [inventario nativo](docs/crm-command-contract.json). `factuarea crm --help` y `factuarea commands --json` permiten descubrir los comandos sin una credencial. La disponibilidad y el acceso siguen sujetos a los guards actuales del servidor.
+
 ### Control horario (workforce)
 
 Con el add-on de **control horario** activo (módulo `control_horario`), el CLI

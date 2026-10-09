@@ -36,6 +36,8 @@ type manifestEntry struct {
 	BodyFields     []manifestField `json:"body_fields,omitempty"`
 	BodyHasObjects bool            `json:"body_has_object_array,omitempty"`
 	FullReplace    bool            `json:"full_replace,omitempty"`
+	CrmOperation   string          `json:"crm_operation,omitempty"`
+	Pagination     *genPagination  `json:"pagination,omitempty"`
 }
 
 func newCommandsCmd() *cobra.Command {
@@ -59,6 +61,8 @@ func newCommandsCmd() *cobra.Command {
 					Paginated:     op.isPaginated(),
 					Irreversible:  op.Irreversible,
 					RequiredScope: op.RequiredScope,
+					CrmOperation:  op.CrmOperation,
+					Pagination:    op.Pagination,
 				}
 				for _, p := range op.PathParams {
 					e.Args = append(e.Args, p.Name)

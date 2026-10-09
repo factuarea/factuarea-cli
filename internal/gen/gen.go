@@ -43,6 +43,17 @@ package cmd
 type genParam struct {
 	Name, In, Type, Description string
 	Required                    bool
+	Format, Pattern             string
+}
+type genPagination struct {
+	Kind string ` + "`json:\"kind\"`" + `
+	QueryParameter string ` + "`json:\"query_parameter\"`" + `
+	ItemsPath string ` + "`json:\"items_path\"`" + `
+	MorePath string ` + "`json:\"more_path,omitempty\"`" + `
+	CursorPath string ` + "`json:\"cursor_path,omitempty\"`" + `
+	CurrentPagePath string ` + "`json:\"current_page_path,omitempty\"`" + `
+	LastPagePath string ` + "`json:\"last_page_path,omitempty\"`" + `
+	IdentityPath string ` + "`json:\"identity_path\"`" + `
 }
 type genBodyField struct {
 	Name, Type, Kind string
@@ -63,6 +74,8 @@ type genOp struct {
 	Irreversible                               bool
 	RequiredScope                              string
 	IdempotencyRequired                        bool
+	CrmOperation                               string
+	Pagination                                 *genPagination
 	Groups                                     []string
 	PathParams, QueryParams                    []genParam
 	Body                                       *genBody
@@ -77,9 +90,11 @@ func generatedOps() []genOp {
 			Action: {{q .Action}}, Summary: {{q .Summary}}, Deprecated: {{.Deprecated}},
 			Irreversible: {{.Irreversible}}, RequiredScope: {{q .RequiredScope}},
 			IdempotencyRequired: {{.IdempotencyRequired}},
-			Groups: []string{ {{range .Groups}}{{q .}}, {{end}} },
-			PathParams: []genParam{ {{range .PathParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },
-			QueryParams: []genParam{ {{range .QueryParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },
+			{{if .CrmOperation}}CrmOperation: {{q .CrmOperation}},
+			{{end}}{{if .Pagination}}Pagination: &genPagination{Kind: {{q .Pagination.Kind}}, QueryParameter: {{q .Pagination.QueryParameter}}, ItemsPath: {{q .Pagination.ItemsPath}}, MorePath: {{q .Pagination.MorePath}}, CursorPath: {{q .Pagination.CursorPath}}, CurrentPagePath: {{q .Pagination.CurrentPagePath}}, LastPagePath: {{q .Pagination.LastPagePath}}, IdentityPath: {{q .Pagination.IdentityPath}}},
+			{{end}}Groups: []string{ {{range .Groups}}{{q .}}, {{end}} },
+			PathParams: []genParam{ {{range .PathParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}{{if .Format}}, Format: {{q .Format}}{{end}}{{if .Pattern}}, Pattern: {{q .Pattern}}{{end}}}, {{end}} },
+			QueryParams: []genParam{ {{range .QueryParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}{{if .Format}}, Format: {{q .Format}}{{end}}{{if .Pattern}}, Pattern: {{q .Pattern}}{{end}}}, {{end}} },
 			{{if .Body}}Body: &genBody{Kind: {{q .Body.Kind}}, Example: {{q .Body.Example}}, FileFields: []string{ {{range .Body.FileFields}}{{q .}}, {{end}} }, {{if .Body.FileArrayFields}}FileArrayFields: []string{ {{range .Body.FileArrayFields}}{{q .}}, {{end}} },{{end}} HasObjectArray: {{hasObjectArray .Body.Fields}}, Fields: []genBodyField{ {{template "fields" .Body.Fields}} }},{{end}}
 			{{if .BinaryResponse}}BinaryContentType: {{q .BinaryResponse.ContentType}},{{end}}
 		},

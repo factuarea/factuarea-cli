@@ -35,10 +35,18 @@ func Load() (ops []Operation, nonConforming []string, err error) {
 			}
 			groups, action, ok := Resolve(op.OperationId)
 			if !ok {
+				groups, action, ok = resolveCRM(op, method, path)
+			}
+			if !ok {
 				nonConforming = append(nonConforming, op.OperationId)
 				continue
 			}
-			ops = append(ops, buildOperation(op, method, path, groups, action))
+			operation := buildOperation(op, method, path, groups, action)
+			operation.Pagination, err = crmPagination(op, operation)
+			if err != nil {
+				return nil, nil, err
+			}
+			ops = append(ops, operation)
 		}
 	}
 
@@ -74,13 +82,14 @@ func methodsOf(item *v3.PathItem) map[string]*v3.Operation {
 
 func buildOperation(op *v3.Operation, method, path string, groups []string, action string) Operation {
 	o := Operation{
-		OperationID: op.OperationId,
-		Method:      method,
-		Path:        path,
-		Groups:      groups,
-		Action:      action,
-		Summary:     op.Summary,
-		Deprecated:  op.Deprecated != nil && *op.Deprecated,
+		OperationID:  op.OperationId,
+		Method:       method,
+		Path:         path,
+		Groups:       groups,
+		Action:       action,
+		Summary:      op.Summary,
+		Deprecated:   op.Deprecated != nil && *op.Deprecated,
+		CrmOperation: stringExt(op.Extensions, "x-crm-operation"),
 	}
 	for _, p := range op.Parameters {
 		if p == nil {
@@ -93,6 +102,10 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 		if p.Schema != nil {
 			if sc := p.Schema.Schema(); sc != nil && len(sc.Type) > 0 {
 				param.Type = sc.Type[0]
+				if o.CrmOperation != "" {
+					param.Format = sc.Format
+					param.Pattern = sc.Pattern
+				}
 			}
 		}
 		switch p.In {
@@ -106,6 +119,9 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 	o.BinaryResponse = buildBinaryResponse(op)
 	o.RequiredScope = stringExt(op.Extensions, "x-required-scope")
 	o.Irreversible = boolExt(op.Extensions, "x-irreversible")
+	if o.CrmOperation != "" {
+		o.Irreversible = o.Irreversible || boolExt(op.Extensions, "x-crm-requires-confirmation")
+	}
 	o.IdempotencyRequired = idempotencyRequired(op)
 	applyOverrides(&o)
 	return o

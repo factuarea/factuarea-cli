@@ -23,6 +23,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	var skipScopeCheck bool
 	var dryRun, skeleton bool
 	var idempotencyKey string
+	var maxPages int
 	fileFlags := map[string]*string{}
 	fileArrayFlags := map[string]*[]string{}
 
@@ -56,6 +57,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		Args:       UsageArgs(argsRule),
 		Deprecated: deprecatedMsg(op),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if op.Pagination != nil && maxPages < 1 {
+				return apierr.Usagef("--max-pages debe ser un entero positivo; limita peticiones del CLI, no resultados ni cuotas de la API")
+			}
 			if hasPosField && len(args) > nPath {
 				if cmd.Flags().Changed(posField.flagName) {
 					return apierr.Usagef("no pases %s como argumento posicional y como --%s a la vez", posField.flagName, posField.flagName)
@@ -120,13 +124,20 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			requestContext := context.Background()
+			if op.CrmOperation != "" {
+				requestContext = cmd.Context()
+				if op.isMutating() {
+					client.WithSingleAttempt()(cc.client)
+				}
+			}
 			if op.isMutating() {
 				if err := safety.RequireLive(cc.res.Environment, g.Live); err != nil {
 					return err
 				}
 			}
 			if op.RequiredScope != "" && !skipScopeCheck {
-				scopes, serr := cc.scopes(context.Background())
+				scopes, serr := cc.scopes(requestContext)
 				if serr != nil {
 					fmt.Fprintf(cmd.ErrOrStderr(), "aviso: no pude verificar scopes (%v); continúo\n", serr)
 				} else if !safety.HasScope(scopes, op.RequiredScope) {
@@ -160,6 +171,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			}
 
 			if op.isPaginated() && paginate {
+				if op.Pagination != nil {
+					return runCRMPaginated(cmd, cc, path, q, op, maxPages)
+				}
 				return runPaginated(cmd, cc, path, q)
 			}
 
@@ -195,6 +209,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			if len(q) > 0 {
 				full += "?" + q.Encode()
 			}
+			if op.CrmOperation != "" && op.isMutating() && idempotencyKey == "" {
+				idempotencyKey = client.NewIdempotencyKey()
+			}
 			if idempotencyKey != "" {
 				if headers == nil {
 					headers = map[string]string{}
@@ -215,9 +232,13 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					headers["Idempotency-Key"] = client.NewIdempotencyKey()
 				}
 			}
-			resp, err := cc.client.Do(context.Background(), op.Method, full, body, headers)
+			resp, err := cc.client.Do(requestContext, op.Method, full, body, headers)
 			if err != nil {
-				output.PrintError(cmd.ErrOrStderr(), err, cc.errorFormat)
+				printCRMMutationError(cmd, cc, op, idempotencyKey, err)
+				return &AlreadyReported{Err: err}
+			}
+			if err := validateCRMResponse(op, resp.Body); err != nil {
+				printCRMMutationError(cmd, cc, op, idempotencyKey, err)
 				return &AlreadyReported{Err: err}
 			}
 			if op.BinaryContentType != "" {
@@ -276,7 +297,14 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		c.Flags().StringVarP(&outputPath, "output", "o", "", "escribe la respuesta binaria a este fichero")
 	}
 	if op.isPaginated() {
-		c.Flags().BoolVar(&paginate, "paginate", false, "recorre todas las páginas (cursor) y emite un objeto JSON por línea (NDJSON), no el envelope {data, has_more, next_cursor}")
+		help := "recorre todas las páginas (cursor) y emite un objeto JSON por línea (NDJSON), no el envelope {data, has_more, next_cursor}"
+		if op.Pagination != nil {
+			help = "recorre la paginación nativa declarada y emite filas autorizadas como NDJSON; un error deja el recorrido parcial"
+		}
+		c.Flags().BoolVar(&paginate, "paginate", false, help)
+	}
+	if op.Pagination != nil {
+		c.Flags().IntVar(&maxPages, "max-pages", 100, "presupuesto local de peticiones para --paginate; al agotarlo la salida es parcial y el comando falla")
 	}
 	if op.Irreversible {
 		confirmHelp := "confirma la operación irreversible pasando el id del recurso"
