@@ -12,13 +12,22 @@ type Operation struct {
 	QueryParams    []Param
 	Body           *Body
 	BinaryResponse *BinaryResponse
-	RequiredScope  string // x-required-scope ("" si ausente)
+	RequiredScope  string   // x-required-scope ("" si ausente)
+	RequiredScopes []string // Native all-of scopes; never a local grant.
+	NativeContract *NativeContract
 	Irreversible   bool   // x-irreversible (false si ausente)
 	CrmOperation   string // Original native x-crm-operation, never a grant.
 	Pagination     *Pagination
 	// IdempotencyRequired: cabecera `Idempotency-Key` requerida por el spec
 	// (parámetro `in: header`, `name: Idempotency-Key`, `required: true`).
 	IdempotencyRequired bool
+}
+
+type NativeContract struct {
+	MaxBodyBytes    int
+	RequestSchema   string
+	ResponseSchemas map[string]string
+	QuerySchemas    map[string]string
 }
 
 type Param struct {

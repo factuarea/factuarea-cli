@@ -30,7 +30,7 @@ func TestCRMNativeInventoryPreservesOriginalOperationIDsAndScopes(t *testing.T) 
 	for path, item := range published.Paths {
 		for method, wire := range item {
 			family, _, _ := strings.Cut(wire.Native, ".")
-			if family != "crm_contact_people" && family != "crm_leads" && family != "crm_pipelines" {
+			if family != "crm_contact_people" && family != "crm_leads" && family != "crm_pipelines" && family != "knowledge_articles" && family != "public_help_centers" {
 				continue
 			}
 			op, ok := parsed[wire.ID]
@@ -46,7 +46,7 @@ func TestCRMNativeInventoryPreservesOriginalOperationIDsAndScopes(t *testing.T) 
 			counts[family]++
 		}
 	}
-	for family, want := range map[string]int{"crm_contact_people": 11, "crm_leads": 23, "crm_pipelines": 15} {
+	for family, want := range map[string]int{"crm_contact_people": 11, "crm_leads": 23, "crm_pipelines": 15, "knowledge_articles": 23, "public_help_centers": 5} {
 		if counts[family] != want {
 			t.Errorf("%s: actual%d expected%d; reconcile native inventory before delivery", family, counts[family], want)
 		}

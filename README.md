@@ -140,7 +140,9 @@ factuarea commands --json | jq '.[] | select(.operation_id | startswith("public-
 
 ### CRM actual
 
-`factuarea crm` incluye las operaciones v1 actuales de ContactPeople, Lead y Pipeline, con sus scopes propios, UUID públicos, confirmación humana y cuerpos originales. Las listas recorren la paginación declarada por cada productor; no se convierte `page` en un cursor ni se inventan campos ocultos. Las escrituras conservan una sola clave de idempotencia y no se reenvían automáticamente ante un resultado incierto.
+`factuarea crm` incluye 77 operaciones v1 nativas: ContactPeople11, Lead23, Pipeline15, Knowledge Articles23 y Public Help Center5. Conserva sus scopes propios, UUID públicos, confirmación humana y cuerpos originales. Las listas recorren la paginación declarada por cada productor. Las escrituras conservan una sola clave de idempotencia y no se reenvían automáticamente ante un resultado incierto.
+
+Knowledge Articles y Public Help Center se descubren con `crm knowledge-articles`, `crm knowledge-categories` y `crm public-help-center`. Sus scopes compuestos requieren también `customer_service:read` o `customer_service:write`. Los GET de recibo usan `--idempotency-key` con la clave original y conservan el recibo nativo; el CLI no sustituye ese resultado por la versión actual. Los cuerpos JSON originales de estas operaciones se envían sin normalizar sus bytes. Esta entrega es código fuente con activación OFF; la disponibilidad sigue siendo decisión del backend.
 
 Consulta [la guía de entrega CRM](docs/CRM-DELIVERY.md) y el [inventario nativo](docs/crm-command-contract.json). `factuarea crm --help` y `factuarea commands --json` permiten descubrir los comandos sin una credencial. La disponibilidad y el acceso siguen sujetos a los guards actuales del servidor.
 

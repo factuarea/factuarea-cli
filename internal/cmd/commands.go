@@ -21,23 +21,29 @@ type manifestField struct {
 }
 
 type manifestEntry struct {
-	Command        string          `json:"command"`
-	OperationID    string          `json:"operation_id"`
-	Summary        string          `json:"summary"`
-	Args           []string        `json:"args"`
-	Flags          []flagInfo      `json:"flags"`
-	Mutating       bool            `json:"mutating"`
-	Deprecated     bool            `json:"deprecated"`
-	Binary         bool            `json:"binary"`
-	Paginated      bool            `json:"paginated"`
-	Irreversible   bool            `json:"irreversible"`
-	RequiredScope  string          `json:"required_scope,omitempty"`
-	Example        string          `json:"example,omitempty"`
-	BodyFields     []manifestField `json:"body_fields,omitempty"`
-	BodyHasObjects bool            `json:"body_has_object_array,omitempty"`
-	FullReplace    bool            `json:"full_replace,omitempty"`
-	CrmOperation   string          `json:"crm_operation,omitempty"`
-	Pagination     *genPagination  `json:"pagination,omitempty"`
+	Command             string                     `json:"command"`
+	OperationID         string                     `json:"operation_id"`
+	Summary             string                     `json:"summary"`
+	Args                []string                   `json:"args"`
+	Flags               []flagInfo                 `json:"flags"`
+	Mutating            bool                       `json:"mutating"`
+	Deprecated          bool                       `json:"deprecated"`
+	Binary              bool                       `json:"binary"`
+	Paginated           bool                       `json:"paginated"`
+	Irreversible        bool                       `json:"irreversible"`
+	RequiredScope       string                     `json:"required_scope,omitempty"`
+	RequiredScopes      []string                   `json:"required_scopes,omitempty"`
+	IdempotencyRequired bool                       `json:"idempotency_required,omitempty"`
+	RequestSchema       json.RawMessage            `json:"request_schema,omitempty"`
+	ResponseSchemas     map[string]json.RawMessage `json:"response_schemas,omitempty"`
+	QuerySchemas        map[string]json.RawMessage `json:"query_schemas,omitempty"`
+	MaxBodyBytes        int                        `json:"max_body_bytes,omitempty"`
+	Example             string                     `json:"example,omitempty"`
+	BodyFields          []manifestField            `json:"body_fields,omitempty"`
+	BodyHasObjects      bool                       `json:"body_has_object_array,omitempty"`
+	FullReplace         bool                       `json:"full_replace,omitempty"`
+	CrmOperation        string                     `json:"crm_operation,omitempty"`
+	Pagination          *genPagination             `json:"pagination,omitempty"`
 }
 
 func newCommandsCmd() *cobra.Command {
@@ -63,6 +69,26 @@ func newCommandsCmd() *cobra.Command {
 					RequiredScope: op.RequiredScope,
 					CrmOperation:  op.CrmOperation,
 					Pagination:    op.Pagination,
+				}
+				if op.NativeContract != nil {
+					e.RequiredScopes = op.RequiredScopes
+					e.MaxBodyBytes = op.NativeContract.MaxBodyBytes
+					e.IdempotencyRequired = op.IdempotencyRequired
+					e.RequestSchema = json.RawMessage(op.NativeContract.RequestSchema)
+					e.ResponseSchemas = map[string]json.RawMessage{}
+					e.QuerySchemas = map[string]json.RawMessage{}
+					for code, schema := range op.NativeContract.ResponseSchemas {
+						e.ResponseSchemas[code] = json.RawMessage(schema)
+					}
+					for name, schema := range op.NativeContract.QuerySchemas {
+						e.QuerySchemas[name] = json.RawMessage(schema)
+					}
+					if op.isMutating() || op.IdempotencyRequired {
+						e.Flags = append(e.Flags, flagInfo{Name: "idempotency-key", Type: "string"})
+					}
+					if op.Irreversible {
+						e.Flags = append(e.Flags, flagInfo{Name: "confirm", Type: "string"})
+					}
 				}
 				for _, p := range op.PathParams {
 					e.Args = append(e.Args, p.Name)

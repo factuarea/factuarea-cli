@@ -61,12 +61,12 @@ func TestCRMCommandsDiscoverOnlyNativeOperations(t *testing.T) {
 		if !strings.HasPrefix(entry.Command, "factuarea crm ") || entry.RequiredScope == "" {
 			t.Fatalf("native command metadata lost: %+v", entry)
 		}
-		if strings.HasPrefix(entry.OperationID, "public-api.v1.") {
+		if strings.HasPrefix(entry.OperationID, "public-api.v1.") && !strings.HasPrefix(entry.CrmOperation, "public_help_centers.") {
 			t.Fatalf("original native operation was renamed: %s", entry.OperationID)
 		}
 	}
-	if count != 49 {
-		t.Fatalf("native command count=%d expected49", count)
+	if count != 77 {
+		t.Fatalf("native command count=%d expected77", count)
 	}
 	for _, unsupported := range []string{"opportunities", "activities"} {
 		cmd := NewRootCmd()

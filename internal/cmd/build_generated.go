@@ -36,6 +36,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		long += "\n\nEjemplo de body (--data):\n  " + op.Body.Example
 	}
 	long += bodyFieldsHelp(op)
+	if op.NativeContract != nil {
+		long += "\n\nContrato nativo: scopes requeridos " + strings.Join(op.RequiredScopes, ", ") + ". Conserva la clave y los bytes originales; los recibos se recuperan explícitamente con --idempotency-key."
+	}
 	if op.Body != nil && op.Body.Kind == "multipart" {
 		long += "\n\nSubida multipart: pasa el fichero con --file-<campo> y los" +
 			" campos de texto con --data como objeto JSON plano. En lotes, repite --file-<campo> por archivo."
@@ -77,6 +80,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			if err := validateEnumFlags(cmd, op); err != nil {
 				return err
 			}
+			if err := validateKnowledgeFlags(cmd, op, idempotencyKey); err != nil {
+				return err
+			}
 			if skeleton {
 				return nil
 			}
@@ -107,11 +113,14 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					return berr
 				}
 				rawUsed := strings.TrimSpace(data) != "" || dataFile != ""
-				if rawUsed {
+				if rawUsed && op.NativeContract == nil {
 					b, berr = validateRawJSONBody(b, true)
 					if berr != nil {
 						return berr
 					}
+				}
+				if err := validateKnowledgeBody(op, b); err != nil {
+					return err
 				}
 				typedBody = b
 				if dryRun {
@@ -140,10 +149,18 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				scopes, serr := cc.scopes(requestContext)
 				if serr != nil {
 					fmt.Fprintf(cmd.ErrOrStderr(), "aviso: no pude verificar scopes (%v); continúo\n", serr)
-				} else if !safety.HasScope(scopes, op.RequiredScope) {
-					perr := apierr.Permf("la API key no tiene el scope %q requerido por esta operación", op.RequiredScope)
-					output.PrintError(cmd.ErrOrStderr(), perr, cc.errorFormat)
-					return &AlreadyReported{Err: perr}
+				} else {
+					required := op.RequiredScopes
+					if len(required) == 0 {
+						required = []string{op.RequiredScope}
+					}
+					for _, scope := range required {
+						if !safety.HasScope(scopes, scope) {
+							perr := apierr.Permf("la API key no tiene el scope %q requerido por esta operación", scope)
+							output.PrintError(cmd.ErrOrStderr(), perr, cc.errorFormat)
+							return &AlreadyReported{Err: perr}
+						}
+					}
 				}
 			}
 			if op.Irreversible {
@@ -165,7 +182,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 						q.Add(p.Name, value)
 					}
 				}
-				if v, _ := cmd.Flags().GetString(p.Name); v != "" {
+				if v, _ := cmd.Flags().GetString(p.Name); v != "" || (op.NativeContract != nil && cmd.Flags().Changed(p.Name)) {
 					q.Add(p.Name, v)
 				}
 			}
@@ -241,6 +258,10 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				printCRMMutationError(cmd, cc, op, idempotencyKey, err)
 				return &AlreadyReported{Err: err}
 			}
+			if err := validateKnowledgeResponse(op, resp.StatusCode, resp.Body, body, args); err != nil {
+				printCRMMutationError(cmd, cc, op, idempotencyKey, err)
+				return &AlreadyReported{Err: err}
+			}
 			if op.BinaryContentType != "" {
 				return writeBinary(cmd, resp.Body, outputPath)
 			}
@@ -271,7 +292,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		}
 		c.Flags().String(p.Name, "", desc)
 	}
-	if op.isMutating() {
+	if op.isMutating() || (op.NativeContract != nil && op.IdempotencyRequired) {
 		c.Flags().StringVar(&idempotencyKey, "idempotency-key", "", "clave estable para repetir esta misma operación sin duplicarla")
 	}
 	if op.Body != nil && op.Body.Kind == "json" {

@@ -68,11 +68,18 @@ type genBody struct {
 	Fields        []genBodyField
 	HasObjectArray bool
 }
+type genNativeContract struct {
+	MaxBodyBytes int
+	RequestSchema string
+	ResponseSchemas, QuerySchemas map[string]string
+}
 type genOp struct {
 	OperationID, Method, Path, Action, Summary string
 	Deprecated                                 bool
 	Irreversible                               bool
 	RequiredScope                              string
+	RequiredScopes                             []string
+	NativeContract                             *genNativeContract
 	IdempotencyRequired                        bool
 	CrmOperation                               string
 	Pagination                                 *genPagination
@@ -89,7 +96,9 @@ func generatedOps() []genOp {
 			OperationID: {{q .OperationID}}, Method: {{q .Method}}, Path: {{q .Path}},
 			Action: {{q .Action}}, Summary: {{q .Summary}}, Deprecated: {{.Deprecated}},
 			Irreversible: {{.Irreversible}}, RequiredScope: {{q .RequiredScope}},
-			IdempotencyRequired: {{.IdempotencyRequired}},
+			{{if .NativeContract}}RequiredScopes: []string{ {{range .RequiredScopes}}{{q .}}, {{end}} },
+			NativeContract: &genNativeContract{MaxBodyBytes: {{.NativeContract.MaxBodyBytes}}, RequestSchema: {{q .NativeContract.RequestSchema}}, ResponseSchemas: map[string]string{ {{range $code, $schema := .NativeContract.ResponseSchemas}}{{q $code}}: {{q $schema}}, {{end}} }, QuerySchemas: map[string]string{ {{range $name, $schema := .NativeContract.QuerySchemas}}{{q $name}}: {{q $schema}}, {{end}} }},
+			{{end}}IdempotencyRequired: {{.IdempotencyRequired}},
 			{{if .CrmOperation}}CrmOperation: {{q .CrmOperation}},
 			{{end}}{{if .Pagination}}Pagination: &genPagination{Kind: {{q .Pagination.Kind}}, QueryParameter: {{q .Pagination.QueryParameter}}, ItemsPath: {{q .Pagination.ItemsPath}}, MorePath: {{q .Pagination.MorePath}}, CursorPath: {{q .Pagination.CursorPath}}, CurrentPagePath: {{q .Pagination.CurrentPagePath}}, LastPagePath: {{q .Pagination.LastPagePath}}, IdentityPath: {{q .Pagination.IdentityPath}}},
 			{{end}}Groups: []string{ {{range .Groups}}{{q .}}, {{end}} },

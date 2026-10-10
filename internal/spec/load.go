@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -14,6 +15,12 @@ import (
 )
 
 func Load() (ops []Operation, nonConforming []string, err error) {
+	var wire map[string]any
+	decoder := json.NewDecoder(bytes.NewReader(Raw))
+	decoder.UseNumber()
+	if err := decoder.Decode(&wire); err != nil {
+		return nil, nil, err
+	}
 	doc, err := libopenapi.NewDocument(Raw)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parse spec: %w", err)
@@ -33,15 +40,25 @@ func Load() (ops []Operation, nonConforming []string, err error) {
 			if op == nil || op.OperationId == "" {
 				continue
 			}
-			groups, action, ok := Resolve(op.OperationId)
-			if !ok {
+			var groups []string
+			var action string
+			var ok bool
+			if stringExt(op.Extensions, "x-crm-operation") != "" {
 				groups, action, ok = resolveCRM(op, method, path)
+			} else {
+				groups, action, ok = Resolve(op.OperationId)
 			}
 			if !ok {
 				nonConforming = append(nonConforming, op.OperationId)
 				continue
 			}
 			operation := buildOperation(op, method, path, groups, action)
+			if isKnowledgeOperation(operation.CrmOperation) {
+				operation.NativeContract, operation.RequiredScopes, err = knowledgeContract(wire, path, method)
+				if err != nil {
+					return nil, nil, err
+				}
+			}
 			operation.Pagination, err = crmPagination(op, operation)
 			if err != nil {
 				return nil, nil, err
@@ -252,6 +269,9 @@ func buildBody(op *v3.Operation) *Body {
 		}
 		if mt.Schema != nil {
 			b.Fields = bodyFields(mt.Schema.Schema(), 0)
+			if isKnowledgeOperation(stringExt(op.Extensions, "x-crm-operation")) {
+				b.Fields = knowledgeBodyFields(mt.Schema.Schema(), 0)
+			}
 		}
 		return b
 	}

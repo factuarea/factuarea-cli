@@ -240,7 +240,11 @@ func singlePositionalField(op genOp) (fieldFlag, bool) {
 func validateRequiredBodyFlags(cmd *cobra.Command, op genOp) error {
 	var missing []string
 	for _, ff := range requiredBodyFlags(op) {
-		if !cmd.Flags().Changed(ff.flagName) || flagIsEmpty(cmd, ff) {
+		empty := flagIsEmpty(cmd, ff)
+		if op.NativeContract != nil && ff.kind == "scalar_array" {
+			empty = false
+		}
+		if !cmd.Flags().Changed(ff.flagName) || empty {
 			missing = append(missing, "--"+ff.flagName)
 		}
 	}
@@ -472,7 +476,11 @@ func bodyFieldsHelp(op genOp) string {
 		b.WriteString("\n\nEsta operación incluye una lista de objetos: pásala con --data-file/-d (JSON).")
 	}
 	if op.isUpdate() {
-		b.WriteString("\n\nEdición parcial: solo se actualizan los campos que envíes; los omitidos se conservan. Para vaciar un campo, pásalo con valor vacío/null.")
+		if op.NativeContract != nil {
+			b.WriteString("\n\nEnvía el cuerpo completo del contrato nativo y la expected_version original. Para valores null explícitos, usa --data-file/-d.")
+		} else {
+			b.WriteString("\n\nEdición parcial: solo se actualizan los campos que envíes; los omitidos se conservan. Para vaciar un campo, pásalo con valor vacío/null.")
+		}
 	}
 	return b.String()
 }

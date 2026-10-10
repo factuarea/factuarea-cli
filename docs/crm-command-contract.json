@@ -1,5 +1,5 @@
 {
-  "scope": "Current native v1 ContactPeople, Lead and Pipeline only",
+  "scope": "Current native v1 ContactPeople11, Lead23, Pipeline15, KnowledgeArticles23 and PublicHelpCenter5; source only, activation remains OFF",
   "requirement_ids": [
     "CRM-082",
     "CRM-144"
@@ -10,22 +10,28 @@
   ],
   "delivery_state": "Source implementation; availability and ratification remain backend-owned",
   "native_producer": "public-api:export-spec; native Scramble/contributors/transformers",
-  "native_artifact_sha256": "9759f8e07cdbd4ba7b477e7f3f785c1b2d198f0657f64dc97c87bdea542bc837",
-  "native_operation_count": 49,
-  "native_path_count": 40,
-  "native_reachable_schema_count": 73,
+  "native_artifact_sha256": "4a2cb151faef526aa8c8fd26c29a1d3f6acd019335e13b058b86671f40eb609f",
+  "native_operation_count": 77,
+  "native_path_count": 66,
+  "native_reachable_schema_count": 106,
   "public_server": [
     {
       "url": "https://api.factuarea.com/v1",
       "description": "Production"
     }
   ],
-  "previous_path_count": 400,
+  "previous_path_count": 440,
   "previous_paths_and_components_unchanged": true,
-  "merged_path_count": 440,
+  "merged_path_count": 466,
   "component_reference_aliases": {
     "#/components/schemas/Error": "#/components/schemas/CrmDeliveryNativeError",
-    "#/components/responses/TooManyRequests": "#/components/responses/CrmDeliveryNativeTooManyRequests"
+    "#/components/responses/TooManyRequests": "#/components/responses/CrmDeliveryNativeTooManyRequests",
+    "#/components/responses/Conflict": "#/components/responses/CrmKnowledgeNativeConflict",
+    "#/components/responses/UnprocessableEntity": "#/components/responses/CrmKnowledgeNativeUnprocessableEntity",
+    "#/components/responses/NotFound": "#/components/responses/CrmKnowledgeNativeNotFound",
+    "#/components/responses/InternalServerError": "#/components/responses/CrmKnowledgeNativeInternalServerError",
+    "#/components/responses/Forbidden": "#/components/responses/CrmKnowledgeNativeForbidden",
+    "#/components/responses/Unauthorized": "#/components/responses/CrmKnowledgeNativeUnauthorized"
   },
   "security_preservation": "Existing canonical API-key/Bearer schemes are identical. Existing OAuth2 metadata is retained: export environment URLs and unrelated OAuth scope additions are not imported. CLI uses the existing API-key client.",
   "operations": [
@@ -763,6 +769,560 @@
       "command": "factuarea crm pipelines update",
       "pagination": null,
       "mutating": true
+    },
+    {
+      "operation_id": "crmApproveKnowledgeArticle",
+      "crm_operation": "knowledge_articles.approve",
+      "method": "POST",
+      "path": "/crm/knowledge/articles/{article}/approve",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "dc49c66c6549479a908f7604e7f277a63acdfbc7c55004983aa621adfc53de5b",
+      "command": "factuarea crm knowledge-articles approve",
+      "pagination": null,
+      "mutating": true,
+      "args": [
+        "article"
+      ],
+      "max_body_bytes": 450000
+    },
+    {
+      "operation_id": "crmArchiveKnowledgeArticle",
+      "crm_operation": "knowledge_articles.archive",
+      "method": "POST",
+      "path": "/crm/knowledge/articles/{article}/archive",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "aa4daf7df8239d9dafaa15d6c1d139fc48a7ea352eff55bb9d630d1b537b12cc",
+      "command": "factuarea crm knowledge-articles archive",
+      "pagination": null,
+      "mutating": true,
+      "args": [
+        "article"
+      ],
+      "max_body_bytes": 450000
+    },
+    {
+      "operation_id": "crmCreateKnowledgeArticle",
+      "crm_operation": "knowledge_articles.create",
+      "method": "POST",
+      "path": "/crm/knowledge/articles",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "17bbb9bf4a625fcd8c3e81b8e76c734eafa5708fd3a6dbb476cdff089f95de1f",
+      "command": "factuarea crm knowledge-articles create",
+      "pagination": null,
+      "mutating": true,
+      "args": [],
+      "max_body_bytes": 450000
+    },
+    {
+      "operation_id": "crmGetKnowledgeArticle",
+      "crm_operation": "knowledge_articles.show",
+      "method": "GET",
+      "path": "/crm/knowledge/articles/{article}",
+      "scope": "knowledge_articles:read",
+      "required_scopes": [
+        "customer_service:read",
+        "knowledge_articles:read"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": false,
+      "native_operation_sha256": "792139ff57572946d733f00bc32ad02b35feafca889e3c1451ee2cd5724486bd",
+      "command": "factuarea crm knowledge-articles show",
+      "pagination": null,
+      "mutating": false,
+      "args": [
+        "article"
+      ],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmGetKnowledgeArticleVersions",
+      "crm_operation": "knowledge_articles.versions",
+      "method": "GET",
+      "path": "/crm/knowledge/articles/{article}/versions",
+      "scope": "knowledge_articles:read",
+      "required_scopes": [
+        "customer_service:read",
+        "knowledge_articles:read"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": false,
+      "native_operation_sha256": "f1af539c4388ef4248caca830f621e7010025fce82b3a039300b2e07ab144dab",
+      "command": "factuarea crm knowledge-articles versions",
+      "pagination": null,
+      "mutating": false,
+      "args": [
+        "article"
+      ],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmLinkKnowledgeArticle",
+      "crm_operation": "knowledge_articles.link",
+      "method": "POST",
+      "path": "/crm/knowledge/articles/{article}/link",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "c4784f5526b69d219aa859d6d0c9af2782702bf10d0b855459e727392d80fd22",
+      "command": "factuarea crm knowledge-articles link",
+      "pagination": null,
+      "mutating": true,
+      "args": [
+        "article"
+      ],
+      "max_body_bytes": 450000
+    },
+    {
+      "operation_id": "crmPublishKnowledgeArticle",
+      "crm_operation": "knowledge_articles.publish",
+      "method": "POST",
+      "path": "/crm/knowledge/articles/{article}/publish",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "7f0c26a98f1cd0f06c7e70e08875098ef2c302ade09c944e6288c4cc1caa24ab",
+      "command": "factuarea crm knowledge-articles publish",
+      "pagination": null,
+      "mutating": true,
+      "args": [
+        "article"
+      ],
+      "max_body_bytes": 450000
+    },
+    {
+      "operation_id": "crmRecoverKnowledgeArticleApproveReceipt",
+      "crm_operation": "knowledge_articles.receipt_approve",
+      "method": "GET",
+      "path": "/crm/knowledge/receipts/knowledge_articles.approve",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "3f5ae4f94da15371aac53a539959a352f4566619c23431cdce5051ec2a2e0ed3",
+      "command": "factuarea crm knowledge-articles receipt-approve",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmRecoverKnowledgeArticleArchiveReceipt",
+      "crm_operation": "knowledge_articles.receipt_archive",
+      "method": "GET",
+      "path": "/crm/knowledge/receipts/knowledge_articles.archive",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "624dbec740303ae6f1d4432aa4a779b8b202d9237c6b2cf93ee4de07cce924cd",
+      "command": "factuarea crm knowledge-articles receipt-archive",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmRecoverKnowledgeArticleCreateReceipt",
+      "crm_operation": "knowledge_articles.receipt_create",
+      "method": "GET",
+      "path": "/crm/knowledge/receipts/knowledge_articles.create",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "7818acc8744cd23c630c0b702ba4d3097b5dccdb831414dde89c335df2a153ec",
+      "command": "factuarea crm knowledge-articles receipt-create",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmRecoverKnowledgeArticleLinkReceipt",
+      "crm_operation": "knowledge_articles.receipt_link",
+      "method": "GET",
+      "path": "/crm/knowledge/receipts/knowledge_articles.link",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "959d04c7d42b7d7a2020dd71271bab16a51d661d591183765d2b7a4e9577d0e5",
+      "command": "factuarea crm knowledge-articles receipt-link",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmRecoverKnowledgeArticlePublishReceipt",
+      "crm_operation": "knowledge_articles.receipt_publish",
+      "method": "GET",
+      "path": "/crm/knowledge/receipts/knowledge_articles.publish",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "4ebb17bfa6bb722bea87498e626ce28305152c00f899ef85d434b0b04b9e51d0",
+      "command": "factuarea crm knowledge-articles receipt-publish",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmRecoverKnowledgeArticleSaveReceipt",
+      "crm_operation": "knowledge_articles.receipt_save",
+      "method": "GET",
+      "path": "/crm/knowledge/receipts/knowledge_articles.save",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "e2985c8eeeae1cadf20bb8e6d5b32afc4f35cc6325b8ea81ef7192d3ea83a6c7",
+      "command": "factuarea crm knowledge-articles receipt-save",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmRecoverKnowledgeArticleSubmitReceipt",
+      "crm_operation": "knowledge_articles.receipt_submit",
+      "method": "GET",
+      "path": "/crm/knowledge/receipts/knowledge_articles.submit",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "38d9aba0483c445cb236a4871a76001a6a10b8f60c8cbbcf63c133794561e75a",
+      "command": "factuarea crm knowledge-articles receipt-submit",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmRecoverKnowledgeArticleUnpublishReceipt",
+      "crm_operation": "knowledge_articles.receipt_unpublish",
+      "method": "GET",
+      "path": "/crm/knowledge/receipts/knowledge_articles.unpublish",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "78eb75cb38631713de91885a78089b6b396fab75705e0dce61e8027aef6907a4",
+      "command": "factuarea crm knowledge-articles receipt-unpublish",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmSaveKnowledgeArticle",
+      "crm_operation": "knowledge_articles.save",
+      "method": "PUT",
+      "path": "/crm/knowledge/articles/{article}",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "62b9ffacfc6deb0576f2a30bc48339831636b9e532496571bf7bbf78811ad44e",
+      "command": "factuarea crm knowledge-articles save",
+      "pagination": null,
+      "mutating": true,
+      "args": [
+        "article"
+      ],
+      "max_body_bytes": 450000
+    },
+    {
+      "operation_id": "crmSearchKnowledgeArticles",
+      "crm_operation": "knowledge_articles.search",
+      "method": "GET",
+      "path": "/crm/knowledge/articles",
+      "scope": "knowledge_articles:read",
+      "required_scopes": [
+        "customer_service:read",
+        "knowledge_articles:read"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": false,
+      "native_operation_sha256": "f1a4cfdd3a10aea8a1a58d4ff4b30ce0c318621154f7b544c3f0574e91af2397",
+      "command": "factuarea crm knowledge-articles search",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "crmSubmitKnowledgeArticle",
+      "crm_operation": "knowledge_articles.submit",
+      "method": "POST",
+      "path": "/crm/knowledge/articles/{article}/submit",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "65148c36cfd4c7e15a503ef09d9c0eb123ae5ebf5a12579028472e3bcf274504",
+      "command": "factuarea crm knowledge-articles submit",
+      "pagination": null,
+      "mutating": true,
+      "args": [
+        "article"
+      ],
+      "max_body_bytes": 450000
+    },
+    {
+      "operation_id": "crmUnpublishKnowledgeArticle",
+      "crm_operation": "knowledge_articles.unpublish",
+      "method": "POST",
+      "path": "/crm/knowledge/articles/{article}/unpublish",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "16a42f0d091bc9135e150203f3bb73c2ab866a42a38963e5bdbe4602a32f5ed5",
+      "command": "factuarea crm knowledge-articles unpublish",
+      "pagination": null,
+      "mutating": true,
+      "args": [
+        "article"
+      ],
+      "max_body_bytes": 450000
+    },
+    {
+      "operation_id": "listKnowledgeCategories",
+      "crm_operation": "knowledge_articles.categories",
+      "method": "GET",
+      "path": "/crm/knowledge/categories",
+      "scope": "knowledge_articles:read",
+      "required_scopes": [
+        "customer_service:read",
+        "knowledge_articles:read"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": false,
+      "native_operation_sha256": "ba9cd233789a8c1e345fa2aa5314945b77c1249185274b8f8e42710753b35ce7",
+      "command": "factuarea crm knowledge-categories list",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "public-api.v1.crm-public-help-center.get",
+      "crm_operation": "public_help_centers.administration_get",
+      "method": "GET",
+      "path": "/crm/public-help-center",
+      "scope": "public_help_centers:write",
+      "required_scopes": [
+        "customer_service:write",
+        "public_help_centers:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": false,
+      "native_operation_sha256": "1522eebcdb979c94f00e35b4a3197e0c00b6aa5c070ed8c7444f9be5464d7385",
+      "command": "factuarea crm public-help-center show",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "public-api.v1.crm-public-help-center.publish",
+      "crm_operation": "public_help_centers.publish",
+      "method": "POST",
+      "path": "/crm/public-help-center/publish",
+      "scope": "public_help_centers:write",
+      "required_scopes": [
+        "customer_service:write",
+        "public_help_centers:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "fbfc2d9e16d4cd691cb68545aad90dcbcb0e843f8ce9602cd02382a11a0ca0f2",
+      "command": "factuarea crm public-help-center publish",
+      "pagination": null,
+      "mutating": true,
+      "args": [],
+      "max_body_bytes": 180000
+    },
+    {
+      "operation_id": "public-api.v1.crm-public-help-center.receipt-publish",
+      "crm_operation": "public_help_centers.publish_receipt",
+      "method": "GET",
+      "path": "/crm/public-help-center/receipts/publish",
+      "scope": "public_help_centers:write",
+      "required_scopes": [
+        "customer_service:write",
+        "public_help_centers:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "f10285c2421198a185618c8ee0866671e52eedbbdebd87fa9c685c58a5b71f7a",
+      "command": "factuarea crm public-help-center publish-receipt",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "public-api.v1.crm-public-help-center.receipt-unpublish",
+      "crm_operation": "public_help_centers.unpublish_receipt",
+      "method": "GET",
+      "path": "/crm/public-help-center/receipts/unpublish",
+      "scope": "public_help_centers:write",
+      "required_scopes": [
+        "customer_service:write",
+        "public_help_centers:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "43733b7eab43989cb8bc20a4d9605ff72b9e39e3aaeda31ae011c7e0368b041c",
+      "command": "factuarea crm public-help-center unpublish-receipt",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "public-api.v1.crm-public-help-center.unpublish",
+      "crm_operation": "public_help_centers.unpublish",
+      "method": "POST",
+      "path": "/crm/public-help-center/{center}/unpublish",
+      "scope": "public_help_centers:write",
+      "required_scopes": [
+        "customer_service:write",
+        "public_help_centers:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "a0db985ca4ef17bbcfda157702d3ba9e46f6f1c31176cd70b65ecb557d792ce1",
+      "command": "factuarea crm public-help-center unpublish",
+      "pagination": null,
+      "mutating": true,
+      "args": [
+        "center"
+      ],
+      "max_body_bytes": 180000
+    },
+    {
+      "operation_id": "recoverKnowledgeCategoryReceipt",
+      "crm_operation": "knowledge_articles.category_receipt",
+      "method": "GET",
+      "path": "/crm/knowledge/categories/receipts/category-save",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": true,
+      "native_operation_sha256": "73e3cefe8f436d964fedd51b739a911db7fbf7de51028bcb975780f87bf58406",
+      "command": "factuarea crm knowledge-categories receipt",
+      "pagination": null,
+      "mutating": false,
+      "args": [],
+      "max_body_bytes": null
+    },
+    {
+      "operation_id": "saveKnowledgeCategory",
+      "crm_operation": "knowledge_articles.category_save",
+      "method": "POST",
+      "path": "/crm/knowledge/categories/save",
+      "scope": "knowledge_articles:write",
+      "required_scopes": [
+        "customer_service:write",
+        "knowledge_articles:write"
+      ],
+      "requires_confirmation": true,
+      "idempotency_required": true,
+      "native_operation_sha256": "215682bff6edd19aa0f170e97b92413d8e2f46ea68f1479af2cfb6de2849d17a",
+      "command": "factuarea crm knowledge-categories save",
+      "pagination": null,
+      "mutating": true,
+      "args": [],
+      "max_body_bytes": 8192
+    },
+    {
+      "operation_id": "suggestServiceArticles",
+      "crm_operation": "knowledge_articles.suggest",
+      "method": "GET",
+      "path": "/crm/knowledge/tickets/{ticket}/suggestions",
+      "scope": "knowledge_articles:read",
+      "required_scopes": [
+        "customer_service:read",
+        "knowledge_articles:read"
+      ],
+      "requires_confirmation": false,
+      "idempotency_required": false,
+      "native_operation_sha256": "408f3061cd2bdd96bcc82667bac537381252d2b3cfd42d9948cc0cbb3c5c68ed",
+      "command": "factuarea crm knowledge-articles suggest",
+      "pagination": null,
+      "mutating": false,
+      "args": [
+        "ticket"
+      ],
+      "max_body_bytes": null
     }
   ],
   "pending": [

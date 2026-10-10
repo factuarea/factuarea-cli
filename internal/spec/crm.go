@@ -16,6 +16,9 @@ func resolveCRM(op *v3.Operation, method, path string) (groups []string, action 
 	if !found || suffix == "" {
 		return nil, "", false
 	}
+	if isKnowledgeOperation(native) {
+		return resolveKnowledgeCRM(op, method, path, family, suffix)
+	}
 	group := map[string]string{"crm_contact_people": "contact-people", "crm_leads": "leads", "crm_pipelines": "pipelines"}[family]
 	if group == "" {
 		return nil, "", false
