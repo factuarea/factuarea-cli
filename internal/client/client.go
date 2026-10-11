@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"math"
 	"mime/multipart"
@@ -101,7 +102,7 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 			return nil, lastErr
 		}
 
-		respBody, _ := io.ReadAll(httpResp.Body)
+		respBody, readErr := io.ReadAll(httpResp.Body)
 		_ = httpResp.Body.Close()
 		resp := &Response{
 			StatusCode:  httpResp.StatusCode,
@@ -109,6 +110,9 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 			Body:        respBody,
 			ContentType: httpResp.Header.Get("Content-Type"),
 			RequestID:   httpResp.Header.Get("X-Request-Id"),
+		}
+		if readErr != nil {
+			return resp, &apierr.TransportError{Err: fmt.Errorf("respuesta HTTP incompleta")}
 		}
 
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {

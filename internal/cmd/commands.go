@@ -77,6 +77,7 @@ func newCommandsCmd() *cobra.Command {
 				manifest = append(manifest, e)
 			}
 			manifest = append(manifest, serviceLevelManifest()...)
+			manifest = append(manifest, crmEntityExportManifest()...)
 			enc := json.NewEncoder(cmd.OutOrStdout())
 			enc.SetEscapeHTML(false)
 			enc.SetIndent("", "  ")

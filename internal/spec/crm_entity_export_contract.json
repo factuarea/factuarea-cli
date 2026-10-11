@@ -1,0 +1,311 @@
+{
+  "source_abi_sha256": "a3f8ee1b837c27d665bf2eedcf0c060a216369f956e7af5d2a145e63a787b0d8",
+  "source": "Source107 native CrmEntityExportOpenApiSchemas + v1-public routes; static shape only, never authority",
+  "types": [
+    "organization",
+    "person",
+    "lead",
+    "opportunity",
+    "activity",
+    "service_ticket"
+  ],
+  "operations": {
+    "request": {
+      "method": "POST",
+      "path": "/v1/crm/entity-exports",
+      "operation_id": "public-api.v1.crm-entity-exports.request",
+      "required_scope": "crm_imports:export"
+    },
+    "original": {
+      "method": "GET",
+      "path": "/v1/crm/entity-exports/{export}",
+      "operation_id": "public-api.v1.crm-entity-exports.show",
+      "required_scope": "crm_imports:export"
+    },
+    "download": {
+      "method": "GET",
+      "path": "/v1/crm/entity-exports/{export}/download",
+      "operation_id": "public-api.v1.crm-entity-exports.download",
+      "required_scope": "crm_imports:export"
+    }
+  },
+  "dataset_matrix": {
+    "organization": {
+      "columns": [
+        "id",
+        "kind",
+        "name",
+        "job_title",
+        "contact_id",
+        "version",
+        "status",
+        "updated_at"
+      ],
+      "filters": {
+        "search": "UTF8 string max255",
+        "kind": "person|organization, must equal selected owner",
+        "status": "active|archived",
+        "contact_uuid": "UUIDv4/v7 string",
+        "owner_uuid": "UUIDv4/v7 string",
+        "team_uuid": "UUIDv4/v7 string",
+        "country_code": "native ContactCountryCatalog ISO2 string",
+        "locality_key": "nonempty printable ASCII string max2404 characters/bytes",
+        "tag": "nonempty native normalized tag string max100",
+        "sort": "name|-name|updated_at|-updated_at; default name",
+        "typed_filters": "native Configuration JSON encoded as string max262144 characters/bytes; current definition/masks required",
+        "updated_from": "valid exact UTC YYYY-MM-DDTHH:mm:ssZ string",
+        "updated_to": "valid exact UTC YYYY-MM-DDTHH:mm:ssZ string"
+      },
+      "period": {
+        "field": "updated_at",
+        "from_key": "updated_from",
+        "to_key": "updated_to",
+        "format": "YYYY-MM-DDTHH:mm:ssZ",
+        "inclusive_from": true,
+        "inclusive_to": true,
+        "order": "from<=to"
+      }
+    },
+    "person": {
+      "columns": [
+        "id",
+        "kind",
+        "name",
+        "job_title",
+        "contact_id",
+        "version",
+        "status",
+        "updated_at"
+      ],
+      "filters": {
+        "search": "UTF8 string max255",
+        "kind": "person|organization, must equal selected owner",
+        "status": "active|archived",
+        "contact_uuid": "UUIDv4/v7 string",
+        "owner_uuid": "UUIDv4/v7 string",
+        "team_uuid": "UUIDv4/v7 string",
+        "country_code": "native ContactCountryCatalog ISO2 string",
+        "locality_key": "nonempty printable ASCII string max2404 characters/bytes",
+        "tag": "nonempty native normalized tag string max100",
+        "sort": "name|-name|updated_at|-updated_at; default name",
+        "typed_filters": "native Configuration JSON encoded as string max262144 characters/bytes; current definition/masks required",
+        "updated_from": "valid exact UTC YYYY-MM-DDTHH:mm:ssZ string",
+        "updated_to": "valid exact UTC YYYY-MM-DDTHH:mm:ssZ string"
+      },
+      "period": {
+        "field": "updated_at",
+        "from_key": "updated_from",
+        "to_key": "updated_to",
+        "format": "YYYY-MM-DDTHH:mm:ssZ",
+        "inclusive_from": true,
+        "inclusive_to": true,
+        "order": "from<=to"
+      }
+    },
+    "lead": {
+      "columns": [
+        "id",
+        "uuid",
+        "version",
+        "status",
+        "stage",
+        "name",
+        "email",
+        "phone",
+        "mobile",
+        "company_name",
+        "owner_id",
+        "team_id",
+        "contact_id",
+        "person_id",
+        "source",
+        "source_term_id",
+        "score",
+        "rules_version",
+        "created_at",
+        "updated_at",
+        "erased_at",
+        "estimated_value_amount",
+        "estimated_value_currency",
+        "country_code",
+        "province",
+        "city",
+        "postal_code"
+      ],
+      "filters": {
+        "status": "open|disqualified|converted|deleted string or nonempty list max100; omitted excludes deleted",
+        "stage": "inbox|contacted|qualified string or nonempty list max100",
+        "owner_id": "lowercase native reference UUIDv1..8 string; no null",
+        "team_id": "lowercase native reference UUIDv1..8 string; no null",
+        "source_term_id": "lowercase native reference UUIDv1..8 string; no null",
+        "contact_person_id": "lowercase native reference UUIDv1..8 string; no null",
+        "form_id": "lowercase UUIDv7 string; no null",
+        "installation_key": "string max100",
+        "created_from": "native valid UTC timestamp YYYY-MM-DDTHH:mm:ss[.1..6digits]Z string",
+        "created_to": "native valid UTC timestamp YYYY-MM-DDTHH:mm:ss[.1..6digits]Z string",
+        "score_min": "integer0..100",
+        "score_max": "integer0..100",
+        "has_email": "strict boolean",
+        "has_phone": "strict boolean",
+        "country_code": "native ContactCountryCatalog string",
+        "locality_key": "native country:province:city string max700, owner URL decoding/LOWER",
+        "typed_filters": "native Configuration filter object or encoded JSON string with current definition, operators and export R/F masks"
+      },
+      "period": {
+        "field": "created_at",
+        "from_key": "created_from",
+        "to_key": "created_to",
+        "format": "YYYY-MM-DDTHH:mm:ss[.1..6digits]Z",
+        "inclusive_from": true,
+        "inclusive_to": true,
+        "order": "from<=to"
+      }
+    },
+    "opportunity": {
+      "columns": [
+        "uuid",
+        "version",
+        "status",
+        "title",
+        "lead_uuid",
+        "contact_uuid",
+        "pipeline_uuid",
+        "stage_uuid",
+        "owner_uuid",
+        "team_uuid",
+        "amount",
+        "currency",
+        "probability",
+        "weighted_value",
+        "expected_close",
+        "next_step",
+        "closed_at"
+      ],
+      "filters": {
+        "status": "open|won|lost",
+        "pipeline_uuid": "UUIDv7 string",
+        "stage_uuid": "UUIDv7 string",
+        "owner_uuid": "native UserUuid UUIDv4/v7 string",
+        "team_uuid": "UUIDv7 string",
+        "contact_uuid": "UUIDv7 string",
+        "lead_uuid": "UUIDv7 string",
+        "phone": "E164 string ^+[1-9][0-9]{1,14}$",
+        "source": "nonempty native string max255",
+        "created_from": "YYYY-MM-DD native valid calendar date",
+        "created_to": "YYYY-MM-DD native valid calendar date",
+        "expected_close_from": "YYYY-MM-DD native valid calendar date",
+        "expected_close_to": "YYYY-MM-DD native valid calendar date",
+        "typed_filters": "object {definition_version:integer>=0,filters:list}; native Configuration opportunity compiler/definition/current masks",
+        "sort": "uuid|version|title|status|amount|currency|probability|weighted_value|expected_close|stage_changed_at|created_at|owner_uuid|team_uuid|pipeline_uuid|stage_uuid, current sortable fields; default uuid",
+        "direction": "asc|desc; default asc"
+      },
+      "period": {
+        "pairs": [
+          {
+            "field": "created_at",
+            "from_key": "created_from",
+            "to_key": "created_to"
+          },
+          {
+            "field": "expected_close",
+            "from_key": "expected_close_from",
+            "to_key": "expected_close_to"
+          }
+        ],
+        "format": "YYYY-MM-DD",
+        "inclusive_from": true,
+        "inclusive_to": true,
+        "order": "from<=to"
+      }
+    },
+    "activity": {
+      "columns": [
+        "id",
+        "version",
+        "type",
+        "status",
+        "due_at",
+        "timezone",
+        "completed_at"
+      ],
+      "filters": {
+        "status": "pending|completed|cancelled",
+        "type": "task|call|meeting|note; native filters govern actual Activity records, no new standalone note owner",
+        "owner_uuid": "native User UUIDv4/v7 string",
+        "target_type": "contact|person|lead|opportunity|booking; paired with target_uuid",
+        "target_uuid": "UUIDv7 string; paired with target_type",
+        "overdue": "strict boolean",
+        "due_from": "valid exact UTC YYYY-MM-DDTHH:mm:ssZ string",
+        "due_to": "valid exact UTC YYYY-MM-DDTHH:mm:ssZ string",
+        "search": "native text string max255",
+        "order": "due_at|-due_at|uuid|-uuid"
+      },
+      "period": {
+        "field": "due_at",
+        "from_key": "due_from",
+        "to_key": "due_to",
+        "format": "YYYY-MM-DDTHH:mm:ssZ",
+        "inclusive_from": true,
+        "inclusive_to": true,
+        "order": "from<=to"
+      }
+    },
+    "service_ticket": {
+      "columns": [
+        "uuid",
+        "version",
+        "title",
+        "description",
+        "status",
+        "priority",
+        "type",
+        "pipeline_uuid",
+        "stage_uuid",
+        "counterparty_uuid",
+        "person_uuid",
+        "assignee_uuid",
+        "created_at",
+        "updated_at",
+        "first_response_at",
+        "resolved_at",
+        "closed_at",
+        "archived_at",
+        "cycle"
+      ],
+      "filters": {
+        "status": "new|assigned|pending|closed|rejected|duplicate",
+        "assignee_uuid": "native UserUuid UUIDv4/v7 string or null=unassigned",
+        "team_uuid": "UUIDv7 string or null=no team",
+        "period": "closed object exactly {from: RFC3339 offset instant,until: RFC3339 offset instant}; until>from"
+      },
+      "period": {
+        "field": "created_at",
+        "object_key": "period",
+        "from_key": "from",
+        "to_key": "until",
+        "format": "YYYY-MM-DDTHH:mm:ss[.1..6digits](Z|+HH:mm|-HH:mm)",
+        "inclusive_from": true,
+        "inclusive_to": false,
+        "order": "until>from"
+      }
+    }
+  },
+  "request_keys": [
+    "id",
+    "entity_type",
+    "filters",
+    "columns",
+    "confirmed"
+  ],
+  "statuses": [
+    "processing",
+    "ready",
+    "failed",
+    "expired"
+  ],
+  "request_max_bytes": 524288,
+  "selection_max_bytes": 262144,
+  "columns_min": 1,
+  "columns_max": 128,
+  "authority_note": "No new column-catalog endpoint. Published matrix describes possible native scalar fields, not a grant. Current scopes/masks apply server-side; selecting an inaccessible column fails closed without fake null. Complex typed filters require their current native producer definition/catalog."
+}
