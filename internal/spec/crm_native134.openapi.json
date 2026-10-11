@@ -1,0 +1,2783 @@
+{
+  "source_artifact_sha256": "3667e01b82dea255c23b2eecb80e6e600baa445b5b7a2beb5a65eb978a1fc073",
+  "source_manifest_sha256": "653247d4492095fb40e06c36e20a61ec4e0ba32165d0f393378eeffe9872d901",
+  "native_profile": {
+    "name": "crm-source-contracts",
+    "source": "Source",
+    "state": "unreleased",
+    "published": false,
+    "ratified": false,
+    "delivery_enabled": false,
+    "catalog_sha256": "f033c9debb1e41c21bba79bb57de9ff3a23370befdc1aa13a4e7e48b653dbcd3"
+  },
+  "capabilities": [],
+  "carriers": [
+    {
+      "route_name": "public-api.v1.crm-documents.restore-original",
+      "operation_id": "crmGetCommercialDocumentRestoreOriginal",
+      "operation_key": "crm_documents.restore_original_get",
+      "uri": "v1/crm/documents/{document}/restore/original",
+      "methods": [
+        "GET"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\CrmDocument\\Infrastructure\\Http\\Middleware\\RenderCommercialDocumentErrors",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:crm_documents:read",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:crm_documents.restore_original_get,document"
+      ]
+    },
+    {
+      "route_name": "public-api.v1.customer-service.bulk-actions.apply",
+      "operation_id": "applyServiceTicketBulkAction",
+      "operation_key": "customer_service.bulk_action",
+      "uri": "v1/crm/service-tickets/bulk-actions",
+      "methods": [
+        "POST"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\Module\\Infrastructure\\Middleware\\ModuleAccessMiddleware:crm",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:customer_service.bulk_action",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:customer_service:write"
+      ]
+    },
+    {
+      "route_name": "public-api.v1.customer-service.bulk-actions.original",
+      "operation_id": "getOriginalServiceTicketBulkItem",
+      "operation_key": "customer_service.bulk_action",
+      "uri": "v1/crm/service-tickets/{ticket}/bulk-actions/original",
+      "methods": [
+        "GET"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\Module\\Infrastructure\\Middleware\\ModuleAccessMiddleware:crm",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:customer_service.bulk_action,ticket",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:customer_service:write"
+      ]
+    },
+    {
+      "route_name": "public-api.v1.customer-service.bulk-actions.tag-options",
+      "operation_id": "getServiceTicketBulkOptions",
+      "operation_key": "customer_service.bulk_options",
+      "uri": "v1/crm/service-tickets/bulk-actions/tag-options",
+      "methods": [
+        "GET"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\Module\\Infrastructure\\Middleware\\ModuleAccessMiddleware:crm",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:customer_service.bulk_options",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:customer_service:read"
+      ]
+    },
+    {
+      "route_name": "public-api.v1.customer-service.stages.index",
+      "operation_id": "listServiceStages",
+      "operation_key": "customer_service.list_stages",
+      "uri": "v1/crm/service-stages",
+      "methods": [
+        "GET"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\Module\\Infrastructure\\Middleware\\ModuleAccessMiddleware:crm",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:customer_service:read",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:customer_service.list_stages"
+      ]
+    },
+    {
+      "route_name": "public-api.v1.customer-service.stages.original",
+      "operation_id": "getServiceStageOriginal",
+      "operation_key": "customer_service.update_stage",
+      "uri": "v1/crm/service-stages/{stage}/original",
+      "methods": [
+        "GET"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\Module\\Infrastructure\\Middleware\\ModuleAccessMiddleware:crm",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:customer_service:write",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:customer_service.update_stage"
+      ]
+    },
+    {
+      "route_name": "public-api.v1.customer-service.stages.update",
+      "operation_id": "updateServiceStage",
+      "operation_key": "customer_service.update_stage",
+      "uri": "v1/crm/service-stages/{stage}",
+      "methods": [
+        "PATCH"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\Module\\Infrastructure\\Middleware\\ModuleAccessMiddleware:crm",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:customer_service:write",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:customer_service.update_stage"
+      ]
+    }
+  ],
+  "operations": {
+    "stage_list": {
+      "path": "/crm/service-stages",
+      "method": "GET",
+      "operation": {
+        "operationId": "listServiceStages",
+        "description": "Catálogo propietario paginado, con filtro opcional de pipeline. Company, entorno aislado, pertenencia, scope y todos los campos C7 se acreditan antes de contar y paginar y se revalidan al proyectar. No concede acceso a tickets ni produce efectos. Las claves id y pipeline_id contienen UUIDv7.",
+        "summary": "Listar etapas de atención autorizadas",
+        "tags": [
+          "CRM Service Stages"
+        ],
+        "parameters": [
+          {
+            "name": "pipeline_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1000000,
+              "default": 1
+            }
+          },
+          {
+            "name": "per_page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "200": {
+            "description": "Página propietaria y conteo autorizados, con todos los campos de la etapa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "maxItems": 100,
+                          "items": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                              },
+                              "pipeline_id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                              },
+                              "name": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 255,
+                                "pattern": "^(?=.*[^ ])[^\\u0000-\\u001F\\u007F]+$"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "archived"
+                                ]
+                              },
+                              "mapped_status": {
+                                "type": "string",
+                                "enum": [
+                                  "new",
+                                  "assigned",
+                                  "pending",
+                                  "closed",
+                                  "rejected"
+                                ]
+                              },
+                              "wip_limit": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": 1,
+                                    "maximum": 2147483647
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "version": {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              "pipeline_version": {
+                                "type": "integer",
+                                "minimum": 1
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "pipeline_id",
+                              "name",
+                              "status",
+                              "mapped_status",
+                              "wip_limit",
+                              "version",
+                              "pipeline_version"
+                            ]
+                          }
+                        },
+                        "total": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "page": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 1000000
+                        },
+                        "per_page": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 100
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "total",
+                        "page",
+                        "per_page"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Etapa o pipeline ausentes, ajenos o invisibles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-required-scope": "customer_service:read",
+        "x-required-oauth-scope": "customer_service.read",
+        "x-crm-operation": "customer_service.list_stages",
+        "x-crm-query-only": true,
+        "x-crm-original-receipt": false,
+        "x-crm-requires-claim": false,
+        "x-crm-requires-confirmation": false,
+        "x-speakeasy-group": "customerService",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "stage_update": {
+      "path": "/crm/service-stages/{stage}",
+      "method": "PATCH",
+      "operation": {
+        "operationId": "updateServiceStage",
+        "description": "La operación customer_service.update_stage exige scope de escritura, ámbito Company, manageAll y permiso literal customer_service:manage_all actuales. Revalida C7 de lectura y escritura; una etapa no sustituye la ACL de un ticket. PATCH recibe un objeto JSON cerrado con CAS de etapa y pipeline. wip_limit=null elimina el límite; un entero positivo debe respetar la ocupación nativa actual. El dueño conserva una única intención, claim y resultado original, incluso si la actualización no cambia datos. La respuesta es el snapshot confirmado de ese Original. Ante timeout se conserva la clave e intención y se consulta /original; una lectura del head no acredita éxito ni autoriza otro envío.",
+        "summary": "Actualizar una etapa de atención con CAS",
+        "tags": [
+          "CRM Service Stages"
+        ],
+        "parameters": [
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[ -~]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "Seis campos escalares obligatorios; wip_limit admite null explícito. No admite Company, entorno, claims, confirmaciones ni UUID de efecto del caller.",
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "pipeline_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                  },
+                  "expected_version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  },
+                  "expected_pipeline_version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "pattern": "^(?=.*[^ ])[^\\u0000-\\u001F\\u007F]+$"
+                  },
+                  "mapped_status": {
+                    "type": "string",
+                    "enum": [
+                      "new",
+                      "assigned",
+                      "pending",
+                      "closed",
+                      "rejected"
+                    ]
+                  },
+                  "wip_limit": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 2147483647
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "pipeline_id",
+                  "expected_version",
+                  "expected_pipeline_version",
+                  "name",
+                  "mapped_status",
+                  "wip_limit"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "200": {
+            "description": "Snapshot del resultado Original confirmado de la actualización.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                        },
+                        "pipeline_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                        },
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 255,
+                          "pattern": "^(?=.*[^ ])[^\\u0000-\\u001F\\u007F]+$"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "archived"
+                          ]
+                        },
+                        "mapped_status": {
+                          "type": "string",
+                          "enum": [
+                            "new",
+                            "assigned",
+                            "pending",
+                            "closed",
+                            "rejected"
+                          ]
+                        },
+                        "wip_limit": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 2147483647
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "pipeline_version": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "pipeline_id",
+                        "name",
+                        "status",
+                        "mapped_status",
+                        "wip_limit",
+                        "version",
+                        "pipeline_version"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-required-scope": "customer_service:write",
+        "x-required-oauth-scope": "customer_service.write",
+        "x-crm-operation": "customer_service.update_stage",
+        "x-crm-query-only": false,
+        "x-crm-original-receipt": false,
+        "x-crm-requires-claim": true,
+        "x-crm-requires-confirmation": true,
+        "x-speakeasy-group": "customerService",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "stage_original": {
+      "path": "/crm/service-stages/{stage}/original",
+      "method": "GET",
+      "operation": {
+        "operationId": "getServiceStageOriginal",
+        "description": "La operación customer_service.update_stage exige scope de escritura, ámbito Company, manageAll y permiso literal customer_service:manage_all actuales. Revalida C7 de lectura y escritura; una etapa no sustituye la ACL de un ticket. GET sólo consulta el recibo confirmado de la misma Company, actor, entorno, canal y credencial. Requiere la Idempotency-Key original y request_fingerprint: SHA256 de ConfirmedIdentityReplay::canonicalJson del objeto normalizado con stage_uuid, pipeline_uuid, expected_version, expected_pipeline_version, name, mapped_status y wip_limit. Los UUID se normalizan y name conserva los bytes enviados; la huella no es la del JSON raw ni incluye autenticación. No admite body, archivos ni otros selectores. Reserva ausente o resultado ambiguo devuelve 409; el head actual no confirma el Original. Esta lectura no reserva, confirma ni vuelve a enviar la mutación.",
+        "summary": "Consultar el resultado Original de la etapa",
+        "tags": [
+          "CRM Service Stages"
+        ],
+        "parameters": [
+          {
+            "name": "stage",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[ -~]+$"
+            }
+          },
+          {
+            "name": "request_fingerprint",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 64,
+              "maxLength": 64,
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "200": {
+            "description": "Snapshot de la etapa del recibo Original confirmado, reautorizado con permisos actuales.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                        },
+                        "pipeline_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                        },
+                        "name": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 255,
+                          "pattern": "^(?=.*[^ ])[^\\u0000-\\u001F\\u007F]+$"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "archived"
+                          ]
+                        },
+                        "mapped_status": {
+                          "type": "string",
+                          "enum": [
+                            "new",
+                            "assigned",
+                            "pending",
+                            "closed",
+                            "rejected"
+                          ]
+                        },
+                        "wip_limit": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 2147483647
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "pipeline_version": {
+                          "type": "integer",
+                          "minimum": 1
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "pipeline_id",
+                        "name",
+                        "status",
+                        "mapped_status",
+                        "wip_limit",
+                        "version",
+                        "pipeline_version"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CAS de etapa/pipeline divergente, intención en conflicto o resultado Original no confirmado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-required-scope": "customer_service:write",
+        "x-required-oauth-scope": "customer_service.write",
+        "x-crm-operation": "customer_service.update_stage",
+        "x-crm-query-only": true,
+        "x-crm-original-receipt": true,
+        "x-crm-requires-claim": false,
+        "x-crm-requires-confirmation": false,
+        "x-speakeasy-group": "customerService",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "bulk_options": {
+      "path": "/crm/service-tickets/bulk-actions/tag-options",
+      "method": "GET",
+      "operation": {
+        "operationId": "getServiceTicketBulkOptions",
+        "description": "Company, actor, sandbox, canal, credencial y C7 proceden del contexto autenticado. La selección conserva el CAS observado; cada ticket conserva su transacción, claim, reserva nativa y Original propios. status usa pipeline_id/stage_id y aplica WIP y aprobación actuales. tags reemplaza la lista exacta (vacía significa vaciar) con referencias nativas bloqueadas y activas. No se crea un ledger global de lote. confirmed acredita el recibo Original (un no-op conserva su versión), rejected prueba un rechazo sin efecto y unknown no permite reenvío. Ante cualquier respuesta HTTP perdida o error global, recuperar cada ticket mediante GET Original con la misma clave, acción, CAS y payload. La lectura no reserva ni redespacha; un Original ausente devuelve unknown/can_retry=false. Los identificadores públicos son UUID bajo id/*_id. El catálogo requiere lectura de tag_uuids y edición autorizada de tag_uuids por separado, y no concede permisos de LeadCapture.",
+        "summary": "Consultar etiquetas nativas disponibles para editar tickets",
+        "responses": {
+          "200": {
+            "description": "Catálogo activo completo y autorizado actual.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "authorization_version": {
+                          "type": "string"
+                        },
+                        "tags": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                              },
+                              "version": {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              "name": {
+                                "type": "string",
+                                "minLength": 1,
+                                "maxLength": 255
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "version",
+                              "name"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "authorization_version",
+                        "tags"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credencial ausente, caducada o inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "C7, pertenencia, scope o campos actuales denegados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ticket o referencia ajenos o invisibles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Clave vinculada a otra intención o resultado no confirmado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Payload cerrado, CAS, acción o clave inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Admisión nativa rechazada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Fallo del productor; recuperar Originals sin reenviar el lote.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-required-scope": "customer_service:read",
+        "x-required-oauth-scope": "customer_service.read",
+        "x-crm-operation": "customer_service.bulk_options",
+        "x-crm-query-only": true,
+        "x-crm-original-receipt": false,
+        "x-crm-requires-confirmation": false,
+        "x-crm-requires-claim": false,
+        "x-speakeasy-group": "customerService",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "bulk_apply": {
+      "path": "/crm/service-tickets/bulk-actions",
+      "method": "POST",
+      "operation": {
+        "operationId": "applyServiceTicketBulkAction",
+        "description": "Company, actor, sandbox, canal, credencial y C7 proceden del contexto autenticado. La selección conserva el CAS observado; cada ticket conserva su transacción, claim, reserva nativa y Original propios. status usa pipeline_id/stage_id y aplica WIP y aprobación actuales. tags reemplaza la lista exacta (vacía significa vaciar) con referencias nativas bloqueadas y activas. No se crea un ledger global de lote. confirmed acredita el recibo Original (un no-op conserva su versión), rejected prueba un rechazo sin efecto y unknown no permite reenvío. Ante cualquier respuesta HTTP perdida o error global, recuperar cada ticket mediante GET Original con la misma clave, acción, CAS y payload. La lectura no reserva ni redespacha; un Original ausente devuelve unknown/can_retry=false. Los identificadores públicos son UUID bajo id/*_id. El catálogo requiere lectura de tag_uuids y edición autorizada de tag_uuids por separado, y no concede permisos de LeadCapture.",
+        "summary": "Aplicar una acción a una selección exacta de tickets",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[ -~]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "const": "assign"
+                      },
+                      "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 100,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                            },
+                            "expected_version": {
+                              "type": "integer",
+                              "minimum": 1
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "expected_version"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "assignee_id": {
+                        "anyOf": [
+                          {
+                            "type": "string",
+                            "format": "uuid",
+                            "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                          },
+                          {
+                            "type": "null"
+                          }
+                        ]
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "items",
+                      "assignee_id"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "const": "priority"
+                      },
+                      "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 100,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                            },
+                            "expected_version": {
+                              "type": "integer",
+                              "minimum": 1
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "expected_version"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "priority": {
+                        "type": "string",
+                        "enum": [
+                          "low",
+                          "normal",
+                          "high",
+                          "urgent"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "items",
+                      "priority"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "const": "tags"
+                      },
+                      "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 100,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                            },
+                            "expected_version": {
+                              "type": "integer",
+                              "minimum": 1
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "expected_version"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "tag_ids": {
+                        "type": "array",
+                        "maxItems": 100,
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                        }
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "items",
+                      "tag_ids"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "action": {
+                        "type": "string",
+                        "const": "status"
+                      },
+                      "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 100,
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                            },
+                            "expected_version": {
+                              "type": "integer",
+                              "minimum": 1
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "expected_version"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "pipeline_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                      },
+                      "stage_id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                      }
+                    },
+                    "required": [
+                      "action",
+                      "items",
+                      "pipeline_id",
+                      "stage_id"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultado parcial tipado por elemento; el envelope no constituye otro recibo.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "action": {
+                          "type": "string",
+                          "enum": [
+                            "assign",
+                            "priority",
+                            "tags",
+                            "status"
+                          ]
+                        },
+                        "total": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 100
+                        },
+                        "confirmed": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "rejected": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "unknown": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "partial": {
+                          "type": "boolean"
+                        },
+                        "results": {
+                          "type": "array",
+                          "minItems": 1,
+                          "maxItems": 100,
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "index": {
+                                "type": "integer",
+                                "minimum": 0
+                              },
+                              "id": {
+                                "type": "string",
+                                "format": "uuid",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                              },
+                              "expected_version": {
+                                "type": "integer",
+                                "minimum": 1
+                              },
+                              "state": {
+                                "type": "string",
+                                "enum": [
+                                  "confirmed",
+                                  "rejected",
+                                  "unknown"
+                                ]
+                              },
+                              "reason": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "unavailable",
+                                  "forbidden",
+                                  "revoked",
+                                  "stale_version",
+                                  "locked",
+                                  "invalid_data",
+                                  "wip_limit",
+                                  "approval_pending",
+                                  "original_key_conflict",
+                                  "original_unconfirmed",
+                                  null
+                                ]
+                              },
+                              "effect_id": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "uuid",
+                                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "result_version": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ],
+                                "minimum": 1
+                              },
+                              "can_retry": {
+                                "type": "boolean",
+                                "const": false
+                              }
+                            },
+                            "required": [
+                              "index",
+                              "id",
+                              "expected_version",
+                              "state",
+                              "reason",
+                              "effect_id",
+                              "result_version",
+                              "can_retry"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "action",
+                        "total",
+                        "confirmed",
+                        "rejected",
+                        "unknown",
+                        "partial",
+                        "results"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credencial ausente, caducada o inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "C7, pertenencia, scope o campos actuales denegados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ticket o referencia ajenos o invisibles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Clave vinculada a otra intención o resultado no confirmado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Payload cerrado, CAS, acción o clave inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Admisión nativa rechazada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Fallo del productor; recuperar Originals sin reenviar el lote.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-required-scope": "customer_service:write",
+        "x-required-oauth-scope": "customer_service.write",
+        "x-crm-operation": "customer_service.bulk_action",
+        "x-crm-query-only": false,
+        "x-crm-original-receipt": false,
+        "x-crm-requires-confirmation": true,
+        "x-crm-requires-claim": true,
+        "x-speakeasy-group": "customerService",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "bulk_original": {
+      "path": "/crm/service-tickets/{ticket}/bulk-actions/original",
+      "method": "GET",
+      "operation": {
+        "operationId": "getOriginalServiceTicketBulkItem",
+        "description": "Company, actor, sandbox, canal, credencial y C7 proceden del contexto autenticado. La selección conserva el CAS observado; cada ticket conserva su transacción, claim, reserva nativa y Original propios. status usa pipeline_id/stage_id y aplica WIP y aprobación actuales. tags reemplaza la lista exacta (vacía significa vaciar) con referencias nativas bloqueadas y activas. No se crea un ledger global de lote. confirmed acredita el recibo Original (un no-op conserva su versión), rejected prueba un rechazo sin efecto y unknown no permite reenvío. Ante cualquier respuesta HTTP perdida o error global, recuperar cada ticket mediante GET Original con la misma clave, acción, CAS y payload. La lectura no reserva ni redespacha; un Original ausente devuelve unknown/can_retry=false. Los identificadores públicos son UUID bajo id/*_id. El catálogo requiere lectura de tag_uuids y edición autorizada de tag_uuids por separado, y no concede permisos de LeadCapture.",
+        "summary": "Consultar el Original nativo de una acción de ticket",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[ -~]+$"
+            }
+          },
+          {
+            "name": "ticket",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "assign",
+                "priority",
+                "tags",
+                "status"
+              ]
+            }
+          },
+          {
+            "name": "expected_version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          {
+            "name": "assignee_id",
+            "in": "query",
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                },
+                {
+                  "type": "string",
+                  "const": "null"
+                }
+              ],
+              "description": "Obligatorio sólo para assign; null textual representa desasignación."
+            }
+          },
+          {
+            "name": "priority",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "low",
+                "normal",
+                "high",
+                "urgent"
+              ],
+              "description": "Obligatorio sólo para priority."
+            }
+          },
+          {
+            "name": "tag_ids",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 4096,
+              "description": "Obligatorio sólo para tags: lista JSON de 0..100 UUID distintos, codificada en la URL."
+            }
+          },
+          {
+            "name": "pipeline_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+              "description": "Obligatorio sólo para status."
+            }
+          },
+          {
+            "name": "stage_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+              "description": "Obligatorio sólo para status."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Original confirmado o unknown explícito sin efectos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "index": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                        },
+                        "expected_version": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "state": {
+                          "type": "string",
+                          "enum": [
+                            "confirmed",
+                            "unknown"
+                          ]
+                        },
+                        "reason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "unavailable",
+                            "forbidden",
+                            "revoked",
+                            "stale_version",
+                            "locked",
+                            "invalid_data",
+                            "wip_limit",
+                            "approval_pending",
+                            "original_key_conflict",
+                            "original_unconfirmed",
+                            null
+                          ]
+                        },
+                        "effect_id": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "uuid",
+                              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "result_version": {
+                          "type": [
+                            "integer",
+                            "null"
+                          ],
+                          "minimum": 1
+                        },
+                        "can_retry": {
+                          "type": "boolean",
+                          "const": false
+                        }
+                      },
+                      "required": [
+                        "index",
+                        "id",
+                        "expected_version",
+                        "state",
+                        "reason",
+                        "effect_id",
+                        "result_version",
+                        "can_retry"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Credencial ausente, caducada o inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "C7, pertenencia, scope o campos actuales denegados.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Ticket o referencia ajenos o invisibles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Clave vinculada a otra intención o resultado no confirmado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Payload cerrado, CAS, acción o clave inválidos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Admisión nativa rechazada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Fallo del productor; recuperar Originals sin reenviar el lote.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-required-scope": "customer_service:write",
+        "x-required-oauth-scope": "customer_service.write",
+        "x-crm-operation": "customer_service.bulk_action",
+        "x-crm-query-only": true,
+        "x-crm-original-receipt": true,
+        "x-crm-requires-confirmation": false,
+        "x-crm-requires-claim": false,
+        "x-speakeasy-group": "customerService",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "restore_original": {
+      "path": "/crm/documents/{document}/restore/original",
+      "method": "GET",
+      "operation": {
+        "operationId": "crmGetCommercialDocumentRestoreOriginal",
+        "description": "GET sin cuerpo: conserva documento, expected_version y el header Idempotency-Key literal del POST. Lee el único receipt cifrado del dueño con Company/actor/sandbox/canal/credencial/conexión actuales. UNKNOWN no confirma desde Current ni ejecuta restore. Exige lectura documental y permisos restore actuales, campos uuid/version/versions/links/archived_at/archived_by y contenido privado retenido. Confirmed conserva Original expected_version+1 incluso después de otro archivo; una clave con revisión distinta devuelve409. No se publica effect/hash/key/blob/snapshot.",
+        "summary": "Consultar el Original del mismo intento de restauración",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/FactuareaVersion"
+          },
+          {
+            "$ref": "#/components/parameters/XActiveProfile"
+          },
+          {
+            "name": "document",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
+          {
+            "name": "expected_version",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9223372036854775806
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[\\x20-\\x7e]+$"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Credencial inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Permiso o scope actual retirado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "description": "Productor/receipt/contenido retenido no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Documento inexistente/invisible o campos obligatorios ocultos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Intención de lectura fuera del contrato cerrado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "Original confirmado o UNKNOWN autorizado. Cache-Control: private, no-store.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/CrmDocumentRestoreOriginal"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "La misma clave pertenece a otra revisión o el receipt cambió durante lectura.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-crm-operation": "crm_documents.restore_original_get",
+        "x-required-scope": "crm_documents:read",
+        "x-required-oauth-scope": "crm_documents.read",
+        "x-crm-requires-confirmation": false,
+        "x-speakeasy-group": "crmDocuments",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    }
+  },
+  "boundaries": {
+    "restore_intent": {
+      "path": "/crm/documents/{document}/restore",
+      "method": "POST",
+      "operation": {
+        "operationId": "crmRestoreCommercialDocument",
+        "description": "Tenant, actor, realm, credencial y C7 son nativos y se reautorizan antes y después. Las máscaras omiten campos. La revisión CAS es distinta del número de contenido; ninguna versión histórica se fabrica. Escrituras con clave recuperan identidad y recibo originales durables. Un productor ambiguo devuelve unavailable. Los blobs conservan una cuota física única en Vault; no se copian PDFs fiscales. Renombrar, sustituir, vincular, archivar y restaurar requieren crm:read y crm_documents:read además de escritura para releer la postcondición por Query. La pareja opcional linked_entity_type/linked_entity_id de descarga exige acceso actual a la ficha y a la versión fijada por el vínculo; nunca concede audiencia. Sin document_version, una pareja con varios contenidos exige seleccionar uno explícitamente. Descarga binaria autenticada, sin URL ni handle público.",
+        "summary": "Biblioteca privada: restore",
+        "tags": [
+          "CRM Private Documents"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/FactuareaVersion"
+          },
+          {
+            "$ref": "#/components/parameters/XActiveProfile"
+          },
+          {
+            "name": "document",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Intención original: mismos argumentos recuperan el receipt original con permisos actuales; otro contenido devuelve409.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[ -~]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expected_version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9223372036854775806
+                  },
+                  "confirmed": {
+                    "type": "boolean",
+                    "const": true,
+                    "description": "Confirmación humana explícita de esta restauración y revisión; no concede acceso."
+                  }
+                },
+                "required": [
+                  "expected_version",
+                  "confirmed"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "200": {
+            "description": "Resultado original autorizado; identidad pública id, sin receipt interno ni referencias físicas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/CrmPrivateDocumentReceipt"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-crm-operation": "crm_documents.restore",
+        "x-required-scope": "crm_documents:write",
+        "x-required-oauth-scope": "crm_documents.write",
+        "x-crm-requires-confirmation": true,
+        "x-speakeasy-group": "crmDocuments",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    }
+  },
+  "restore_paths_in_native_input": [
+    "/crm/documents/{document}/restore/original",
+    "/crm/documents/{document}/restore"
+  ],
+  "components": {
+    "responses": {
+      "Unauthorized": {
+        "description": "Autenticación ausente o inválida.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "missing_api_key": {
+                "summary": "Missing API key",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "missing_api_key",
+                    "message": "No se ha proporcionado una API key válida en el header Authorization.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#missing_api_key",
+                    "request_id": "req_01HKQS5N8VR7QXJ9K3T6BWPMZA"
+                  }
+                }
+              },
+              "invalid_api_key": {
+                "summary": "Invalid API key format",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "invalid_api_key",
+                    "message": "La API key no tiene el formato esperado (debe empezar por fact_live_ o fact_test_).",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#invalid_api_key",
+                    "request_id": "req_01HKQS5N9JTQM7HVTQP3FBN5XB"
+                  }
+                }
+              },
+              "api_key_revoked": {
+                "summary": "Revoked API key",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "api_key_revoked",
+                    "message": "Esta API key ha sido revocada y ya no es válida.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#api_key_revoked",
+                    "request_id": "req_01HKQS5NA8K7E2V9YDZWMT6RJC"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Scope, membresía, plan, C7 o campo actual denegado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "insufficient_scope": {
+                "summary": "API key lacks required scope",
+                "value": {
+                  "error": {
+                    "type": "authorization_error",
+                    "code": "insufficient_scope",
+                    "message": "Esta API key no tiene el scope requerido para esta operación.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#insufficient_scope",
+                    "request_id": "req_01HKQS5NBC3P8M1KX4V7SLNHQD"
+                  }
+                }
+              },
+              "feature_not_available_in_plan": {
+                "summary": "Plan upgrade required",
+                "value": {
+                  "error": {
+                    "type": "authorization_error",
+                    "code": "feature_not_available_in_plan",
+                    "message": "Esta funcionalidad requiere el plan empresario o superior. Actualiza tu suscripción para acceder.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#feature_not_available_in_plan",
+                    "request_id": "req_01HKQS5NCK4V9N2L7Y8X3WPMRE"
+                  }
+                }
+              },
+              "addon_not_active": {
+                "summary": "Plan without public API access",
+                "value": {
+                  "error": {
+                    "type": "authorization_error",
+                    "code": "addon_not_active",
+                    "message": "Tu plan actual no incluye acceso a la API pública. Contrata o renueva un plan de Factuarea para usar la API.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#addon_not_active",
+                    "request_id": "req_01HKQS5NDP5W0Q3M8Z9A4BVSNF"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "La admisión nativa de esta familia rechaza la operación.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "rate_limit_exceeded": {
+                "summary": "Rate limit exceeded",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "rate_limit_exceeded",
+                    "message": "Has excedido el rate limit de 60 peticiones por minuto. Reintenta tras 30 segundos.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#rate_limit_exceeded",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5H0JBZVL"
+                  }
+                }
+              },
+              "too_many_auth_failures": {
+                "summary": "Too many authentication failures (temporary lockout)",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "too_many_auth_failures",
+                    "message": "Has alcanzado el número máximo de intentos de autenticación fallidos. La API key queda bloqueada temporalmente. Reintenta tras el tiempo indicado en `Retry-After`.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#too_many_auth_failures",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5H0JBZVM"
+                  }
+                }
+              },
+              "upload_in_flight_budget_exceeded": {
+                "summary": "Too many concurrent uploads in flight",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "upload_in_flight_budget_exceeded",
+                    "message": "Tu empresa tiene demasiadas subidas en curso a la vez: este archivo ocupa 10 MB y el margen simultáneo es de 120 MB. Espera a que terminen las subidas en marcha y vuelve a intentarlo dentro de 45 segundos.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#upload_in_flight_budget_exceeded",
+                    "request_id": "req_01HKQS5NUPLOADINFLIGHT005"
+                  }
+                }
+              },
+              "company_rate_limit_exceeded": {
+                "summary": "Company-wide rate limit exceeded (all keys combined)",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "company_rate_limit_exceeded",
+                    "message": "Tu empresa ha superado su límite conjunto de 900 peticiones por minuto, contando a la vez todas sus credenciales. Es un techo de la empresa, así que repartir el tráfico no lo eleva. Reintenta en 12 segundos, o solicita una ampliación de plan si necesitas más capacidad.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#company_rate_limit_exceeded",
+                    "request_id": "req_01HKQS5NCOMPANYRATELIMIT06"
+                  }
+                }
+              },
+              "company_monthly_quota_exceeded": {
+                "summary": "Company-wide monthly quota exhausted (all keys combined)",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "company_monthly_quota_exceeded",
+                    "message": "Tu empresa ha agotado su cuota conjunta de 150000 peticiones de este mes, contando a la vez todas sus credenciales. Es un techo de la empresa, así que repartir el tráfico no lo eleva. El contador se reinicia el día 1 del mes siguiente; solicita una ampliación de plan si necesitas más volumen antes.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#company_monthly_quota_exceeded",
+                    "request_id": "req_01HKQS5NCOMPANYMONTHLY0007"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "Retry-After": {
+            "description": "Number of seconds to wait before retrying.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Limit": {
+            "description": "Request quota for the current window (RFC 9331).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Remaining": {
+            "description": "Remaining requests in the current window (RFC 9331).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Reset": {
+            "description": "Seconds until the quota window resets (RFC 9331).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Limit": {
+            "description": "Request quota for the current window (legacy header).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "description": "Remaining requests in the current window (legacy header).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "description": "Seconds until the quota window resets (legacy header).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "La infraestructura o el productor canónico no están disponibles.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "internal_error": {
+                "summary": "Unexpected server error",
+                "value": {
+                  "error": {
+                    "type": "api_error",
+                    "code": "internal_error",
+                    "message": "Ha ocurrido un error inesperado. Si persiste, contacta con soporte adjuntando el request_id.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#internal_error",
+                    "request_id": "req_01HKQS5NLX2D7X0U5H6J1KCAWM"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Tipo JSON, calendario, reloj, referencia o regla inválida.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "parameter_invalid": {
+                "summary": "Parameter failed validation",
+                "value": {
+                  "error": {
+                    "type": "invalid_request_error",
+                    "code": "parameter_invalid",
+                    "message": "El campo `name` es obligatorio y no puede estar vacío.",
+                    "param": "name",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#parameter_invalid",
+                    "request_id": "req_01HKQS5NGS8Z3T6Q1D2E7FYVSI"
+                  }
+                }
+              },
+              "invalid_idempotency_key_format": {
+                "summary": "Invalid Idempotency-Key format",
+                "value": {
+                  "error": {
+                    "type": "invalid_request_error",
+                    "code": "invalid_param_format",
+                    "message": "La Idempotency-Key debe tener entre 1 y 64 caracteres ASCII printable.",
+                    "param": "Idempotency-Key",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_format",
+                    "request_id": "req_01HKQS5NIDEMPKEYFORMAT0007"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Ticket, calendario o referencia ausente, ajena o invisible.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "resource_not_found": {
+                "summary": "Resource not found",
+                "value": {
+                  "error": {
+                    "type": "not_found_error",
+                    "code": "resource_not_found",
+                    "message": "El recurso solicitado no existe o pertenece a otra empresa.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#resource_not_found",
+                    "request_id": "req_01HKQS5NEQ6X1R4N9B0C5DWTPG"
+                  }
+                }
+              },
+              "tax_report_not_found": {
+                "summary": "Tax report not found for the period",
+                "value": {
+                  "error": {
+                    "type": "not_found_error",
+                    "code": "tax_report_not_found",
+                    "message": "No se ha encontrado ninguna declaración generada para el período indicado.",
+                    "param": "period",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#tax_report_not_found",
+                    "request_id": "req_01HKQS5NTAXRNOTFOUNDPERIOD07"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflicto CAS, clave reutilizada o reserva original sin confirmar.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "idempotency_key_reused": {
+                "summary": "Idempotency key reused with different body",
+                "value": {
+                  "error": {
+                    "type": "idempotency_error",
+                    "code": "idempotency_key_reused",
+                    "message": "La cabecera `Idempotency-Key` ya se usó con un body distinto. Usa una clave nueva o reenvía exactamente el mismo body.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#idempotency_key_reused",
+                    "request_id": "req_01HKQS5NHT9A4U7R2E3F8GZWTJ"
+                  }
+                }
+              },
+              "resource_already_exists": {
+                "summary": "Resource already exists (with subcode)",
+                "value": {
+                  "error": {
+                    "type": "conflict_error",
+                    "code": "resource_already_exists",
+                    "subcode": "tax_id_already_exists",
+                    "message": "Ya existe un cliente con ese CIF/NIF.",
+                    "param": "tax_id",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#resource_already_exists",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5HAIBZVM"
+                  }
+                }
+              },
+              "resource_conflict": {
+                "summary": "Generic resource conflict",
+                "value": {
+                  "error": {
+                    "type": "conflict_error",
+                    "code": "resource_conflict",
+                    "message": "El recurso está en un estado que no permite esta operación.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#resource_conflict",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5HAIBZVL"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Machine-readable category of the error. Versioned by `Factuarea-Version`: from `2026-09-01` onwards the payment gate codes `payment_method_required`, `seat_charge_failed`, `gestoria_plan_required`, `employee_seat_payment_method_required` and `employee_seat_charge_failed` are served as `payment_required_error`; requests pinned to an earlier version keep receiving `invalid_request_error` for those five. `error.code` and `error.subcode` never change — branch on `code` if you want version-independent behaviour.",
+                "enum": [
+                  "api_error",
+                  "authentication_error",
+                  "authorization_error",
+                  "conflict_error",
+                  "idempotency_error",
+                  "invalid_request_error",
+                  "not_found_error",
+                  "payment_required_error",
+                  "permission_error",
+                  "rate_limit_error",
+                  "service_unavailable_error"
+                ],
+                "example": "authentication_error",
+                "examples": [
+                  "authentication_error"
+                ]
+              },
+              "code": {
+                "type": "string",
+                "description": "Stable error code, e.g. missing_api_key, insufficient_scope, parameter_invalid, invalid_status_transition. Full reference of every code, grouped by area: https://docs.factuarea.com/guides/errors/all.",
+                "example": "missing_api_key",
+                "examples": [
+                  "missing_api_key"
+                ]
+              },
+              "subcode": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Sub-code detailing the subtype within `code`. Present only on some errors, and only where `code` alone is ambiguous: on 409 duplication conflicts it pins the duplicate key (`code=resource_already_exists`, `subcode=tax_id_already_exists`), and on 402 payment errors it pins which gate rejected the call (`code=seat_charge_failed`, `subcode=seat_charge_failed`; `code=addon_required`, `subcode=webhooks_addon_required`). Like `code`, it is stable and invariant across locales and API versions.",
+                "example": "tax_id_already_exists",
+                "examples": [
+                  "tax_id_already_exists"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable description in Spanish.",
+                "example": "No se ha proporcionado una API key válida en el header Authorization.",
+                "examples": [
+                  "No se ha proporcionado una API key válida en el header Authorization."
+                ]
+              },
+              "param": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Field that caused the error (for parameter_invalid and similar invalid_request_error codes). On multi-field validation errors it points to the FIRST failed field; the full set lives in `errors[]`."
+              },
+              "line_index": {
+                "type": "integer",
+                "description": "Zero-based position of the document line that raised the error, the same `N` as in a validation path `lines.N.field`. Present only when a domain rule rejects ONE specific line of the document (a product, variant, presentation, configuration or option that does not exist or is deactivated, a missing price or VAT rate, an exemption cause or regime key outside its catalog, a disbursement line carrying what it may not, a line total that does not match, …) and absent on every other error. It is additive: `param` keeps naming the field exactly as before, so a client can ignore `line_index`. Use it to highlight the offending line without parsing `message`."
+              },
+              "errors": {
+                "type": "array",
+                "description": "Present on 422 validation errors: ALL failed fields, one item per field (not only the first). Each item carries `param`/`code`/`message` plus the optional hints `expected_format`/`allowed_values`. Additive and backward-compatible — `error.param`/`error.message` still mirror the first failed field.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "param": {
+                      "type": "string",
+                      "description": "Name of the failed field."
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Stable machine-readable code for this field, derived from the failed validation rule (e.g. parameter_missing, parameter_invalid_format, parameter_invalid_enum)."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable description of the field error. Localized (es/en/ca) when its `code` belongs to the stable catalog."
+                    },
+                    "expected_format": {
+                      "type": "string",
+                      "description": "Expected format hint (e.g. `YYYY-MM-DD`, `uuid`, `email`, `url`). Only present when the failure is a format error."
+                    },
+                    "allowed_values": {
+                      "type": "array",
+                      "description": "Legal values of the enum. Only present when the failure is an enum/`in` error.",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "param",
+                    "code",
+                    "message"
+                  ]
+                }
+              },
+              "details": {
+                "type": "object",
+                "description": "Structured details about the error, present only on some errors and with a shape that depends on the case. On 409 duplication conflicts (subcodes `tax_id_already_exists`, `external_id_already_exists`, `sku_already_exists`) it carries `existing_resource_id`, the UUID of the resource that already exists. On 402 `payment_required_error` responses caused by a missing payment method it carries `payment_setup_url`, the Billing Portal link that unblocks the operation. On the 422 subcodes raised inside the domain it carries the hint of that case: `allowed_values` (rejected value outside a closed catalog), `offending_field` (field a disbursement line may not carry) or `expected` + `received` (line total checksum mismatch).",
+                "properties": {
+                  "operation_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Operation in the authenticated company that must be resolved before another employee-seat mutation."
+                  },
+                  "row_errors": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "row_id",
+                        "field",
+                        "message"
+                      ],
+                      "properties": {
+                        "row_id": {
+                          "type": "string"
+                        },
+                        "field": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "description": "Employee-batch validation failures identified by the stable row_id; no employee was charged or created."
+                  },
+                  "field_errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "description": "Review fields that must be corrected before a purchase scan can be converted. Keys use public identifiers, for example supplier_id or lines.0.tax_rate."
+                  },
+                  "existing_resource_id": {
+                    "type": "string",
+                    "description": "UUID of the pre-existing resource that triggered the conflict. Resolvable with a `GET /v1/{resource}/{id}` without an extra `find_by_*` call. Only present on 409 duplication conflicts."
+                  },
+                  "payment_setup_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Billing Portal URL where the payment method can be set up. Only present on 402 errors caused by a missing payment method (`payment_method_required`, `employee_seat_payment_method_required`); once the payment method is on file, retrying the same call succeeds. Absent on the other 402 codes (declined charge, plan or add-on required)."
+                  },
+                  "allowed_values": {
+                    "type": "array",
+                    "description": "Legal values of the closed catalog the rejected value does not belong to. Present on the 422 subcodes that validate against a catalog inside the domain (`line_type_invalid`, `correction_code_illegal_for_original`). Note that a 422 raised by request validation reports the same hint per field in `error.errors[].allowed_values` instead.",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "offending_field": {
+                    "type": "string",
+                    "description": "Name of the line field that made the operation illegal. Present on 422 `suplido_line_cannot_carry_taxes`: a disbursement line (`line_type: \"SUPLIDO\"`) may not carry VAT, withholding, surcharge, discount, regime key, exemption cause or product, and this names the one that was sent."
+                  },
+                  "expected": {
+                    "type": "number",
+                    "description": "Amount this API computed for the line. Present on 422 `line_total_checksum_mismatch`, together with `received`, so the rounding mismatch with your own ERP can be located without guessing."
+                  },
+                  "received": {
+                    "type": "number",
+                    "description": "Amount sent in `lines[].line_total`, which differs from `expected` by more than one cent. Present on 422 `line_total_checksum_mismatch`."
+                  },
+                  "active_rules": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Current active automation rule count on automation_active_rules_limit_exceeded."
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Plan limit reached, including the active automation rule cap on automation_active_rules_limit_exceeded."
+                  },
+                  "resource": {
+                    "type": "string",
+                    "description": "Resource whose quota was reached on plan_limit_exceeded, for example documents_year or users."
+                  },
+                  "current": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Current usage of the resource on plan_limit_exceeded."
+                  },
+                  "period_end": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time",
+                    "description": "End of the quota period on plan_limit_exceeded; null for resources without a period, including platform users."
+                  }
+                }
+              },
+              "doc_url": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uri",
+                "description": "Link to error reference in docs.",
+                "example": "https://docs.factuarea.com/guides/errors#missing_api_key",
+                "examples": [
+                  "https://docs.factuarea.com/guides/errors#missing_api_key"
+                ]
+              },
+              "request_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Request ID for support/debugging.",
+                "example": "req_01HKQS5N8VR7QXJ9K3T6BWPMZA",
+                "examples": [
+                  "req_01HKQS5N8VR7QXJ9K3T6BWPMZA"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "Error"
+      },
+      "CrmDocumentRestoreOriginal": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "state": {
+                "type": "string",
+                "const": "unknown"
+              },
+              "document": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                  },
+                  "expected_version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9223372036854775806
+                  }
+                },
+                "required": [
+                  "id",
+                  "expected_version"
+                ]
+              },
+              "restore_original": {
+                "type": "null"
+              }
+            },
+            "required": [
+              "state",
+              "document",
+              "restore_original"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "state": {
+                "type": "string",
+                "const": "confirmed"
+              },
+              "document": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                  },
+                  "expected_version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9223372036854775806
+                  }
+                },
+                "required": [
+                  "id",
+                  "expected_version"
+                ]
+              },
+              "restore_original": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89aAbB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                  },
+                  "version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9223372036854775806
+                  }
+                },
+                "required": [
+                  "id",
+                  "version"
+                ]
+              }
+            },
+            "required": [
+              "state",
+              "document",
+              "restore_original"
+            ]
+          }
+        ],
+        "title": "CrmDocumentRestoreOriginal"
+      },
+      "CrmPrivateDocumentReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "id",
+          "version"
+        ],
+        "title": "CrmPrivateDocumentReceipt"
+      }
+    },
+    "parameters": {
+      "FactuareaVersion": {
+        "name": "Factuarea-Version",
+        "in": "header",
+        "description": "Pin the API version (`YYYY-MM-DD`, Stripe-style date versioning) for this request; omit to use the key's pinned version, or the latest if none. Unsupported version → `400 unsupported_api_version`; malformed → `400 parameter_invalid_format`. The effective version is echoed in the `Factuarea-Version` response header. See the [Versioning guide](/guides/versioning).",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date",
+          "example": "2026-06-01"
+        }
+      },
+      "XActiveProfile": {
+        "name": "X-Active-Profile",
+        "in": "header",
+        "description": "Operate on behalf of a child company (gestoría master key): pass its public `id` (UUID v7) and the request runs against that child's data without changing the key's scope, tier or environment (omit to use the key's own company). Invalid UUID → `400 parameter_invalid_uuid`; unknown or non-owned id → `404 profile_not_found`. See the [Acting on behalf guide](/guides/acting-on-behalf).",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a0c"
+        }
+      }
+    }
+  },
+  "source_manifest_projection_sha256": "abeb39dcf9ef77f893c3909aab8fe83690c08ba052f40b1f4433f4577a44b914"
+}

@@ -61,3 +61,21 @@ Raw/key no se recortan, regeneran o guardan. La opción `--idempotency-key-env`
 permite mantener la clave fuera de argv/logs; los tokens entran por los canales
 existentes de auth. No se han ejecutado los dos HTTP causales preparados ni API,
 build, fixtures, DB, instalaciones o suites.
+
+## Restore Original del nuevo corte Native149
+
+El consumidor `NativeCrm134` añade `crm documents restore-original <document>`
+desde el artefacto nativo149 real, sin cambiar el pin143 ni su writer Restore.
+Conserva el mismo fichero `FIRST_RESTORE_BODY` (expected_version y confirmed:true)
+y la misma clave literal del POST:
+
+```sh
+factuarea crm documents restore-original "$DOCUMENT_UUID" --source-contracts \
+  --data-file "$FIRST_RESTORE_BODY" --idempotency-key-env FACTUAREA_RESTORE_INTENT --json
+```
+
+Usa GET sin cuerpo con el CAS Original; mantiene UNKNOWN sin reenviar Restore
+ni inferir el resultado desde Current. Una respuesta confirmed conserva la revisión
+original expected_version+1 incluso si Current ya avanzó o fue archivado de nuevo.
+El scope es `crm_documents:read`; permisos restore/Company/C7 vigentes y contenido
+retenido siguen a cargo del dueño nativo. [Comandos y recuperación NativeCrm134](../tools/NativeCrm134/README.md).

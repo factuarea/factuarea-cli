@@ -193,6 +193,11 @@ func (c *CrmSource139Contract) validate(schema map[string]any, value any, depth 
 			// Native PCRE uses this strict EOF assertion. RE2's \z has the same
 			// meaning; unsupported expressions otherwise fail closed.
 			pattern = strings.ReplaceAll(pattern, `$(?![\s\S])`, `\z`)
+			// Exact Native149 Stage name predicate: no ASCII controls and
+			// at least one character other than ASCII space. RE2 has no lookahead.
+			if pattern == `^(?=.*[^ ])[^\u0000-\u001F\u007F]+$` {
+				pattern = `^[^\x00-\x1f\x7f]*[^ \x00-\x1f\x7f][^\x00-\x1f\x7f]*\z`
+			}
 			r, err := regexp.Compile(pattern)
 			if err != nil || !r.MatchString(v) {
 				return errCrmSource139Shape

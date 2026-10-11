@@ -64,5 +64,6 @@ func NewRootCmd() *cobra.Command {
 	registerCrmSource139Commands(root)
 	registerCrmJourney140Commands(root)
 	registerCrmSource143Commands(root)
+	registerCrmNative134Commands(root)
 	return root
 }
