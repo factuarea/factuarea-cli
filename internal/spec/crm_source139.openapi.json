@@ -1,0 +1,1984 @@
+{
+  "source_artifact_sha256": "438b12b53be7ae7535cd6c85ba7dea06c76d84a33024db0e0232ac8ba279be63",
+  "source_manifest_sha256": "1a733685845fdca3ed0c0af725a626837ce1c63fe420bfb90a5bdcef851927b9",
+  "native_profile": {
+    "name": "crm-source-contracts",
+    "source": "Source",
+    "state": "unreleased",
+    "published": false,
+    "ratified": false,
+    "delivery_enabled": false,
+    "catalog_sha256": "78aee740427c76d2e009d8ff010f1784c1d1df02b86cbda4ad60c7a761972fbb"
+  },
+  "capabilities": [],
+  "carriers": [
+    {
+      "route_name": "public-api.v1.crm-spreadsheet-imports.apply-original",
+      "operation_id": "public-api.v1.crm-spreadsheet-imports.apply-original",
+      "operation_key": "crm_imports.apply",
+      "uri": "v1/crm/imports/{run}/apply/original",
+      "methods": [
+        "GET"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:crm_imports:write",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:crm_imports.apply"
+      ]
+    }
+  ],
+  "operations": {
+    "import_apply_original": {
+      "path": "/crm/imports/{run}/apply/original",
+      "method": "GET",
+      "operation": {
+        "operationId": "public-api.v1.crm-spreadsheet-imports.apply-original",
+        "description": "Consulta la primera respuesta 202 cifrada del mismo claim de aplicación, con la clave y hash literal del cuerpo POST conservados. No ejecuta filas, resume claims ni reconstruye respuesta desde Current. Revalida empresa, actor, sandbox, credencial actual, C7 y máscaras de los runs original y resultado. Missing, in_progress y unconfirmed no acreditan éxito. El cuerpo original v1 conserva id/source_blob_id; el padre de retry_failed conserva su propio UUID.",
+        "tags": [
+          "CRM Imports"
+        ],
+        "parameters": [
+          {
+            "name": "run",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "original_body_sha256",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado factual del Original; Current se consulta por separado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "original_body_sha256",
+                            "authorization_version",
+                            "state",
+                            "original_response"
+                          ],
+                          "properties": {
+                            "original_body_sha256": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            },
+                            "authorization_version": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "state": {
+                              "type": "string",
+                              "enum": [
+                                "missing",
+                                "in_progress",
+                                "unconfirmed"
+                              ]
+                            },
+                            "original_response": {
+                              "type": "null"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "original_body_sha256",
+                            "authorization_version",
+                            "state",
+                            "original_response"
+                          ],
+                          "properties": {
+                            "original_body_sha256": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            },
+                            "authorization_version": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "state": {
+                              "type": "string",
+                              "const": "confirmed"
+                            },
+                            "original_response": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "status",
+                                "body"
+                              ],
+                              "properties": {
+                                "status": {
+                                  "type": "integer",
+                                  "const": 202
+                                },
+                                "body": {
+                                  "type": "string",
+                                  "description": "Exact original JSON response bytes, including its data envelope."
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-required-scope": "crm_imports:write",
+        "x-crm-operation": "crm_imports.apply",
+        "x-crm-requires-confirmation": false,
+        "x-speakeasy-group": "crmSpreadsheetImports",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "agenda": {
+      "path": "/agenda",
+      "method": "GET",
+      "operation": {
+        "operationId": "public-api.v1.agenda.list",
+        "description": "Return a combined agenda between `from` and `to` (at most 93 days, both included): due tasks and, from other modules, invoice and purchase invoice due dates, quote and pro forma expiries, recurring invoice runs, tax deadlines, absences and holidays. `sources` chooses the layers. Every layer also needs the read scope of its own resource and its module (for example `invoices:read` for invoice due dates, `absences:read` for absences); layers the key cannot read are left out without an error, and `sources` in the response lists the layers actually served. `assignee_id` (`me` or a member id) filters the task layer. The whole window is returned in one page.",
+        "summary": "List agenda items",
+        "tags": [
+          "Agenda"
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "description": "First day of the window (`YYYY-MM-DD`, included). Required.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "description": "Last day of the window (`YYYY-MM-DD`, included). Required. The window spans at most 93 days: a longer or inverted window returns 400 `parameter_invalid_range` on `to`.",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "sources",
+            "in": "query",
+            "description": "Comma-separated layers to include: `tasks`, `invoice_due`, `purchase_invoice_due`, `quote_expiry`, `proforma_expiry`, `recurring_invoice_run`, `fiscal_deadline`, `absence`, `holiday`. Omit it to include every layer; an empty value includes none. Each layer also requires the read scope of its resource (for example `invoices:read` for `invoice_due`) and its module: layers the key cannot read are left out without an error, and the `sources` of the response lists only the layers actually served. An unknown layer returns 400 `parameter_invalid_enum`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assignee_id",
+            "in": "query",
+            "description": "Only filters the `tasks` layer: `me` for the member who owns the API key, or the UUID of a member of your company. Any other value returns 422 `invalid_param_value`.",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "$ref": "#/components/parameters/FactuareaVersion"
+          },
+          {
+            "$ref": "#/components/parameters/XActiveProfile"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/PaginatedList"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AgendaList"
+                    }
+                  ]
+                },
+                "examples": {
+                  "success": {
+                    "summary": "GET /v1/agenda · 200",
+                    "value": {
+                      "data": [
+                        {
+                          "id": "0193a4f2-8f53-7d44-8e85-7a9b1c3d5f12",
+                          "object": "agenda_item",
+                          "type": "tasks",
+                          "title": "Integrar la pasarela de pago en el checkout",
+                          "starts_on": "2026-09-21",
+                          "ends_on": "2026-10-06",
+                          "status": "active",
+                          "url": "/tasks/t/0193a4f2-8f53-7d44-8e85-7a9b1c3d5f12",
+                          "task": {
+                            "key": "DEV-12",
+                            "project_id": "0193a4f2-7c20-7a11-8b52-4d6e8f0a2c01",
+                            "project_name": "Desarrollo web",
+                            "priority": "high",
+                            "assignee_id": "0193a4f2-6b1c-7d3e-8a41-2c5e7f9a1b01",
+                            "board_status": "active",
+                            "completed": false
+                          },
+                          "fiscal": null
+                        },
+                        {
+                          "id": "0193a4f2-d40e-7cff-8d90-8f0a2b4c6e10",
+                          "object": "agenda_item",
+                          "type": "invoice_due",
+                          "title": "FAC-2026-00057 · Acme Soluciones SL",
+                          "starts_on": "2026-10-15",
+                          "ends_on": "2026-10-15",
+                          "status": "issued",
+                          "url": "/sales-invoices/0193a4f2-d40e-7cff-8d90-8f0a2b4c6e10",
+                          "task": null,
+                          "fiscal": null
+                        },
+                        {
+                          "id": "fiscal:303:2026-Q3",
+                          "object": "agenda_item",
+                          "type": "fiscal_deadline",
+                          "title": "Modelo 303 · 3T 2026",
+                          "starts_on": "2026-10-20",
+                          "ends_on": "2026-10-20",
+                          "status": "pending",
+                          "url": "/settings/tax-reports",
+                          "task": null,
+                          "fiscal": {
+                            "model": "303",
+                            "period": "2026-Q3",
+                            "task_id": "0193a4f2-8f53-7d44-8e85-7a9b1c3d5f30"
+                          }
+                        },
+                        {
+                          "id": "0193a4f2-d40e-7cff-8d90-8f0a2b4c6e01",
+                          "object": "agenda_item",
+                          "type": "absence",
+                          "title": "Lucía Fernández · Vacaciones",
+                          "starts_on": "2026-10-26",
+                          "ends_on": "2026-10-30",
+                          "status": "approved",
+                          "url": "/absence-calendar",
+                          "task": null,
+                          "fiscal": null
+                        }
+                      ],
+                      "has_more": false,
+                      "next_cursor": null,
+                      "sources": [
+                        "tasks",
+                        "invoice_due",
+                        "fiscal_deadline",
+                        "absence"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "Factuarea-Version": {
+                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                "schema": {
+                  "type": "string",
+                  "format": "date",
+                  "examples": [
+                    "2026-06-01"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Autenticación ausente o inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "missing_api_key": {
+                    "summary": "GET /v1/agenda · 401 missing_api_key",
+                    "value": {
+                      "error": {
+                        "type": "authentication_error",
+                        "code": "missing_api_key",
+                        "message": "Falta header Authorization o X-API-Key.",
+                        "doc_url": "https://docs.factuarea.com/guides/errors#missing_api_key",
+                        "request_id": "req_1c6dc4a430adb2e21d61d50c9a"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Scope, membresía, plan, C7 o campo actual denegado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "insufficient_scope": {
+                    "summary": "GET /v1/agenda · 403 insufficient_scope",
+                    "value": {
+                      "error": {
+                        "type": "authorization_error",
+                        "code": "insufficient_scope",
+                        "message": "Esta operación requiere el scope 'tasks:read'. Tu API key solo tiene los scopes: ninguno.",
+                        "doc_url": "https://docs.factuarea.com/guides/errors#insufficient_scope",
+                        "request_id": "req_62b1d5797f8d2a8d3ff72e1d86"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "La admisión nativa de esta familia rechaza la operación.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "rate_limit_exceeded": {
+                    "summary": "GET /v1/agenda · 429 rate_limit_exceeded",
+                    "value": {
+                      "error": {
+                        "type": "rate_limit_error",
+                        "code": "rate_limit_exceeded",
+                        "message": "Has excedido el límite de requests permitido. Reintenta más tarde.",
+                        "doc_url": "https://docs.factuarea.com/guides/errors#rate_limit_exceeded",
+                        "request_id": "req_805a24da33acc4b98386b931a7"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "Retry-After": {
+                "description": "Number of seconds to wait before retrying.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Limit": {
+                "description": "Request quota for the current window (RFC 9331).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Remaining": {
+                "description": "Remaining requests in the current window (RFC 9331).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "RateLimit-Reset": {
+                "description": "Seconds until the quota window resets (RFC 9331).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Request quota for the current window (legacy header).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Remaining requests in the current window (legacy header).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Seconds until the quota window resets (legacy header).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "La infraestructura o el productor canónico no están disponibles.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "internal_error": {
+                    "summary": "GET /v1/agenda · 500 internal_error",
+                    "value": {
+                      "error": {
+                        "type": "api_error",
+                        "code": "internal_error",
+                        "message": "Algo se rompió en nuestro lado al procesar la petición. La condición no la provoca tu payload.",
+                        "doc_url": "https://docs.factuarea.com/guides/errors#internal_error",
+                        "request_id": "req_aae58b782125defa78ef804350"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request is syntactically malformed — e.g. an unknown query parameter, an integer parameter with non-numeric value, or a value outside the documented range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "parameter_missing": {
+                    "summary": "GET /v1/agenda · 400 parameter_missing",
+                    "value": {
+                      "error": {
+                        "type": "invalid_request_error",
+                        "code": "parameter_missing",
+                        "message": "El parámetro 'from' es obligatorio.",
+                        "param": "from",
+                        "doc_url": "https://docs.factuarea.com/guides/errors#parameter_missing",
+                        "request_id": "req_d4b51c21a90359eed7d82b665f"
+                      }
+                    }
+                  },
+                  "parameter_invalid_range": {
+                    "summary": "GET /v1/agenda · 400 parameter_invalid_range",
+                    "value": {
+                      "error": {
+                        "type": "invalid_request_error",
+                        "code": "parameter_invalid_range",
+                        "message": "El parámetro 'to' debe ser igual o posterior a 'from' y la ventana de fechas no puede superar 93 días (ambos días incluidos).",
+                        "param": "to",
+                        "doc_url": "https://docs.factuarea.com/guides/errors#parameter_invalid_range",
+                        "request_id": "req_d7b867905a89ed06046c127984"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Tipo JSON, calendario, reloj, referencia o regla inválida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                },
+                "examples": {
+                  "invalid_param_value": {
+                    "summary": "GET /v1/agenda · 422 invalid_param_value",
+                    "value": {
+                      "error": {
+                        "type": "invalid_request_error",
+                        "code": "invalid_param_value",
+                        "message": "El filtro assignee_id debe ser \"me\" o el id de un miembro de la empresa.",
+                        "param": "assignee_id",
+                        "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_value",
+                        "request_id": "req_03262b076bcc3326424b62eace"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          }
+        },
+        "x-speakeasy-group": "agenda",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [
+            "429",
+            "5XX"
+          ],
+          "retryConnectionErrors": true
+        },
+        "x-required-scope": "tasks:read"
+      }
+    }
+  },
+  "boundaries": {
+    "import_apply": {
+      "path": "/crm/imports/{run}/apply",
+      "method": "POST",
+      "operation": {
+        "operationId": "public-api.v1.crm-spreadsheet-imports.apply",
+        "description": "Apply Crm Spreadsheet Import V1.",
+        "parameters": [
+          {
+            "name": "run",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/FactuareaVersion"
+          },
+          {
+            "$ref": "#/components/parameters/XActiveProfile"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "Factuarea-Version": {
+                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                "schema": {
+                  "type": "string",
+                  "format": "date",
+                  "examples": [
+                    "2026-06-01"
+                  ]
+                }
+              },
+              "Idempotent-Replayed": {
+                "description": "Present with value `\"true\"` only when this response was replayed from the idempotency cache for a repeated `Idempotency-Key` (same key, same request fingerprint). Absent on the first, freshly executed request.",
+                "schema": {
+                  "type": "string",
+                  "examples": [
+                    "true"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "x-required-scope": "crm_imports:write",
+        "x-speakeasy-group": "crmSpreadsheetImports",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "import_current": {
+      "path": "/crm/imports/{run}",
+      "method": "GET",
+      "operation": {
+        "operationId": "public-api.v1.crm-spreadsheet-imports.show",
+        "description": "Find Crm Spreadsheet Import V1.",
+        "parameters": [
+          {
+            "name": "run",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/FactuareaVersion"
+          },
+          {
+            "$ref": "#/components/parameters/XActiveProfile"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "`CrmSpreadsheetImportResource`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/CrmSpreadsheetImportResource"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              },
+              "text/csv; charset=UTF-8": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store, max-age=0"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-cache"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "Factuarea-Version": {
+                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                "schema": {
+                  "type": "string",
+                  "format": "date",
+                  "examples": [
+                    "2026-06-01"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          }
+        },
+        "x-required-scope": "crm_imports:read",
+        "x-speakeasy-group": "crmSpreadsheetImports",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    }
+  },
+  "restore_paths_in_native_input": [],
+  "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Machine-readable category of the error. Versioned by `Factuarea-Version`: from `2026-09-01` onwards the payment gate codes `payment_method_required`, `seat_charge_failed`, `gestoria_plan_required`, `employee_seat_payment_method_required` and `employee_seat_charge_failed` are served as `payment_required_error`; requests pinned to an earlier version keep receiving `invalid_request_error` for those five. `error.code` and `error.subcode` never change — branch on `code` if you want version-independent behaviour.",
+                "enum": [
+                  "api_error",
+                  "authentication_error",
+                  "authorization_error",
+                  "conflict_error",
+                  "idempotency_error",
+                  "invalid_request_error",
+                  "not_found_error",
+                  "payment_required_error",
+                  "permission_error",
+                  "rate_limit_error",
+                  "service_unavailable_error"
+                ],
+                "example": "authentication_error",
+                "examples": [
+                  "authentication_error"
+                ]
+              },
+              "code": {
+                "type": "string",
+                "description": "Stable error code, e.g. missing_api_key, insufficient_scope, parameter_invalid, invalid_status_transition. Full reference of every code, grouped by area: https://docs.factuarea.com/guides/errors/all.",
+                "example": "missing_api_key",
+                "examples": [
+                  "missing_api_key"
+                ]
+              },
+              "subcode": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Sub-code detailing the subtype within `code`. Present only on some errors, and only where `code` alone is ambiguous: on 409 duplication conflicts it pins the duplicate key (`code=resource_already_exists`, `subcode=tax_id_already_exists`), and on 402 payment errors it pins which gate rejected the call (`code=seat_charge_failed`, `subcode=seat_charge_failed`; `code=addon_required`, `subcode=webhooks_addon_required`). Like `code`, it is stable and invariant across locales and API versions.",
+                "example": "tax_id_already_exists",
+                "examples": [
+                  "tax_id_already_exists"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable description in Spanish.",
+                "example": "No se ha proporcionado una API key válida en el header Authorization.",
+                "examples": [
+                  "No se ha proporcionado una API key válida en el header Authorization."
+                ]
+              },
+              "param": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Field that caused the error (for parameter_invalid and similar invalid_request_error codes). On multi-field validation errors it points to the FIRST failed field; the full set lives in `errors[]`."
+              },
+              "line_index": {
+                "type": "integer",
+                "description": "Zero-based position of the document line that raised the error, the same `N` as in a validation path `lines.N.field`. Present only when a domain rule rejects ONE specific line of the document (a product, variant, presentation, configuration or option that does not exist or is deactivated, a missing price or VAT rate, an exemption cause or regime key outside its catalog, a disbursement line carrying what it may not, a line total that does not match, …) and absent on every other error. It is additive: `param` keeps naming the field exactly as before, so a client can ignore `line_index`. Use it to highlight the offending line without parsing `message`."
+              },
+              "errors": {
+                "type": "array",
+                "description": "Present on 422 validation errors: ALL failed fields, one item per field (not only the first). Each item carries `param`/`code`/`message` plus the optional hints `expected_format`/`allowed_values`. Additive and backward-compatible — `error.param`/`error.message` still mirror the first failed field.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "param": {
+                      "type": "string",
+                      "description": "Name of the failed field."
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Stable machine-readable code for this field, derived from the failed validation rule (e.g. parameter_missing, parameter_invalid_format, parameter_invalid_enum)."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable description of the field error. Localized (es/en/ca) when its `code` belongs to the stable catalog."
+                    },
+                    "expected_format": {
+                      "type": "string",
+                      "description": "Expected format hint (e.g. `YYYY-MM-DD`, `uuid`, `email`, `url`). Only present when the failure is a format error."
+                    },
+                    "allowed_values": {
+                      "type": "array",
+                      "description": "Legal values of the enum. Only present when the failure is an enum/`in` error.",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "param",
+                    "code",
+                    "message"
+                  ]
+                }
+              },
+              "details": {
+                "type": "object",
+                "description": "Structured details about the error, present only on some errors and with a shape that depends on the case. On 409 duplication conflicts (subcodes `tax_id_already_exists`, `external_id_already_exists`, `sku_already_exists`) it carries `existing_resource_id`, the UUID of the resource that already exists. On 402 `payment_required_error` responses caused by a missing payment method it carries `payment_setup_url`, the Billing Portal link that unblocks the operation. On the 422 subcodes raised inside the domain it carries the hint of that case: `allowed_values` (rejected value outside a closed catalog), `offending_field` (field a disbursement line may not carry) or `expected` + `received` (line total checksum mismatch).",
+                "properties": {
+                  "operation_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Operation in the authenticated company that must be resolved before another employee-seat mutation."
+                  },
+                  "row_errors": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "row_id",
+                        "field",
+                        "message"
+                      ],
+                      "properties": {
+                        "row_id": {
+                          "type": "string"
+                        },
+                        "field": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "description": "Employee-batch validation failures identified by the stable row_id; no employee was charged or created."
+                  },
+                  "field_errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "description": "Review fields that must be corrected before a purchase scan can be converted. Keys use public identifiers, for example supplier_id or lines.0.tax_rate."
+                  },
+                  "existing_resource_id": {
+                    "type": "string",
+                    "description": "UUID of the pre-existing resource that triggered the conflict. Resolvable with a `GET /v1/{resource}/{id}` without an extra `find_by_*` call. Only present on 409 duplication conflicts."
+                  },
+                  "payment_setup_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Billing Portal URL where the payment method can be set up. Only present on 402 errors caused by a missing payment method (`payment_method_required`, `employee_seat_payment_method_required`); once the payment method is on file, retrying the same call succeeds. Absent on the other 402 codes (declined charge, plan or add-on required)."
+                  },
+                  "allowed_values": {
+                    "type": "array",
+                    "description": "Legal values of the closed catalog the rejected value does not belong to. Present on the 422 subcodes that validate against a catalog inside the domain (`line_type_invalid`, `correction_code_illegal_for_original`). Note that a 422 raised by request validation reports the same hint per field in `error.errors[].allowed_values` instead.",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "offending_field": {
+                    "type": "string",
+                    "description": "Name of the line field that made the operation illegal. Present on 422 `suplido_line_cannot_carry_taxes`: a disbursement line (`line_type: \"SUPLIDO\"`) may not carry VAT, withholding, surcharge, discount, regime key, exemption cause or product, and this names the one that was sent."
+                  },
+                  "expected": {
+                    "type": "number",
+                    "description": "Amount this API computed for the line. Present on 422 `line_total_checksum_mismatch`, together with `received`, so the rounding mismatch with your own ERP can be located without guessing."
+                  },
+                  "received": {
+                    "type": "number",
+                    "description": "Amount sent in `lines[].line_total`, which differs from `expected` by more than one cent. Present on 422 `line_total_checksum_mismatch`."
+                  },
+                  "active_rules": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Current active automation rule count on automation_active_rules_limit_exceeded."
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Plan limit reached, including the active automation rule cap on automation_active_rules_limit_exceeded."
+                  },
+                  "resource": {
+                    "type": "string",
+                    "description": "Resource whose quota was reached on plan_limit_exceeded, for example documents_year or users."
+                  },
+                  "current": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Current usage of the resource on plan_limit_exceeded."
+                  },
+                  "period_end": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time",
+                    "description": "End of the quota period on plan_limit_exceeded; null for resources without a period, including platform users."
+                  }
+                }
+              },
+              "doc_url": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uri",
+                "description": "Link to error reference in docs.",
+                "example": "https://docs.factuarea.com/guides/errors#missing_api_key",
+                "examples": [
+                  "https://docs.factuarea.com/guides/errors#missing_api_key"
+                ]
+              },
+              "request_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Request ID for support/debugging.",
+                "example": "req_01HKQS5N8VR7QXJ9K3T6BWPMZA",
+                "examples": [
+                  "req_01HKQS5N8VR7QXJ9K3T6BWPMZA"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "Error"
+      },
+      "PaginatedList": {
+        "type": "object",
+        "description": "Cursor-paginated list envelope shared by every v1 listing endpoint. `data` holds the page items; `has_more` signals whether another page exists; `next_cursor` is the cursor to pass back for the following page. Treat it as strictly opaque: send it through verbatim, never parse it and never assume a format — it is not the same across listings, and each listing documents its own cursor parameter. Concrete listings narrow `data` to their resource type via `allOf`.",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "description": "Items on the current page."
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether more pages are available after this one.",
+            "example": true,
+            "examples": [
+              true
+            ]
+          },
+          "next_cursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Opaque cursor for the next page, or `null` when `has_more` is `false`. The example below shows the shape used by most listings; others return a different one, so pass the value back verbatim instead of validating it.",
+            "example": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a0c",
+            "examples": [
+              "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a0c"
+            ]
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_cursor"
+        ],
+        "title": "PaginatedList"
+      },
+      "AgendaList": {
+        "type": "object",
+        "description": "Every agenda item of the window in one page (`has_more` is always `false`), plus the layers served.",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AgendaItem"
+            },
+            "description": "Items ordered by date, type and title."
+          },
+          "has_more": {
+            "type": "boolean",
+            "enum": [
+              false
+            ],
+            "description": "Always `false`: the whole window is returned at once."
+          },
+          "next_cursor": {
+            "type": "null",
+            "description": "Always `null`."
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "tasks",
+                "invoice_due",
+                "purchase_invoice_due",
+                "quote_expiry",
+                "proforma_expiry",
+                "recurring_invoice_run",
+                "fiscal_deadline",
+                "absence",
+                "holiday"
+              ]
+            },
+            "description": "Layers actually served: the requested ones that the API key can read (scope and module)."
+          }
+        },
+        "required": [
+          "data",
+          "has_more",
+          "next_cursor",
+          "sources"
+        ],
+        "title": "AgendaList"
+      },
+      "AgendaItem": {
+        "type": "object",
+        "description": "An item of the combined agenda: a due task, a document due date or expiry, a recurring run, a tax deadline, an absence or a holiday.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "UUID of the source entity, or a stable identifier for tax deadlines and holidays.",
+            "example": "0193a4f2-8f53-7d44-8e85-7a9b1c3d5f12",
+            "examples": [
+              "0193a4f2-8f53-7d44-8e85-7a9b1c3d5f12"
+            ]
+          },
+          "object": {
+            "type": "string",
+            "enum": [
+              "agenda_item"
+            ],
+            "description": "Stripe-like discriminator. Always `agenda_item` for this resource.",
+            "example": "agenda_item",
+            "examples": [
+              "agenda_item"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "tasks",
+              "invoice_due",
+              "purchase_invoice_due",
+              "quote_expiry",
+              "proforma_expiry",
+              "recurring_invoice_run",
+              "fiscal_deadline",
+              "absence",
+              "holiday"
+            ],
+            "description": "Layer of the item.",
+            "example": "tasks",
+            "examples": [
+              "tasks"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "example": "Integrar la pasarela de pago en el checkout",
+            "examples": [
+              "Integrar la pasarela de pago en el checkout"
+            ]
+          },
+          "starts_on": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-09-21",
+            "examples": [
+              "2026-09-21"
+            ]
+          },
+          "ends_on": {
+            "type": "string",
+            "format": "date",
+            "example": "2026-10-06",
+            "examples": [
+              "2026-10-06"
+            ]
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Status of the source entity, or `null`.",
+            "example": "active",
+            "examples": [
+              "active"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "description": "Path of the item in the Factuarea app.",
+            "example": "/tasks/t/0193a4f2-8f53-7d44-8e85-7a9b1c3d5f12",
+            "examples": [
+              "/tasks/t/0193a4f2-8f53-7d44-8e85-7a9b1c3d5f12"
+            ]
+          },
+          "task": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Task details, only in the `tasks` layer; `null` otherwise.",
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "project_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "UUID of the project."
+              },
+              "project_name": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "low",
+                  "medium",
+                  "high",
+                  "urgent"
+                ],
+                "description": "Task priority."
+              },
+              "assignee_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "UUID of the assigned member, or `null`."
+              },
+              "board_status": {
+                "type": "string",
+                "enum": [
+                  "planned",
+                  "active",
+                  "archived"
+                ],
+                "description": "Board status: `planned` (backlog), `active` (in a column of the board) or `archived`."
+              },
+              "completed": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "key",
+              "project_id",
+              "project_name",
+              "priority",
+              "assignee_id",
+              "board_status",
+              "completed"
+            ],
+            "example": {
+              "key": "DEV-12",
+              "project_id": "0193a4f2-7c20-7a11-8b52-4d6e8f0a2c01",
+              "project_name": "Desarrollo web",
+              "priority": "high",
+              "assignee_id": "0193a4f2-6b1c-7d3e-8a41-2c5e7f9a1b01",
+              "board_status": "active",
+              "completed": false
+            },
+            "examples": [
+              {
+                "key": "DEV-12",
+                "project_id": "0193a4f2-7c20-7a11-8b52-4d6e8f0a2c01",
+                "project_name": "Desarrollo web",
+                "priority": "high",
+                "assignee_id": "0193a4f2-6b1c-7d3e-8a41-2c5e7f9a1b01",
+                "board_status": "active",
+                "completed": false
+              }
+            ]
+          },
+          "fiscal": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "description": "Tax deadline details, only in the `fiscal_deadline` layer; `null` otherwise.",
+            "properties": {
+              "model": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Tax form (`303`, `111`…)."
+              },
+              "period": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Period key (`2026-3T`, `2026`…)."
+              },
+              "task_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "UUID of the task generated for the deadline, or `null`."
+              }
+            },
+            "required": [
+              "model",
+              "period",
+              "task_id"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "object",
+          "type",
+          "title",
+          "starts_on",
+          "ends_on",
+          "status",
+          "url",
+          "task",
+          "fiscal"
+        ],
+        "title": "AgendaItem"
+      },
+      "CrmSpreadsheetImportResource": {
+        "type": "string",
+        "title": "CrmSpreadsheetImportResource"
+      }
+    },
+    "parameters": {
+      "FactuareaVersion": {
+        "name": "Factuarea-Version",
+        "in": "header",
+        "description": "Pin the API version (`YYYY-MM-DD`, Stripe-style date versioning) for this request; omit to use the key's pinned version, or the latest if none. Unsupported version → `400 unsupported_api_version`; malformed → `400 parameter_invalid_format`. The effective version is echoed in the `Factuarea-Version` response header. See the [Versioning guide](/guides/versioning).",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date",
+          "example": "2026-06-01"
+        }
+      },
+      "XActiveProfile": {
+        "name": "X-Active-Profile",
+        "in": "header",
+        "description": "Operate on behalf of a child company (gestoría master key): pass its public `id` (UUID v7) and the request runs against that child's data without changing the key's scope, tier or environment (omit to use the key's own company). Invalid UUID → `400 parameter_invalid_uuid`; unknown or non-owned id → `404 profile_not_found`. See the [Acting on behalf guide](/guides/acting-on-behalf).",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a0c"
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Autenticación ausente o inválida.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "missing_api_key": {
+                "summary": "Missing API key",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "missing_api_key",
+                    "message": "No se ha proporcionado una API key válida en el header Authorization.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#missing_api_key",
+                    "request_id": "req_01HKQS5N8VR7QXJ9K3T6BWPMZA"
+                  }
+                }
+              },
+              "invalid_api_key": {
+                "summary": "Invalid API key format",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "invalid_api_key",
+                    "message": "La API key no tiene el formato esperado (debe empezar por fact_live_ o fact_test_).",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#invalid_api_key",
+                    "request_id": "req_01HKQS5N9JTQM7HVTQP3FBN5XB"
+                  }
+                }
+              },
+              "api_key_revoked": {
+                "summary": "Revoked API key",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "api_key_revoked",
+                    "message": "Esta API key ha sido revocada y ya no es válida.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#api_key_revoked",
+                    "request_id": "req_01HKQS5NA8K7E2V9YDZWMT6RJC"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Scope, membresía, plan, C7 o campo actual denegado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "insufficient_scope": {
+                "summary": "API key lacks required scope",
+                "value": {
+                  "error": {
+                    "type": "authorization_error",
+                    "code": "insufficient_scope",
+                    "message": "Esta API key no tiene el scope requerido para esta operación.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#insufficient_scope",
+                    "request_id": "req_01HKQS5NBC3P8M1KX4V7SLNHQD"
+                  }
+                }
+              },
+              "feature_not_available_in_plan": {
+                "summary": "Plan upgrade required",
+                "value": {
+                  "error": {
+                    "type": "authorization_error",
+                    "code": "feature_not_available_in_plan",
+                    "message": "Esta funcionalidad requiere el plan empresario o superior. Actualiza tu suscripción para acceder.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#feature_not_available_in_plan",
+                    "request_id": "req_01HKQS5NCK4V9N2L7Y8X3WPMRE"
+                  }
+                }
+              },
+              "addon_not_active": {
+                "summary": "Plan without public API access",
+                "value": {
+                  "error": {
+                    "type": "authorization_error",
+                    "code": "addon_not_active",
+                    "message": "Tu plan actual no incluye acceso a la API pública. Contrata o renueva un plan de Factuarea para usar la API.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#addon_not_active",
+                    "request_id": "req_01HKQS5NDP5W0Q3M8Z9A4BVSNF"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "La admisión nativa de esta familia rechaza la operación.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "rate_limit_exceeded": {
+                "summary": "Rate limit exceeded",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "rate_limit_exceeded",
+                    "message": "Has excedido el rate limit de 60 peticiones por minuto. Reintenta tras 30 segundos.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#rate_limit_exceeded",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5H0JBZVL"
+                  }
+                }
+              },
+              "too_many_auth_failures": {
+                "summary": "Too many authentication failures (temporary lockout)",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "too_many_auth_failures",
+                    "message": "Has alcanzado el número máximo de intentos de autenticación fallidos. La API key queda bloqueada temporalmente. Reintenta tras el tiempo indicado en `Retry-After`.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#too_many_auth_failures",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5H0JBZVM"
+                  }
+                }
+              },
+              "upload_in_flight_budget_exceeded": {
+                "summary": "Too many concurrent uploads in flight",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "upload_in_flight_budget_exceeded",
+                    "message": "Tu empresa tiene demasiadas subidas en curso a la vez: este archivo ocupa 10 MB y el margen simultáneo es de 120 MB. Espera a que terminen las subidas en marcha y vuelve a intentarlo dentro de 45 segundos.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#upload_in_flight_budget_exceeded",
+                    "request_id": "req_01HKQS5NUPLOADINFLIGHT005"
+                  }
+                }
+              },
+              "company_rate_limit_exceeded": {
+                "summary": "Company-wide rate limit exceeded (all keys combined)",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "company_rate_limit_exceeded",
+                    "message": "Tu empresa ha superado su límite conjunto de 900 peticiones por minuto, contando a la vez todas sus credenciales. Es un techo de la empresa, así que repartir el tráfico no lo eleva. Reintenta en 12 segundos, o solicita una ampliación de plan si necesitas más capacidad.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#company_rate_limit_exceeded",
+                    "request_id": "req_01HKQS5NCOMPANYRATELIMIT06"
+                  }
+                }
+              },
+              "company_monthly_quota_exceeded": {
+                "summary": "Company-wide monthly quota exhausted (all keys combined)",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "company_monthly_quota_exceeded",
+                    "message": "Tu empresa ha agotado su cuota conjunta de 150000 peticiones de este mes, contando a la vez todas sus credenciales. Es un techo de la empresa, así que repartir el tráfico no lo eleva. El contador se reinicia el día 1 del mes siguiente; solicita una ampliación de plan si necesitas más volumen antes.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#company_monthly_quota_exceeded",
+                    "request_id": "req_01HKQS5NCOMPANYMONTHLY0007"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "Retry-After": {
+            "description": "Number of seconds to wait before retrying.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Limit": {
+            "description": "Request quota for the current window (RFC 9331).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Remaining": {
+            "description": "Remaining requests in the current window (RFC 9331).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Reset": {
+            "description": "Seconds until the quota window resets (RFC 9331).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Limit": {
+            "description": "Request quota for the current window (legacy header).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "description": "Remaining requests in the current window (legacy header).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "description": "Seconds until the quota window resets (legacy header).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "La infraestructura o el productor canónico no están disponibles.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "internal_error": {
+                "summary": "Unexpected server error",
+                "value": {
+                  "error": {
+                    "type": "api_error",
+                    "code": "internal_error",
+                    "message": "Ha ocurrido un error inesperado. Si persiste, contacta con soporte adjuntando el request_id.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#internal_error",
+                    "request_id": "req_01HKQS5NLX2D7X0U5H6J1KCAWM"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Ticket, calendario o referencia ausente, ajena o invisible.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "resource_not_found": {
+                "summary": "Resource not found",
+                "value": {
+                  "error": {
+                    "type": "not_found_error",
+                    "code": "resource_not_found",
+                    "message": "El recurso solicitado no existe o pertenece a otra empresa.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#resource_not_found",
+                    "request_id": "req_01HKQS5NEQ6X1R4N9B0C5DWTPG"
+                  }
+                }
+              },
+              "tax_report_not_found": {
+                "summary": "Tax report not found for the period",
+                "value": {
+                  "error": {
+                    "type": "not_found_error",
+                    "code": "tax_report_not_found",
+                    "message": "No se ha encontrado ninguna declaración generada para el período indicado.",
+                    "param": "period",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#tax_report_not_found",
+                    "request_id": "req_01HKQS5NTAXRNOTFOUNDPERIOD07"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Tipo JSON, calendario, reloj, referencia o regla inválida.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "parameter_invalid": {
+                "summary": "Parameter failed validation",
+                "value": {
+                  "error": {
+                    "type": "invalid_request_error",
+                    "code": "parameter_invalid",
+                    "message": "El campo `name` es obligatorio y no puede estar vacío.",
+                    "param": "name",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#parameter_invalid",
+                    "request_id": "req_01HKQS5NGS8Z3T6Q1D2E7FYVSI"
+                  }
+                }
+              },
+              "invalid_idempotency_key_format": {
+                "summary": "Invalid Idempotency-Key format",
+                "value": {
+                  "error": {
+                    "type": "invalid_request_error",
+                    "code": "invalid_param_format",
+                    "message": "La Idempotency-Key debe tener entre 1 y 64 caracteres ASCII printable.",
+                    "param": "Idempotency-Key",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_format",
+                    "request_id": "req_01HKQS5NIDEMPKEYFORMAT0007"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflicto CAS, clave reutilizada o reserva original sin confirmar.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "idempotency_key_reused": {
+                "summary": "Idempotency key reused with different body",
+                "value": {
+                  "error": {
+                    "type": "idempotency_error",
+                    "code": "idempotency_key_reused",
+                    "message": "La cabecera `Idempotency-Key` ya se usó con un body distinto. Usa una clave nueva o reenvía exactamente el mismo body.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#idempotency_key_reused",
+                    "request_id": "req_01HKQS5NHT9A4U7R2E3F8GZWTJ"
+                  }
+                }
+              },
+              "resource_already_exists": {
+                "summary": "Resource already exists (with subcode)",
+                "value": {
+                  "error": {
+                    "type": "conflict_error",
+                    "code": "resource_already_exists",
+                    "subcode": "tax_id_already_exists",
+                    "message": "Ya existe un cliente con ese CIF/NIF.",
+                    "param": "tax_id",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#resource_already_exists",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5HAIBZVM"
+                  }
+                }
+              },
+              "resource_conflict": {
+                "summary": "Generic resource conflict",
+                "value": {
+                  "error": {
+                    "type": "conflict_error",
+                    "code": "resource_conflict",
+                    "message": "El recurso está en un estado que no permite esta operación.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#resource_conflict",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5HAIBZVL"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      }
+    }
+  }
+}

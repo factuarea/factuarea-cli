@@ -36,6 +36,9 @@ type manifestEntry struct {
 	BodyFields     []manifestField `json:"body_fields,omitempty"`
 	BodyHasObjects bool            `json:"body_has_object_array,omitempty"`
 	FullReplace    bool            `json:"full_replace,omitempty"`
+	ContractState  string          `json:"contract_state,omitempty"`
+	Published      *bool           `json:"published,omitempty"`
+	ContractSHA256 string          `json:"contract_sha256,omitempty"`
 }
 
 func newCommandsCmd() *cobra.Command {
@@ -78,6 +81,7 @@ func newCommandsCmd() *cobra.Command {
 			}
 			manifest = append(manifest, serviceLevelManifest()...)
 			manifest = append(manifest, crmEntityExportManifest()...)
+			manifest = append(manifest, crmSource139Manifest()...)
 			enc := json.NewEncoder(cmd.OutOrStdout())
 			enc.SetEscapeHTML(false)
 			enc.SetIndent("", "  ")

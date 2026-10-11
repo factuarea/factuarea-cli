@@ -61,5 +61,6 @@ func NewRootCmd() *cobra.Command {
 	registerGeneratedCommands(root)
 	registerServiceLevelCommands(root)
 	registerCrmEntityExportCommands(root)
+	registerCrmSource139Commands(root)
 	return root
 }
