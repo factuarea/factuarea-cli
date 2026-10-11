@@ -1,0 +1,2153 @@
+{
+  "source_artifact_sha256": "59b6cd2664aa8524e96a7600565b70b5eae5f6beaa7527913d703adf653a2fca",
+  "source_manifest_sha256": "207a905bcfe60d4a033279bedc2e1e7d2d398e1f6c214bc7c0eab9b0fe2ecaa1",
+  "native_profile": {
+    "name": "crm-source-contracts",
+    "source": "Source",
+    "state": "unreleased",
+    "published": false,
+    "ratified": false,
+    "delivery_enabled": false,
+    "catalog_sha256": "814cc0ad9a994af2acfdb25e1633557469cfacc869d49792a478d3a869b8699e"
+  },
+  "capabilities": [],
+  "carriers": [
+    {
+      "route_name": "public-api.v1.crm-documents.get",
+      "operation_id": "crmGetCommercialDocument",
+      "operation_key": "crm_documents.get",
+      "uri": "v1/crm/documents/{document}",
+      "methods": [
+        "GET"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\CrmDocument\\Infrastructure\\Http\\Middleware\\RenderCommercialDocumentErrors",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:crm_documents:read",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:crm_documents.get,document"
+      ]
+    },
+    {
+      "route_name": "public-api.v1.crm-documents.restore",
+      "operation_id": "crmRestoreCommercialDocument",
+      "operation_key": "crm_documents.restore",
+      "uri": "v1/crm/documents/{document}/restore",
+      "methods": [
+        "POST"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\CrmDocument\\Infrastructure\\Http\\Middleware\\RenderCommercialDocumentErrors",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:crm_documents:write",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:crm_documents.restore,document"
+      ]
+    },
+    {
+      "route_name": "public-api.v1.crm-spreadsheet-imports.apply",
+      "operation_id": "public-api.v1.crm-spreadsheet-imports.apply",
+      "operation_key": "crm_imports.apply",
+      "uri": "v1/crm/imports/{run}/apply",
+      "methods": [
+        "POST"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:crm_imports:write",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:crm_imports.apply"
+      ]
+    },
+    {
+      "route_name": "public-api.v1.crm-spreadsheet-imports.apply-original",
+      "operation_id": "public-api.v1.crm-spreadsheet-imports.apply-original",
+      "operation_key": "crm_imports.apply",
+      "uri": "v1/crm/imports/{run}/apply/original",
+      "methods": [
+        "GET"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:crm_imports:write",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:crm_imports.apply"
+      ]
+    },
+    {
+      "route_name": "public-api.v1.crm-spreadsheet-imports.show",
+      "operation_id": "public-api.v1.crm-spreadsheet-imports.show",
+      "operation_key": "crm_imports.show",
+      "uri": "v1/crm/imports/{run}",
+      "methods": [
+        "GET"
+      ],
+      "current_middleware": [
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceContentLength",
+        "App\\PublicApi\\Infrastructure\\Http\\Middleware\\EnforceJsonContentType",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiCredentialPipeline",
+        "App\\Shared\\Infrastructure\\Http\\Middleware\\CaptureRequestActor",
+        "App\\PublicApi\\Infrastructure\\OAuthCrmBatch77\\NativePublicApiScope:crm_imports:read",
+        "App\\Shared\\Infrastructure\\Crm\\EnforceCrmOperation:crm_imports.show"
+      ]
+    }
+  ],
+  "operations": {
+    "import_apply": {
+      "path": "/crm/imports/{run}/apply",
+      "method": "POST",
+      "operation": {
+        "operationId": "public-api.v1.crm-spreadsheet-imports.apply",
+        "description": "Aplica el run y preview originales con CAS, efecto y confirmación humanos. Devuelve 202 del run autorizado; no acredita todas las filas completadas. retry_failed puede crear un run hijo y aceptar un archivo corregido. Conserva Idempotency-Key y los bytes exactos del POST: ante respuesta incierta consulta GET apply/original con su SHA-256 literal, sin reenviar ni inferir éxito desde Current. Empresa, actor, credencial, sandbox, C7 y campos completos se reautorizan; no se publican celdas ni pruebas privadas.",
+        "tags": [
+          "CRM Imports"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/FactuareaVersion"
+          },
+          {
+            "$ref": "#/components/parameters/XActiveProfile"
+          },
+          {
+            "name": "run",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[\\x20-\\x7e]+$",
+              "description": "Optional under the current native admission policy. Required to retain and read the separate apply Original: preserve this exact key and the original POST bytes."
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "expected_version": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "preview_hash": {
+                    "type": "string",
+                    "pattern": "^[0-9a-f]{64}$"
+                  },
+                  "effect_uuid": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "import",
+                      "retry_failed",
+                      "compensate"
+                    ]
+                  },
+                  "confirmed": {
+                    "type": "boolean",
+                    "const": true
+                  },
+                  "corrected_source_blob_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                  }
+                },
+                "required": [
+                  "expected_version",
+                  "preview_hash",
+                  "effect_uuid",
+                  "mode",
+                  "confirmed"
+                ],
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "mode": {
+                          "const": "retry_failed"
+                        }
+                      }
+                    },
+                    "else": {
+                      "not": {
+                        "required": [
+                          "corrected_source_blob_id"
+                        ]
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Primera respuesta 202 del run autorizado; las filas pendientes permanecen en progress. Original se lee por separado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "source_blob_id",
+                        "entity_type",
+                        "version",
+                        "state",
+                        "preview_hash",
+                        "counts",
+                        "blocking_codes",
+                        "progress"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                        },
+                        "source_blob_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                        },
+                        "entity_type": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "state": {
+                          "type": "string",
+                          "description": "Current native run state, separate from the immutable first apply response."
+                        },
+                        "preview_hash": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}$"
+                        },
+                        "counts": {
+                          "type": "object",
+                          "required": [
+                            "total"
+                          ],
+                          "propertyNames": {
+                            "pattern": "^[a-z][a-z0-9_]*$"
+                          },
+                          "additionalProperties": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        },
+                        "blocking_codes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]*$"
+                          }
+                        },
+                        "progress": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "total",
+                            "processed",
+                            "pending"
+                          ],
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "processed": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "pending": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          }
+                        },
+                        "parent_run_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "headers": {
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "Factuarea-Version": {
+                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                "schema": {
+                  "type": "string",
+                  "format": "date",
+                  "examples": [
+                    "2026-06-01"
+                  ]
+                }
+              },
+              "Idempotent-Replayed": {
+                "description": "Present with value `\"true\"` only when this response was replayed from the idempotency cache for a repeated `Idempotency-Key` (same key, same request fingerprint). Absent on the first, freshly executed request.",
+                "schema": {
+                  "type": "string",
+                  "examples": [
+                    "true"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          }
+        },
+        "x-required-scope": "crm_imports:write",
+        "x-required-oauth-scope": "crm_imports.write",
+        "x-crm-operation": "crm_imports.apply",
+        "x-crm-requires-confirmation": true,
+        "x-crm-requires-claim": true,
+        "x-crm-current-c7": true,
+        "x-speakeasy-group": "crmSpreadsheetImports",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "import_current": {
+      "path": "/crm/imports/{run}",
+      "method": "GET",
+      "operation": {
+        "operationId": "public-api.v1.crm-spreadsheet-imports.show",
+        "description": "Lee Current y sus errores paginados en la misma versión nativa. El cursor queda ligado al run y versión; un cambio devuelve conflicto. Current no sustituye la primera respuesta apply Original. El modo report_format=csv exige expected_version y excluye cursor/limit; devuelve los bytes CSV ya producidos, sin ejecutar filas. Revalida empresa, actor, credencial, sandbox, C7 y máscaras; no publica valores de celdas ni autoridad privada.",
+        "tags": [
+          "CRM Imports"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/FactuareaVersion"
+          },
+          {
+            "$ref": "#/components/parameters/XActiveProfile"
+          },
+          {
+            "name": "run",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "maxLength": 512,
+              "minLength": 1,
+              "pattern": "^[A-Za-z0-9_-]+$",
+              "description": "Current JSON read mode; cannot be combined with report_format or expected_version."
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "description": "Current JSON read mode; cannot be combined with report_format or expected_version."
+            }
+          },
+          {
+            "name": "report_format",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "const": "csv",
+              "description": "CSV read mode: report_format=csv and expected_version are required together; cursor and limit are forbidden."
+            }
+          },
+          {
+            "name": "expected_version",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "CSV read mode: report_format=csv and expected_version are required together; cursor and limit are forbidden."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current coherente con sus errores y versión; el modo CSV conserva bytes originales y no acredita apply Original.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": [
+                        "id",
+                        "source_blob_id",
+                        "entity_type",
+                        "version",
+                        "state",
+                        "preview_hash",
+                        "counts",
+                        "blocking_codes",
+                        "progress",
+                        "errors"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                        },
+                        "source_blob_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                        },
+                        "entity_type": {
+                          "type": "string"
+                        },
+                        "version": {
+                          "type": "integer",
+                          "minimum": 1
+                        },
+                        "state": {
+                          "type": "string",
+                          "description": "Current native run state, separate from the immutable first apply response."
+                        },
+                        "preview_hash": {
+                          "type": "string",
+                          "pattern": "^[0-9a-f]{64}$"
+                        },
+                        "counts": {
+                          "type": "object",
+                          "required": [
+                            "total"
+                          ],
+                          "propertyNames": {
+                            "pattern": "^[a-z][a-z0-9_]*$"
+                          },
+                          "additionalProperties": {
+                            "type": "integer",
+                            "minimum": 0
+                          }
+                        },
+                        "blocking_codes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string",
+                            "pattern": "^[a-z][a-z0-9_]*$"
+                          }
+                        },
+                        "progress": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "total",
+                            "processed",
+                            "pending"
+                          ],
+                          "properties": {
+                            "total": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "processed": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "pending": {
+                              "type": "integer",
+                              "minimum": 0
+                            }
+                          }
+                        },
+                        "parent_run_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-7[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"
+                        },
+                        "errors": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "version",
+                            "items",
+                            "has_more",
+                            "next_row",
+                            "next_cursor"
+                          ],
+                          "properties": {
+                            "version": {
+                              "type": "integer",
+                              "minimum": 1
+                            },
+                            "items": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                  "source_row",
+                                  "field",
+                                  "codes"
+                                ],
+                                "properties": {
+                                  "source_row": {
+                                    "type": "integer",
+                                    "minimum": 2
+                                  },
+                                  "field": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "codes": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string",
+                                      "pattern": "^[a-z][a-z0-9_]*$"
+                                    }
+                                  }
+                                }
+                              }
+                            },
+                            "has_more": {
+                              "type": "boolean"
+                            },
+                            "next_row": {
+                              "type": [
+                                "integer",
+                                "null"
+                              ],
+                              "minimum": 2
+                            },
+                            "next_cursor": {
+                              "type": [
+                                "string",
+                                "null"
+                              ],
+                              "minLength": 1,
+                              "maxLength": 512,
+                              "pattern": "^[A-Za-z0-9_-]+$",
+                              "description": "Opaque cursor bound to this run and Current version. A changed version conflicts; it does not reconstruct an Original response."
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "text/csv; charset=UTF-8": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "headers": {
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Content-Length": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "const": "private, no-store, max-age=0"
+                }
+              },
+              "Pragma": {
+                "schema": {
+                  "type": "string",
+                  "const": "no-cache"
+                }
+              },
+              "X-Content-Type-Options": {
+                "schema": {
+                  "type": "string",
+                  "const": "nosniff"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Unique request identifier, propagated for log correlation and support.",
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "X-RateLimit-Limit": {
+                "description": "Maximum number of requests allowed in the current rate limit window (60 seconds).",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Remaining": {
+                "description": "Number of requests remaining in the current rate limit window before receiving a 429.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "X-RateLimit-Reset": {
+                "description": "Unix timestamp (seconds) at which the rate limit window resets and the counter returns to its maximum.",
+                "schema": {
+                  "type": "integer"
+                }
+              },
+              "Factuarea-Version": {
+                "description": "Effective API version (`YYYY-MM-DD`, Stripe-style date versioning) resolved for this request: the `Factuarea-Version` request header if sent, otherwise the version pinned on the API key, otherwise the latest version. Present on every response.",
+                "schema": {
+                  "type": "string",
+                  "format": "date",
+                  "examples": [
+                    "2026-06-01"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "409": {
+            "description": "Versión, preview, cursor o identidad original cambiados; no reenviar una aplicación incierta.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-required-scope": "crm_imports:read",
+        "x-required-oauth-scope": "crm_imports.read",
+        "x-crm-operation": "crm_imports.show",
+        "x-crm-requires-confirmation": false,
+        "x-crm-requires-claim": false,
+        "x-crm-current-c7": true,
+        "x-crm-query-schema": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "cursor": {
+                  "type": "string",
+                  "maxLength": 512,
+                  "minLength": 1,
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                },
+                "limit": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 100
+                }
+              },
+              "required": []
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "report_format",
+                "expected_version"
+              ],
+              "properties": {
+                "report_format": {
+                  "type": "string",
+                  "const": "csv"
+                },
+                "expected_version": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          ]
+        },
+        "x-speakeasy-group": "crmSpreadsheetImports",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "import_original": {
+      "path": "/crm/imports/{run}/apply/original",
+      "method": "GET",
+      "operation": {
+        "operationId": "public-api.v1.crm-spreadsheet-imports.apply-original",
+        "description": "Consulta la primera respuesta 202 cifrada del mismo claim de aplicación, con la clave y hash literal del cuerpo POST conservados. No ejecuta filas, resume claims ni reconstruye respuesta desde Current. Revalida empresa, actor, sandbox, credencial actual, C7 y máscaras de los runs original y resultado. Missing, in_progress y unconfirmed no acreditan éxito. El cuerpo original v1 conserva id/source_blob_id; el padre de retry_failed conserva su propio UUID.",
+        "tags": [
+          "CRM Imports"
+        ],
+        "parameters": [
+          {
+            "name": "run",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "original_body_sha256",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Estado factual del Original; Current se consulta por separado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "data"
+                  ],
+                  "properties": {
+                    "data": {
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "original_body_sha256",
+                            "authorization_version",
+                            "state",
+                            "original_response"
+                          ],
+                          "properties": {
+                            "original_body_sha256": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            },
+                            "authorization_version": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "state": {
+                              "type": "string",
+                              "enum": [
+                                "missing",
+                                "in_progress",
+                                "unconfirmed"
+                              ]
+                            },
+                            "original_response": {
+                              "type": "null"
+                            }
+                          }
+                        },
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "original_body_sha256",
+                            "authorization_version",
+                            "state",
+                            "original_response"
+                          ],
+                          "properties": {
+                            "original_body_sha256": {
+                              "type": "string",
+                              "pattern": "^[0-9a-f]{64}$"
+                            },
+                            "authorization_version": {
+                              "type": "string",
+                              "minLength": 1
+                            },
+                            "state": {
+                              "type": "string",
+                              "const": "confirmed"
+                            },
+                            "original_response": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": [
+                                "status",
+                                "body"
+                              ],
+                              "properties": {
+                                "status": {
+                                  "type": "integer",
+                                  "const": 202
+                                },
+                                "body": {
+                                  "type": "string",
+                                  "description": "Exact original JSON response bytes, including its data envelope."
+                                }
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Contrato, identidad, C7 o productor original no disponible.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-required-scope": "crm_imports:write",
+        "x-crm-operation": "crm_imports.apply",
+        "x-crm-requires-confirmation": false,
+        "x-speakeasy-group": "crmSpreadsheetImports",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "document_restore": {
+      "path": "/crm/documents/{document}/restore",
+      "method": "POST",
+      "operation": {
+        "operationId": "crmRestoreCommercialDocument",
+        "description": "Tenant, actor, realm, credencial y C7 son nativos y se reautorizan antes y después. Las máscaras omiten campos. La revisión CAS es distinta del número de contenido; ninguna versión histórica se fabrica. Escrituras con clave recuperan identidad y recibo originales durables. Un productor ambiguo devuelve unavailable. Los blobs conservan una cuota física única en Vault; no se copian PDFs fiscales. Renombrar, sustituir, vincular, archivar y restaurar requieren crm:read y crm_documents:read además de escritura para releer la postcondición por Query. La pareja opcional linked_entity_type/linked_entity_id de descarga exige acceso actual a la ficha y a la versión fijada por el vínculo; nunca concede audiencia. Sin document_version, una pareja con varios contenidos exige seleccionar uno explícitamente. Descarga binaria autenticada, sin URL ni handle público.",
+        "summary": "Biblioteca privada: restore",
+        "tags": [
+          "CRM Private Documents"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/FactuareaVersion"
+          },
+          {
+            "$ref": "#/components/parameters/XActiveProfile"
+          },
+          {
+            "name": "document",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "description": "Intención original: mismos argumentos recuperan el receipt original con permisos actuales; otro contenido devuelve409.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255,
+              "pattern": "^[ -~]+$"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "expected_version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9223372036854775806
+                  },
+                  "confirmed": {
+                    "type": "boolean",
+                    "const": true,
+                    "description": "Confirmación humana explícita de esta restauración y revisión; no concede acceso."
+                  }
+                },
+                "required": [
+                  "expected_version",
+                  "confirmed"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "200": {
+            "description": "Resultado original autorizado; identidad pública id, sin receipt interno ni referencias físicas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/CrmPrivateDocumentReceipt"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "x-crm-operation": "crm_documents.restore",
+        "x-required-scope": "crm_documents:write",
+        "x-required-oauth-scope": "crm_documents.write",
+        "x-crm-requires-confirmation": true,
+        "x-speakeasy-group": "crmDocuments",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    },
+    "document_current": {
+      "path": "/crm/documents/{document}",
+      "method": "GET",
+      "operation": {
+        "operationId": "crmGetCommercialDocument",
+        "description": "Tenant, actor, realm, credencial y C7 son nativos y se reautorizan antes y después. Las máscaras omiten campos. La revisión CAS es distinta del número de contenido; ninguna versión histórica se fabrica. Escrituras con clave recuperan identidad y recibo originales durables. Un productor ambiguo devuelve unavailable. Los blobs conservan una cuota física única en Vault; no se copian PDFs fiscales. Renombrar, sustituir, vincular, archivar y restaurar requieren crm:read y crm_documents:read además de escritura para releer la postcondición por Query. La pareja opcional linked_entity_type/linked_entity_id de descarga exige acceso actual a la ficha y a la versión fijada por el vínculo; nunca concede audiencia. Sin document_version, una pareja con varios contenidos exige seleccionar uno explícitamente. Descarga binaria autenticada, sin URL ni handle público.",
+        "summary": "Biblioteca privada: get",
+        "tags": [
+          "CRM Private Documents"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/FactuareaVersion"
+          },
+          {
+            "$ref": "#/components/parameters/XActiveProfile"
+          },
+          {
+            "name": "document",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "200": {
+            "description": "Resultado original autorizado; identidad pública id, sin receipt interno ni referencias físicas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/CrmPrivateDocument"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CAS o intención original en conflicto.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        },
+        "x-crm-operation": "crm_documents.get",
+        "x-required-scope": "crm_documents:read",
+        "x-required-oauth-scope": "crm_documents.read",
+        "x-crm-requires-confirmation": false,
+        "x-speakeasy-group": "crmDocuments",
+        "x-speakeasy-retries": {
+          "strategy": "backoff",
+          "backoff": {
+            "initialInterval": 500,
+            "maxInterval": 60000,
+            "maxElapsedTime": 3600000,
+            "exponent": 1.5
+          },
+          "statusCodes": [],
+          "retryConnectionErrors": false
+        }
+      }
+    }
+  },
+  "boundaries": {},
+  "restore_paths_in_native_input": [
+    "/crm/documents/{document}/restore"
+  ],
+  "components": {
+    "parameters": {
+      "FactuareaVersion": {
+        "name": "Factuarea-Version",
+        "in": "header",
+        "description": "Pin the API version (`YYYY-MM-DD`, Stripe-style date versioning) for this request; omit to use the key's pinned version, or the latest if none. Unsupported version → `400 unsupported_api_version`; malformed → `400 parameter_invalid_format`. The effective version is echoed in the `Factuarea-Version` response header. See the [Versioning guide](/guides/versioning).",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "date",
+          "example": "2026-06-01"
+        }
+      },
+      "XActiveProfile": {
+        "name": "X-Active-Profile",
+        "in": "header",
+        "description": "Operate on behalf of a child company (gestoría master key): pass its public `id` (UUID v7) and the request runs against that child's data without changing the key's scope, tier or environment (omit to use the key's own company). Invalid UUID → `400 parameter_invalid_uuid`; unknown or non-owned id → `404 profile_not_found`. See the [Acting on behalf guide](/guides/acting-on-behalf).",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "format": "uuid",
+          "example": "01931b3e-7c4a-7f2e-9a8b-3c5d6e7f8a0c"
+        }
+      }
+    },
+    "responses": {
+      "Unauthorized": {
+        "description": "Autenticación ausente o inválida.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "missing_api_key": {
+                "summary": "Missing API key",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "missing_api_key",
+                    "message": "No se ha proporcionado una API key válida en el header Authorization.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#missing_api_key",
+                    "request_id": "req_01HKQS5N8VR7QXJ9K3T6BWPMZA"
+                  }
+                }
+              },
+              "invalid_api_key": {
+                "summary": "Invalid API key format",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "invalid_api_key",
+                    "message": "La API key no tiene el formato esperado (debe empezar por fact_live_ o fact_test_).",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#invalid_api_key",
+                    "request_id": "req_01HKQS5N9JTQM7HVTQP3FBN5XB"
+                  }
+                }
+              },
+              "api_key_revoked": {
+                "summary": "Revoked API key",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "api_key_revoked",
+                    "message": "Esta API key ha sido revocada y ya no es válida.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#api_key_revoked",
+                    "request_id": "req_01HKQS5NA8K7E2V9YDZWMT6RJC"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "Forbidden": {
+        "description": "Scope, membresía, plan, C7 o campo actual denegado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "insufficient_scope": {
+                "summary": "API key lacks required scope",
+                "value": {
+                  "error": {
+                    "type": "authorization_error",
+                    "code": "insufficient_scope",
+                    "message": "Esta API key no tiene el scope requerido para esta operación.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#insufficient_scope",
+                    "request_id": "req_01HKQS5NBC3P8M1KX4V7SLNHQD"
+                  }
+                }
+              },
+              "feature_not_available_in_plan": {
+                "summary": "Plan upgrade required",
+                "value": {
+                  "error": {
+                    "type": "authorization_error",
+                    "code": "feature_not_available_in_plan",
+                    "message": "Esta funcionalidad requiere el plan empresario o superior. Actualiza tu suscripción para acceder.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#feature_not_available_in_plan",
+                    "request_id": "req_01HKQS5NCK4V9N2L7Y8X3WPMRE"
+                  }
+                }
+              },
+              "addon_not_active": {
+                "summary": "Plan without public API access",
+                "value": {
+                  "error": {
+                    "type": "authorization_error",
+                    "code": "addon_not_active",
+                    "message": "Tu plan actual no incluye acceso a la API pública. Contrata o renueva un plan de Factuarea para usar la API.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#addon_not_active",
+                    "request_id": "req_01HKQS5NDP5W0Q3M8Z9A4BVSNF"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "TooManyRequests": {
+        "description": "La admisión nativa de esta familia rechaza la operación.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "rate_limit_exceeded": {
+                "summary": "Rate limit exceeded",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "rate_limit_exceeded",
+                    "message": "Has excedido el rate limit de 60 peticiones por minuto. Reintenta tras 30 segundos.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#rate_limit_exceeded",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5H0JBZVL"
+                  }
+                }
+              },
+              "too_many_auth_failures": {
+                "summary": "Too many authentication failures (temporary lockout)",
+                "value": {
+                  "error": {
+                    "type": "authentication_error",
+                    "code": "too_many_auth_failures",
+                    "message": "Has alcanzado el número máximo de intentos de autenticación fallidos. La API key queda bloqueada temporalmente. Reintenta tras el tiempo indicado en `Retry-After`.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#too_many_auth_failures",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5H0JBZVM"
+                  }
+                }
+              },
+              "upload_in_flight_budget_exceeded": {
+                "summary": "Too many concurrent uploads in flight",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "upload_in_flight_budget_exceeded",
+                    "message": "Tu empresa tiene demasiadas subidas en curso a la vez: este archivo ocupa 10 MB y el margen simultáneo es de 120 MB. Espera a que terminen las subidas en marcha y vuelve a intentarlo dentro de 45 segundos.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#upload_in_flight_budget_exceeded",
+                    "request_id": "req_01HKQS5NUPLOADINFLIGHT005"
+                  }
+                }
+              },
+              "company_rate_limit_exceeded": {
+                "summary": "Company-wide rate limit exceeded (all keys combined)",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "company_rate_limit_exceeded",
+                    "message": "Tu empresa ha superado su límite conjunto de 900 peticiones por minuto, contando a la vez todas sus credenciales. Es un techo de la empresa, así que repartir el tráfico no lo eleva. Reintenta en 12 segundos, o solicita una ampliación de plan si necesitas más capacidad.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#company_rate_limit_exceeded",
+                    "request_id": "req_01HKQS5NCOMPANYRATELIMIT06"
+                  }
+                }
+              },
+              "company_monthly_quota_exceeded": {
+                "summary": "Company-wide monthly quota exhausted (all keys combined)",
+                "value": {
+                  "error": {
+                    "type": "rate_limit_error",
+                    "code": "company_monthly_quota_exceeded",
+                    "message": "Tu empresa ha agotado su cuota conjunta de 150000 peticiones de este mes, contando a la vez todas sus credenciales. Es un techo de la empresa, así que repartir el tráfico no lo eleva. El contador se reinicia el día 1 del mes siguiente; solicita una ampliación de plan si necesitas más volumen antes.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#company_monthly_quota_exceeded",
+                    "request_id": "req_01HKQS5NCOMPANYMONTHLY0007"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "Retry-After": {
+            "description": "Number of seconds to wait before retrying.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Limit": {
+            "description": "Request quota for the current window (RFC 9331).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Remaining": {
+            "description": "Remaining requests in the current window (RFC 9331).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "RateLimit-Reset": {
+            "description": "Seconds until the quota window resets (RFC 9331).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Limit": {
+            "description": "Request quota for the current window (legacy header).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Remaining": {
+            "description": "Remaining requests in the current window (legacy header).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-RateLimit-Reset": {
+            "description": "Seconds until the quota window resets (legacy header).",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "InternalServerError": {
+        "description": "La infraestructura o el productor canónico no están disponibles.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "internal_error": {
+                "summary": "Unexpected server error",
+                "value": {
+                  "error": {
+                    "type": "api_error",
+                    "code": "internal_error",
+                    "message": "Ha ocurrido un error inesperado. Si persiste, contacta con soporte adjuntando el request_id.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#internal_error",
+                    "request_id": "req_01HKQS5NLX2D7X0U5H6J1KCAWM"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Ticket, calendario o referencia ausente, ajena o invisible.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "resource_not_found": {
+                "summary": "Resource not found",
+                "value": {
+                  "error": {
+                    "type": "not_found_error",
+                    "code": "resource_not_found",
+                    "message": "El recurso solicitado no existe o pertenece a otra empresa.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#resource_not_found",
+                    "request_id": "req_01HKQS5NEQ6X1R4N9B0C5DWTPG"
+                  }
+                }
+              },
+              "tax_report_not_found": {
+                "summary": "Tax report not found for the period",
+                "value": {
+                  "error": {
+                    "type": "not_found_error",
+                    "code": "tax_report_not_found",
+                    "message": "No se ha encontrado ninguna declaración generada para el período indicado.",
+                    "param": "period",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#tax_report_not_found",
+                    "request_id": "req_01HKQS5NTAXRNOTFOUNDPERIOD07"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "UnprocessableEntity": {
+        "description": "Tipo JSON, calendario, reloj, referencia o regla inválida.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "parameter_invalid": {
+                "summary": "Parameter failed validation",
+                "value": {
+                  "error": {
+                    "type": "invalid_request_error",
+                    "code": "parameter_invalid",
+                    "message": "El campo `name` es obligatorio y no puede estar vacío.",
+                    "param": "name",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#parameter_invalid",
+                    "request_id": "req_01HKQS5NGS8Z3T6Q1D2E7FYVSI"
+                  }
+                }
+              },
+              "invalid_idempotency_key_format": {
+                "summary": "Invalid Idempotency-Key format",
+                "value": {
+                  "error": {
+                    "type": "invalid_request_error",
+                    "code": "invalid_param_format",
+                    "message": "La Idempotency-Key debe tener entre 1 y 64 caracteres ASCII printable.",
+                    "param": "Idempotency-Key",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#invalid_param_format",
+                    "request_id": "req_01HKQS5NIDEMPKEYFORMAT0007"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflicto CAS, clave reutilizada o reserva original sin confirmar.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            },
+            "examples": {
+              "idempotency_key_reused": {
+                "summary": "Idempotency key reused with different body",
+                "value": {
+                  "error": {
+                    "type": "idempotency_error",
+                    "code": "idempotency_key_reused",
+                    "message": "La cabecera `Idempotency-Key` ya se usó con un body distinto. Usa una clave nueva o reenvía exactamente el mismo body.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#idempotency_key_reused",
+                    "request_id": "req_01HKQS5NHT9A4U7R2E3F8GZWTJ"
+                  }
+                }
+              },
+              "resource_already_exists": {
+                "summary": "Resource already exists (with subcode)",
+                "value": {
+                  "error": {
+                    "type": "conflict_error",
+                    "code": "resource_already_exists",
+                    "subcode": "tax_id_already_exists",
+                    "message": "Ya existe un cliente con ese CIF/NIF.",
+                    "param": "tax_id",
+                    "doc_url": "https://docs.factuarea.com/guides/errors#resource_already_exists",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5HAIBZVM"
+                  }
+                }
+              },
+              "resource_conflict": {
+                "summary": "Generic resource conflict",
+                "value": {
+                  "error": {
+                    "type": "conflict_error",
+                    "code": "resource_conflict",
+                    "message": "El recurso está en un estado que no permite esta operación.",
+                    "param": null,
+                    "doc_url": "https://docs.factuarea.com/guides/errors#resource_conflict",
+                    "request_id": "req_01HKQS5NKW1C6W9T4G5HAIBZVL"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "headers": {
+          "X-Request-Id": {
+            "description": "Unique request identifier, propagated for log correlation and support.",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Machine-readable category of the error. Versioned by `Factuarea-Version`: from `2026-09-01` onwards the payment gate codes `payment_method_required`, `seat_charge_failed`, `gestoria_plan_required`, `employee_seat_payment_method_required` and `employee_seat_charge_failed` are served as `payment_required_error`; requests pinned to an earlier version keep receiving `invalid_request_error` for those five. `error.code` and `error.subcode` never change — branch on `code` if you want version-independent behaviour.",
+                "enum": [
+                  "api_error",
+                  "authentication_error",
+                  "authorization_error",
+                  "conflict_error",
+                  "idempotency_error",
+                  "invalid_request_error",
+                  "not_found_error",
+                  "payment_required_error",
+                  "permission_error",
+                  "rate_limit_error",
+                  "service_unavailable_error"
+                ],
+                "example": "authentication_error",
+                "examples": [
+                  "authentication_error"
+                ]
+              },
+              "code": {
+                "type": "string",
+                "description": "Stable error code, e.g. missing_api_key, insufficient_scope, parameter_invalid, invalid_status_transition. Full reference of every code, grouped by area: https://docs.factuarea.com/guides/errors/all.",
+                "example": "missing_api_key",
+                "examples": [
+                  "missing_api_key"
+                ]
+              },
+              "subcode": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Sub-code detailing the subtype within `code`. Present only on some errors, and only where `code` alone is ambiguous: on 409 duplication conflicts it pins the duplicate key (`code=resource_already_exists`, `subcode=tax_id_already_exists`), and on 402 payment errors it pins which gate rejected the call (`code=seat_charge_failed`, `subcode=seat_charge_failed`; `code=addon_required`, `subcode=webhooks_addon_required`). Like `code`, it is stable and invariant across locales and API versions.",
+                "example": "tax_id_already_exists",
+                "examples": [
+                  "tax_id_already_exists"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable description in Spanish.",
+                "example": "No se ha proporcionado una API key válida en el header Authorization.",
+                "examples": [
+                  "No se ha proporcionado una API key válida en el header Authorization."
+                ]
+              },
+              "param": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Field that caused the error (for parameter_invalid and similar invalid_request_error codes). On multi-field validation errors it points to the FIRST failed field; the full set lives in `errors[]`."
+              },
+              "line_index": {
+                "type": "integer",
+                "description": "Zero-based position of the document line that raised the error, the same `N` as in a validation path `lines.N.field`. Present only when a domain rule rejects ONE specific line of the document (a product, variant, presentation, configuration or option that does not exist or is deactivated, a missing price or VAT rate, an exemption cause or regime key outside its catalog, a disbursement line carrying what it may not, a line total that does not match, …) and absent on every other error. It is additive: `param` keeps naming the field exactly as before, so a client can ignore `line_index`. Use it to highlight the offending line without parsing `message`."
+              },
+              "errors": {
+                "type": "array",
+                "description": "Present on 422 validation errors: ALL failed fields, one item per field (not only the first). Each item carries `param`/`code`/`message` plus the optional hints `expected_format`/`allowed_values`. Additive and backward-compatible — `error.param`/`error.message` still mirror the first failed field.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "param": {
+                      "type": "string",
+                      "description": "Name of the failed field."
+                    },
+                    "code": {
+                      "type": "string",
+                      "description": "Stable machine-readable code for this field, derived from the failed validation rule (e.g. parameter_missing, parameter_invalid_format, parameter_invalid_enum)."
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Human-readable description of the field error. Localized (es/en/ca) when its `code` belongs to the stable catalog."
+                    },
+                    "expected_format": {
+                      "type": "string",
+                      "description": "Expected format hint (e.g. `YYYY-MM-DD`, `uuid`, `email`, `url`). Only present when the failure is a format error."
+                    },
+                    "allowed_values": {
+                      "type": "array",
+                      "description": "Legal values of the enum. Only present when the failure is an enum/`in` error.",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "param",
+                    "code",
+                    "message"
+                  ]
+                }
+              },
+              "details": {
+                "type": "object",
+                "description": "Structured details about the error, present only on some errors and with a shape that depends on the case. On 409 duplication conflicts (subcodes `tax_id_already_exists`, `external_id_already_exists`, `sku_already_exists`) it carries `existing_resource_id`, the UUID of the resource that already exists. On 402 `payment_required_error` responses caused by a missing payment method it carries `payment_setup_url`, the Billing Portal link that unblocks the operation. On the 422 subcodes raised inside the domain it carries the hint of that case: `allowed_values` (rejected value outside a closed catalog), `offending_field` (field a disbursement line may not carry) or `expected` + `received` (line total checksum mismatch).",
+                "properties": {
+                  "operation_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Operation in the authenticated company that must be resolved before another employee-seat mutation."
+                  },
+                  "row_errors": {
+                    "type": "array",
+                    "maxItems": 1000,
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "row_id",
+                        "field",
+                        "message"
+                      ],
+                      "properties": {
+                        "row_id": {
+                          "type": "string"
+                        },
+                        "field": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "description": "Employee-batch validation failures identified by the stable row_id; no employee was charged or created."
+                  },
+                  "field_errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "description": "Review fields that must be corrected before a purchase scan can be converted. Keys use public identifiers, for example supplier_id or lines.0.tax_rate."
+                  },
+                  "existing_resource_id": {
+                    "type": "string",
+                    "description": "UUID of the pre-existing resource that triggered the conflict. Resolvable with a `GET /v1/{resource}/{id}` without an extra `find_by_*` call. Only present on 409 duplication conflicts."
+                  },
+                  "payment_setup_url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Billing Portal URL where the payment method can be set up. Only present on 402 errors caused by a missing payment method (`payment_method_required`, `employee_seat_payment_method_required`); once the payment method is on file, retrying the same call succeeds. Absent on the other 402 codes (declined charge, plan or add-on required)."
+                  },
+                  "allowed_values": {
+                    "type": "array",
+                    "description": "Legal values of the closed catalog the rejected value does not belong to. Present on the 422 subcodes that validate against a catalog inside the domain (`line_type_invalid`, `correction_code_illegal_for_original`). Note that a 422 raised by request validation reports the same hint per field in `error.errors[].allowed_values` instead.",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "offending_field": {
+                    "type": "string",
+                    "description": "Name of the line field that made the operation illegal. Present on 422 `suplido_line_cannot_carry_taxes`: a disbursement line (`line_type: \"SUPLIDO\"`) may not carry VAT, withholding, surcharge, discount, regime key, exemption cause or product, and this names the one that was sent."
+                  },
+                  "expected": {
+                    "type": "number",
+                    "description": "Amount this API computed for the line. Present on 422 `line_total_checksum_mismatch`, together with `received`, so the rounding mismatch with your own ERP can be located without guessing."
+                  },
+                  "received": {
+                    "type": "number",
+                    "description": "Amount sent in `lines[].line_total`, which differs from `expected` by more than one cent. Present on 422 `line_total_checksum_mismatch`."
+                  },
+                  "active_rules": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Current active automation rule count on automation_active_rules_limit_exceeded."
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Plan limit reached, including the active automation rule cap on automation_active_rules_limit_exceeded."
+                  },
+                  "resource": {
+                    "type": "string",
+                    "description": "Resource whose quota was reached on plan_limit_exceeded, for example documents_year or users."
+                  },
+                  "current": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Current usage of the resource on plan_limit_exceeded."
+                  },
+                  "period_end": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time",
+                    "description": "End of the quota period on plan_limit_exceeded; null for resources without a period, including platform users."
+                  }
+                }
+              },
+              "doc_url": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uri",
+                "description": "Link to error reference in docs.",
+                "example": "https://docs.factuarea.com/guides/errors#missing_api_key",
+                "examples": [
+                  "https://docs.factuarea.com/guides/errors#missing_api_key"
+                ]
+              },
+              "request_id": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Request ID for support/debugging.",
+                "example": "req_01HKQS5N8VR7QXJ9K3T6BWPMZA",
+                "examples": [
+                  "req_01HKQS5N8VR7QXJ9K3T6BWPMZA"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ],
+        "title": "Error"
+      },
+      "CrmPrivateDocumentReceipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "id",
+          "version"
+        ],
+        "title": "CrmPrivateDocumentReceipt"
+      },
+      "CrmPrivateDocument": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "visibility": {
+            "type": "string",
+            "enum": [
+              "private",
+              "shared",
+              "company"
+            ]
+          },
+          "created_by_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "archived_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "archived_by_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "number": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "mime": {
+                  "type": "string"
+                },
+                "size_bytes": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "created_by_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "number",
+                "mime",
+                "size_bytes",
+                "created_by_id",
+                "created_at"
+              ]
+            }
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "entity_type": {
+                  "type": "string"
+                },
+                "entity_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                },
+                "document_version": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "linked_by_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "linked_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "entity_type",
+                "entity_id",
+                "document_version",
+                "linked_by_id",
+                "linked_at"
+              ]
+            }
+          },
+          "shares": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                },
+                "grant_type": {
+                  "type": "string",
+                  "enum": [
+                    "user",
+                    "team"
+                  ]
+                },
+                "grantee_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "expires_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "revoked_at": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "revoked_by_id": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "created_by_id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "grant_type",
+                "grantee_id",
+                "expires_at",
+                "revoked_at",
+                "revoked_by_id",
+                "created_by_id",
+                "created_at"
+              ]
+            }
+          }
+        },
+        "required": [
+          "id",
+          "version"
+        ],
+        "title": "CrmPrivateDocument"
+      }
+    }
+  }
+}

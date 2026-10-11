@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 // Generated mechanically from the private native export, never the published spec.
@@ -44,9 +46,8 @@ func NativeCrmSource139Contract() (*CrmSource139Contract, error) {
 	if contract.NativeHash != CrmSource139NativeHash || contract.Profile.State != "unreleased" || contract.Profile.Ratified || contract.Profile.Published || contract.Profile.DeliveryEnabled || len(contract.Capabilities) != 0 {
 		return nil, errors.New("contrato Source139 sin su gate privado nativo")
 	}
-	for _, key := range []string{"import_apply_original", "agenda"} {
-		op, exists := contract.Operations[key]
-		if !exists || op.Method != "GET" || op.ID() == "" || op.Scope() == "" {
+	for key, op := range contract.Operations {
+		if (op.Method != "GET" && op.Method != "POST" && op.Method != "PATCH") || op.ID() == "" || op.Scope() == "" {
 			return nil, fmt.Errorf("lector Source139 no declarado: %s", key)
 		}
 	}
@@ -73,6 +74,7 @@ func (c *CrmSource139Contract) ValidateParameter(key, location, name string, val
 		if !ok {
 			continue
 		}
+		p = c.resolve(p)
 		if p["name"] != name || p["in"] != location {
 			continue
 		}
@@ -106,12 +108,17 @@ func (c *CrmSource139Contract) AgendaSources() ([]string, error) {
 
 // Derive the success boundary from the exported schema rather than a parallel DTO catalog.
 func (c *CrmSource139Contract) ValidateResponse(key string, body []byte) error {
+	return c.ValidateResponseStatus(key, 200, body)
+}
+
+func (c *CrmSource139Contract) ValidateResponseStatus(key string, status int, body []byte) error {
 	op, exists := c.Operations[key]
 	if !exists {
 		return errors.New("operación Source139 ausente")
 	}
 	responses, _ := op.Operation["responses"].(map[string]any)
-	response, _ := responses["200"].(map[string]any)
+	response, _ := responses[strconv.Itoa(status)].(map[string]any)
+	response = c.resolve(response)
 	content, _ := response["content"].(map[string]any)
 	media, _ := content["application/json"].(map[string]any)
 	schema, _ := media["schema"].(map[string]any)
@@ -120,4 +127,37 @@ func (c *CrmSource139Contract) ValidateResponse(key string, body []byte) error {
 		return errors.New("respuesta Source139 sin esquema/JSON nativo")
 	}
 	return c.validate(schema, value, 0)
+}
+
+// Raw bytes remain the original intent; validation never serializes them again.
+func (c *CrmSource139Contract) ValidateRequest(key string, body []byte) error {
+	op, exists := c.Operations[key]
+	if !exists {
+		return errors.New("operación Source139 ausente")
+	}
+	request, _ := op.Operation["requestBody"].(map[string]any)
+	request = c.resolve(request)
+	content, _ := request["content"].(map[string]any)
+	media, _ := content["application/json"].(map[string]any)
+	schema, _ := media["schema"].(map[string]any)
+	value, err := decodeCrmSource139JSON(body)
+	if err != nil || schema == nil {
+		return errors.New("cuerpo sin esquema/JSON nativo Source139")
+	}
+	return c.validate(schema, value, 0)
+}
+
+func (c *CrmSource139Contract) resolve(value map[string]any) map[string]any {
+	for depth := 0; depth < 64; depth++ {
+		ref, ok := value["$ref"].(string)
+		if !ok {
+			return value
+		}
+		parts := strings.Split(ref, "/")
+		if len(parts) != 4 || parts[0] != "#" || parts[1] != "components" {
+			return nil
+		}
+		value = c.Components[parts[2]][parts[3]]
+	}
+	return nil
 }

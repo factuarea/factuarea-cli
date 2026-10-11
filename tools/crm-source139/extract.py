@@ -13,6 +13,16 @@ from pathlib import Path
 SELECTED = {
     "import_apply_original": ("/crm/imports/{run}/apply/original", "get"),
     "agenda": ("/agenda", "get"),
+    "lead_create": ("/crm/leads", "post"),
+    "lead_current": ("/crm/leads/{lead}", "get"),
+    "lead_original": ("/crm/leads/create/original", "get"),
+    "opportunity_create": ("/crm/opportunity", "post"),
+    "opportunity_current": ("/crm/opportunity/{opportunity}", "get"),
+    "opportunity_original": ("/crm/opportunity/create/original", "get"),
+    "activity_create": ("/crm/crmactivity", "post"),
+    "activity_current": ("/crm/crmactivity/{activity}", "get"),
+    "activity_original": ("/crm/crmactivity/create/original", "get"),
+    "activity_update": ("/crm/crmactivity/{activity}", "patch"),
 }
 BOUNDARIES = {
     "import_apply": ("/crm/imports/{run}/apply", "post"),
@@ -20,10 +30,11 @@ BOUNDARIES = {
 }
 
 
-def extract(input_path, output_path):
+def extract(input_path, output_path, selection=None, boundary_selection=None):
     metadata = json.loads(input_path.read_bytes())
     native_bytes = Path(metadata["artifact"]).read_bytes()
-    if hashlib.sha256(native_bytes).hexdigest() != metadata["artifact_sha256"]:
+    native_hash = metadata.get("artifact_sha256") or metadata.get("sha256")
+    if hashlib.sha256(native_bytes).hexdigest() != native_hash:
         raise ValueError("Native artifact does not match its input manifest")
     native = json.loads(native_bytes)
     profile = native["x-factuarea-contract-profile"]
@@ -41,8 +52,8 @@ def extract(input_path, output_path):
             for key, (path, method) in selection.items()
         }
 
-    selected = operations(SELECTED)
-    boundaries = operations(BOUNDARIES)
+    selected = operations(SELECTED if selection is None else selection)
+    boundaries = operations(BOUNDARIES if boundary_selection is None else boundary_selection)
     components = {}
     visited = set()
 
@@ -67,7 +78,7 @@ def extract(input_path, output_path):
     include(boundaries)
     selected_ids = {entry["operation"]["operationId"] for entry in selected.values()}
     result = {
-        "source_artifact_sha256": metadata["artifact_sha256"],
+        "source_artifact_sha256": native_hash,
         "source_manifest_sha256": hashlib.sha256(input_path.read_bytes()).hexdigest(),
         "native_profile": {key: value for key, value in profile.items() if key != "carriers"},
         "capabilities": metadata["capabilities"],

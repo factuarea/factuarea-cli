@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -22,12 +23,13 @@ import (
 const defaultBaseURL = "https://api.factuarea.com"
 
 type Client struct {
-	baseURL    string
-	apiKey     string
-	hc         *http.Client
-	apiVersion string
-	maxRetries int
-	sleep      func(time.Duration)
+	baseURL        string
+	apiKey         string
+	hc             *http.Client
+	apiVersion     string
+	maxRetries     int
+	singleDispatch bool
+	sleep          func(time.Duration)
 }
 
 type Option func(*Client)
@@ -35,7 +37,11 @@ type Option func(*Client)
 func WithBaseURL(u string) Option           { return func(c *Client) { c.baseURL = strings.TrimRight(u, "/") } }
 func WithHTTPClient(hc *http.Client) Option { return func(c *Client) { c.hc = hc } }
 func WithMaxRetries(n int) Option           { return func(c *Client) { c.maxRetries = n } }
-func WithAPIVersion(v string) Option        { return func(c *Client) { c.apiVersion = v } }
+
+// Opt-in for a native original intent: explicit key, one dispatch and no redirect.
+// The default published client behavior remains unchanged.
+func WithSingleDispatch() Option     { return func(c *Client) { c.singleDispatch = true } }
+func WithAPIVersion(v string) Option { return func(c *Client) { c.apiVersion = v } }
 
 func WithSleep(fn func(time.Duration)) Option { return func(c *Client) { c.sleep = fn } }
 
@@ -64,12 +70,35 @@ type Response struct {
 func (c *Client) Do(ctx context.Context, method, path string, body []byte, extraHeaders map[string]string) (*Response, error) {
 	url := c.baseURL + path
 	idempotencyKey := extraHeaders["Idempotency-Key"]
+	mutating := method == http.MethodPost || method == http.MethodPut || method == http.MethodPatch || method == http.MethodDelete
+	if c.singleDispatch && mutating && !crmJourney140LiteralKey(idempotencyKey) {
+		return nil, apierr.Usagef("la intención nativa exige una clave explícita ASCII de 1–255 bytes, sin recortar")
+	}
 	if idempotencyKey == "" && (method == http.MethodPost || method == http.MethodPut || method == http.MethodPatch || method == http.MethodDelete) {
 		idempotencyKey = NewIdempotencyKey()
 	}
 
 	var lastErr error
-	for attempt := 0; attempt <= c.maxRetries; attempt++ {
+	retries := c.maxRetries
+	hc := c.hc
+	if c.singleDispatch {
+		retries = 0
+		one := *hc
+		one.CheckRedirect = func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }
+		transport := one.Transport
+		if transport == nil {
+			transport = http.DefaultTransport
+		}
+		if native, ok := transport.(*http.Transport); ok {
+			isolated := native.Clone()
+			isolated.DisableKeepAlives = true
+			defer isolated.CloseIdleConnections()
+			transport = isolated
+		}
+		one.Transport = clientSingleDispatchTransport{transport}
+		hc = &one
+	}
+	for attempt := 0; attempt <= retries; attempt++ {
 		req, err := http.NewRequestWithContext(ctx, method, url, bodyReader(body))
 		if err != nil {
 			return nil, err
@@ -89,13 +118,16 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 			req.Header.Set(k, v)
 		}
 
-		httpResp, err := c.hc.Do(req)
+		httpResp, err := hc.Do(req)
 		if err != nil {
+			if c.singleDispatch {
+				return nil, &apierr.TransportError{Err: errors.New("resultado UNKNOWN: no se reenvió la petición; conserva cuerpo y clave, sin inferir confirmación desde Current")}
+			}
 			if ctx.Err() != nil {
 				return nil, &apierr.TransportError{Err: ctx.Err()}
 			}
 			lastErr = &apierr.TransportError{Err: err}
-			if attempt < c.maxRetries {
+			if attempt < retries {
 				c.sleep(backoff(attempt))
 				continue
 			}
@@ -114,18 +146,29 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 		if readErr != nil {
 			return resp, &apierr.TransportError{Err: fmt.Errorf("respuesta HTTP incompleta")}
 		}
+		if c.singleDispatch && resp.StatusCode >= 300 && resp.StatusCode < 400 {
+			return resp, &apierr.TransportError{Err: errors.New("resultado UNKNOWN: redirect rechazado, no se reenvió la intención")}
+		}
 
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 			return resp, nil
 		}
 
-		if isRetryable(resp.StatusCode) && attempt < c.maxRetries {
+		if isRetryable(resp.StatusCode) && attempt < retries {
 			c.sleep(retryDelay(resp, attempt))
 			continue
 		}
 		return resp, parseError(resp)
 	}
 	return nil, lastErr
+}
+
+type clientSingleDispatchTransport struct{ transport http.RoundTripper }
+
+func (t clientSingleDispatchTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	one := req.Clone(req.Context())
+	one.GetBody = nil
+	return t.transport.RoundTrip(one)
 }
 
 func bodyReader(b []byte) io.Reader {

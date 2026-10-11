@@ -6,6 +6,8 @@ import (
 	"errors"
 	"io"
 	"math"
+	"math/big"
+	"net/mail"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -30,8 +32,8 @@ func decodeCrmSource139JSON(body []byte) (any, error) {
 	return value, nil
 }
 
-// Validates only JSON schema primitives actually emitted in the selected native
-// read responses. This schema boundary never infers current authority.
+// Validates schema primitives emitted by the exact selected native operations.
+// This boundary never infers current authority or configured reference grants.
 func (c *CrmSource139Contract) validate(schema map[string]any, value any, depth int) error {
 	if depth > 64 {
 		return errCrmSource139Shape
@@ -69,6 +71,30 @@ func (c *CrmSource139Contract) validate(schema map[string]any, value any, depth 
 			return errCrmSource139Shape
 		}
 	}
+	if schemas, ok := schema["anyOf"].([]any); ok {
+		matches := 0
+		for _, child := range schemas {
+			s, ok := child.(map[string]any)
+			if ok && c.validate(s, value, depth+1) == nil {
+				matches++
+			}
+		}
+		if matches == 0 {
+			return errCrmSource139Shape
+		}
+	}
+	if condition, ok := schema["if"].(map[string]any); ok {
+		branch := "else"
+		if c.validate(condition, value, depth+1) == nil {
+			branch = "then"
+		}
+		if child, ok := schema[branch].(map[string]any); ok && c.validate(child, value, depth+1) != nil {
+			return errCrmSource139Shape
+		}
+	}
+	if excluded, ok := schema["not"].(map[string]any); ok && c.validate(excluded, value, depth+1) == nil {
+		return errCrmSource139Shape
+	}
 	if constant, exists := schema["const"]; exists && !reflect.DeepEqual(constant, value) {
 		return errCrmSource139Shape
 	}
@@ -102,6 +128,9 @@ func (c *CrmSource139Contract) validate(schema map[string]any, value any, depth 
 	}
 	switch v := value.(type) {
 	case map[string]any:
+		if !crmSource139Size(schema, "minProperties", "maxProperties", len(v)) {
+			return errCrmSource139Shape
+		}
 		properties, _ := schema["properties"].(map[string]any)
 		if required, ok := schema["required"].([]any); ok {
 			for _, key := range required {
@@ -115,6 +144,9 @@ func (c *CrmSource139Contract) validate(schema map[string]any, value any, depth 
 			}
 		}
 		for key, child := range v {
+			if names, ok := schema["propertyNames"].(map[string]any); ok && c.validate(names, key, depth+1) != nil {
+				return errCrmSource139Shape
+			}
 			if property, exists := properties[key]; exists {
 				s, ok := property.(map[string]any)
 				if !ok || c.validate(s, child, depth+1) != nil {
@@ -122,9 +154,23 @@ func (c *CrmSource139Contract) validate(schema map[string]any, value any, depth 
 				}
 			} else if schema["additionalProperties"] == false {
 				return errCrmSource139Shape
+			} else if extra, ok := schema["additionalProperties"].(map[string]any); ok && c.validate(extra, child, depth+1) != nil {
+				return errCrmSource139Shape
 			}
 		}
 	case []any:
+		if !crmSource139Size(schema, "minItems", "maxItems", len(v)) {
+			return errCrmSource139Shape
+		}
+		if schema["uniqueItems"] == true {
+			for i := range v {
+				for j := 0; j < i; j++ {
+					if reflect.DeepEqual(v[i], v[j]) {
+						return errCrmSource139Shape
+					}
+				}
+			}
+		}
 		if item, exists := schema["items"]; exists {
 			s, ok := item.(map[string]any)
 			if !ok {
@@ -144,6 +190,9 @@ func (c *CrmSource139Contract) validate(schema map[string]any, value any, depth 
 			return errCrmSource139Shape
 		}
 		if pattern, ok := schema["pattern"].(string); ok {
+			// Native PCRE uses this strict EOF assertion. RE2's \z has the same
+			// meaning; unsupported expressions otherwise fail closed.
+			pattern = strings.ReplaceAll(pattern, `$(?![\s\S])`, `\z`)
 			r, err := regexp.Compile(pattern)
 			if err != nil || !r.MatchString(v) {
 				return errCrmSource139Shape
@@ -151,6 +200,15 @@ func (c *CrmSource139Contract) validate(schema map[string]any, value any, depth 
 		}
 		if format, ok := schema["format"].(string); ok {
 			switch format {
+			case "date-time":
+				if _, err := time.Parse(time.RFC3339Nano, v); err != nil {
+					return errCrmSource139Shape
+				}
+			case "email":
+				address, err := mail.ParseAddress(v)
+				if err != nil || address.Address != v {
+					return errCrmSource139Shape
+				}
 			case "date":
 				if _, err := time.Parse("2006-01-02", v); err != nil {
 					return errCrmSource139Shape
@@ -162,18 +220,28 @@ func (c *CrmSource139Contract) validate(schema map[string]any, value any, depth 
 			}
 		}
 	case json.Number:
-		n, ok := crmSource139Number(v)
+		n, ok := new(big.Rat).SetString(string(v))
 		if !ok {
 			return errCrmSource139Shape
 		}
-		if min, ok := crmSource139Number(schema["minimum"]); ok && n < min {
+		if min, ok := crmSource139ExactNumber(schema["minimum"]); ok && n.Cmp(min) < 0 {
 			return errCrmSource139Shape
 		}
-		if max, ok := crmSource139Number(schema["maximum"]); ok && n > max {
+		if max, ok := crmSource139ExactNumber(schema["maximum"]); ok && n.Cmp(max) > 0 {
 			return errCrmSource139Shape
 		}
 	}
 	return nil
+}
+
+func crmSource139Size(schema map[string]any, minKey, maxKey string, size int) bool {
+	if min, ok := crmSource139Number(schema[minKey]); ok && float64(size) < min {
+		return false
+	}
+	if max, ok := crmSource139Number(schema[maxKey]); ok && float64(size) > max {
+		return false
+	}
+	return true
 }
 
 func crmSource139Type(kind string, value any) bool {
@@ -193,13 +261,21 @@ func crmSource139Type(kind string, value any) bool {
 		_, ok := value.(bool)
 		return ok
 	case "integer":
-		n, ok := crmSource139Number(value)
-		return ok && math.Trunc(n) == n
+		n, ok := crmSource139ExactNumber(value)
+		return ok && n.IsInt()
 	case "number":
-		_, ok := crmSource139Number(value)
+		_, ok := crmSource139ExactNumber(value)
 		return ok
 	}
 	return false
+}
+
+func crmSource139ExactNumber(value any) (*big.Rat, bool) {
+	n, ok := value.(json.Number)
+	if !ok {
+		return nil, false
+	}
+	return new(big.Rat).SetString(string(n))
 }
 
 func crmSource139Number(value any) (float64, bool) {

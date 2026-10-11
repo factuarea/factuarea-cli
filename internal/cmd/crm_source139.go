@@ -31,12 +31,16 @@ func registerCrmSource139Commands(root *cobra.Command) {
 }
 
 func crmSource139Context(cmd *cobra.Command, sourceEnabled, skipScope bool, key string) (*cliContext, func(), error) {
-	if !sourceEnabled || !cmd.Flags().Changed("source-contracts") {
-		return nil, nil, apierr.Usagef("este lector requiere --source-contracts explícito: el contrato nativo sigue privado, sin publicación o activación CRM")
-	}
 	contract, err := spec.NativeCrmSource139Contract()
 	if err != nil {
 		return nil, nil, err
+	}
+	return crmNativeSourceContext(cmd, sourceEnabled, skipScope, key, contract)
+}
+
+func crmNativeSourceContext(cmd *cobra.Command, sourceEnabled, skipScope bool, key string, contract *spec.CrmSource139Contract) (*cliContext, func(), error) {
+	if !sourceEnabled || !cmd.Flags().Changed("source-contracts") {
+		return nil, nil, apierr.Usagef("este lector requiere --source-contracts explícito: el contrato nativo sigue privado, sin publicación o activación CRM")
 	}
 	cc, err := newCLIContext(globalsFrom(cmd), "")
 	if err != nil {
