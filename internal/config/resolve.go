@@ -21,6 +21,7 @@ const (
 )
 
 func ResolveAPIKey(stdinKey, profile string, getenv func(string) string, store Store) (Resolution, error) {
+	selectedProfile := profile != "" || getenv(EnvProfile) != ""
 	if profile == "" {
 		profile = getenv(EnvProfile)
 	}
@@ -31,7 +32,9 @@ func ResolveAPIKey(stdinKey, profile string, getenv func(string) string, store S
 	if stdinKey != "" {
 		return mk(stdinKey, "stdin", profile), nil
 	}
-	if v := getenv(EnvAPIKey); v != "" {
+	// A selected profile is an explicit credential boundary. The generic env key
+	// remains convenient only when no profile was selected (flag or environment).
+	if v := getenv(EnvAPIKey); v != "" && !selectedProfile {
 		return mk(v, "env", profile), nil
 	}
 	if store != nil {

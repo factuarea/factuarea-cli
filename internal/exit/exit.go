@@ -7,25 +7,45 @@ import (
 )
 
 const (
-	OK         = 0
-	CLIBug     = 1
-	Usage      = 2
-	Auth       = 3
-	Perm       = 4
-	Validation = 5
-	NotFound   = 6
-	RateLimit  = 7
-	Conflict   = 8
-	Server     = 9
-	Network    = 10
+	OK          = 0
+	CLIBug      = 1
+	Usage       = 2
+	Auth        = 3
+	Perm        = 4
+	Validation  = 5
+	NotFound    = 6
+	RateLimit   = 7
+	Conflict    = 8
+	Server      = 9
+	Network     = 10
+	Unconfirmed = 11
 )
 
 func ForError(err error) int {
 	if err == nil {
 		return OK
 	}
+	var unknown *apierr.WriteUnconfirmed
+	if errors.As(err, &unknown) {
+		return Unconfirmed
+	}
 	var api *apierr.APIError
 	if errors.As(err, &api) {
+		// The actual HTTP status wins over optional or provider-specific type names.
+		switch api.StatusCode {
+		case 401:
+			return Auth
+		case 403:
+			return Perm
+		case 404:
+			return NotFound
+		case 409:
+			return Conflict
+		case 422, 400:
+			return Validation
+		case 429:
+			return RateLimit
+		}
 		switch api.Type {
 		case "authentication_error":
 			return Auth

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 type flagInfo struct {
@@ -66,6 +67,17 @@ func newCommandsCmd() *cobra.Command {
 				for _, p := range op.QueryParams {
 					e.Flags = append(e.Flags, flagInfo{Name: p.Name, Type: p.Type})
 				}
+				if _, nativePages := crmNativePaginationFor(op); nativePages {
+					e.Paginated = true
+					e.Flags = append(e.Flags, flagInfo{Name: "all", Type: "bool"}, flagInfo{Name: "max-pages", Type: "int"})
+				}
+				if command, native := crmOAuthGeneratedCommand(op); native {
+					e.Summary = command.Short
+					e.Flags = []flagInfo{}
+					command.Flags().VisitAll(func(flag *pflag.Flag) {
+						e.Flags = append(e.Flags, flagInfo{Name: flag.Name, Type: flag.Value.Type()})
+					})
+				}
 				if op.Body != nil {
 					e.Example = op.Body.Example
 				}
@@ -77,6 +89,11 @@ func newCommandsCmd() *cobra.Command {
 				manifest = append(manifest, e)
 			}
 			manifest = append(manifest, serviceLevelManifest()...)
+			manifest = append(manifest, crmCoreNativeManifest()...)
+			manifest = append(manifest, crmDocumentManifest()...)
+			manifest = append(manifest, crmServiceTicketManifest()...)
+			manifest = append(manifest, crmOAuthOriginalManifest()...)
+			manifest = append(manifest, crmWhatsAppManifest()...)
 			enc := json.NewEncoder(cmd.OutOrStdout())
 			enc.SetEscapeHTML(false)
 			enc.SetIndent("", "  ")

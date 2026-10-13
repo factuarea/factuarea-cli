@@ -11,8 +11,9 @@ import (
 func parseError(resp *Response) error {
 	if strings.Contains(resp.ContentType, "json") {
 		var raw struct {
-			Error map[string]any  `json:"error"`
-			Data  json.RawMessage `json:"data"`
+			Error  map[string]any  `json:"error"`
+			Data   json.RawMessage `json:"data"`
+			Errors any             `json:"errors"`
 		}
 		if json.Unmarshal(resp.Body, &raw) == nil && (raw.Error != nil || len(raw.Data) > 0) {
 			get := func(k string) string {
@@ -33,6 +34,10 @@ func parseError(resp *Response) error {
 				Data:       raw.Data,
 				Details:    raw.Error["details"],
 				Errors:     raw.Error["errors"],
+				RetryAfter: resp.Header.Get("Retry-After"),
+			}
+			if api.Errors == nil {
+				api.Errors = raw.Errors
 			}
 			if api.RequestID == "" {
 				api.RequestID = resp.RequestID
@@ -51,7 +56,22 @@ func parseError(resp *Response) error {
 		Type:       synthesizeType(resp.StatusCode),
 		Message:    nonJSONMessage(resp),
 		RequestID:  resp.RequestID,
+		RetryAfter: resp.Header.Get("Retry-After"),
 	}
+}
+
+func parseCredentialError(resp *Response, credential string) error {
+	// A rejected request must never echo the actual bearer through error fields.
+	// Scrub the known credential across the parsed envelope, including 422 maps.
+	if credential == "" {
+		return parseError(resp)
+	}
+	copyResponse := *resp
+	copyResponse.Body = []byte(strings.ReplaceAll(string(resp.Body), credential, "[REDACTED]"))
+	copyResponse.RequestID = strings.ReplaceAll(resp.RequestID, credential, "[REDACTED]")
+	copyResponse.Header = resp.Header.Clone()
+	copyResponse.Header.Set("Retry-After", strings.ReplaceAll(resp.Header.Get("Retry-After"), credential, "[REDACTED]"))
+	return parseError(&copyResponse)
 }
 
 func nonJSONMessage(resp *Response) string {

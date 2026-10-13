@@ -4,11 +4,14 @@ import (
 	"bytes"
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
 	"math"
 	"mime/multipart"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -61,17 +64,66 @@ type Response struct {
 }
 
 func (c *Client) Do(ctx context.Context, method, path string, body []byte, extraHeaders map[string]string) (*Response, error) {
-	url := c.baseURL + path
-	idempotencyKey := extraHeaders["Idempotency-Key"]
+	endpoint := c.baseURL + path
+	mutating := method != http.MethodGet && method != http.MethodHead && method != http.MethodOptions
+	if err := ctx.Err(); err != nil {
+		return nil, &apierr.TransportError{Err: err}
+	}
+	idempotencyKey := ""
+	keyHeaders := 0
+	for name, value := range extraHeaders {
+		if strings.EqualFold(name, "Idempotency-Key") {
+			keyHeaders++
+			idempotencyKey = value
+		}
+	}
+	if keyHeaders > 1 {
+		return nil, apierr.Usagef("Idempotency-Key debe tener una sola identidad original")
+	}
 	if idempotencyKey == "" && (method == http.MethodPost || method == http.MethodPut || method == http.MethodPatch || method == http.MethodDelete) {
 		idempotencyKey = NewIdempotencyKey()
 	}
 
+	// net/http follows redirects (and may replay a body on 307/308) by default.
+	// Every request here keeps the original endpoint and credential boundary.
+	hc := *c.hc
+	hc.CheckRedirect = func(_ *http.Request, _ []*http.Request) error { return http.ErrUseLastResponse }
+	// Go's Transport may internally replay requests carrying Idempotency-Key
+	// after a reused connection fails. A write uses a fresh transport connection
+	// and has no GetBody replay callback, independent of this client's retry loop.
+	if mutating {
+		transport := hc.Transport
+		if transport == nil {
+			transport = http.DefaultTransport
+		}
+		if native, ok := transport.(*http.Transport); ok {
+			isolated := native.Clone()
+			isolated.DisableKeepAlives = true
+			hc.Transport = isolated
+			defer isolated.CloseIdleConnections()
+		}
+	}
+	maxRetries := c.maxRetries
+	if mutating {
+		maxRetries = 0
+	}
+	unconfirmed := func(cause error) error {
+		digest := sha256.Sum256(body)
+		requestPath := path
+		if parsed, err := url.Parse(path); err == nil {
+			requestPath = parsed.Path
+		}
+		return &apierr.WriteUnconfirmed{Err: cause, Method: method, Path: requestPath, IdempotencyKey: idempotencyKey, OriginalBodySHA256: hex.EncodeToString(digest[:])}
+	}
 	var lastErr error
-	for attempt := 0; attempt <= c.maxRetries; attempt++ {
-		req, err := http.NewRequestWithContext(ctx, method, url, bodyReader(body))
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		req, err := http.NewRequestWithContext(ctx, method, endpoint, bodyReader(body))
 		if err != nil {
 			return nil, err
+		}
+		if mutating {
+			req.GetBody = nil
+			req.Close = true
 		}
 		req.Header.Set("Authorization", "Bearer "+c.apiKey)
 		req.Header.Set("Accept", "application/json")
@@ -88,20 +140,23 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 			req.Header.Set(k, v)
 		}
 
-		httpResp, err := c.hc.Do(req)
+		httpResp, err := hc.Do(req)
 		if err != nil {
+			if mutating {
+				return nil, unconfirmed(err)
+			}
 			if ctx.Err() != nil {
 				return nil, &apierr.TransportError{Err: ctx.Err()}
 			}
-			lastErr = &apierr.TransportError{Err: err}
-			if attempt < c.maxRetries {
+			lastErr = &apierr.TransportError{Err: fmt.Errorf("no se pudo completar la lectura HTTP")}
+			if attempt < maxRetries {
 				c.sleep(backoff(attempt))
 				continue
 			}
 			return nil, lastErr
 		}
 
-		respBody, _ := io.ReadAll(httpResp.Body)
+		respBody, readErr := io.ReadAll(httpResp.Body)
 		_ = httpResp.Body.Close()
 		resp := &Response{
 			StatusCode:  httpResp.StatusCode,
@@ -110,16 +165,25 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 			ContentType: httpResp.Header.Get("Content-Type"),
 			RequestID:   httpResp.Header.Get("X-Request-Id"),
 		}
+		if readErr != nil {
+			if mutating {
+				return resp, unconfirmed(readErr)
+			}
+			return resp, &apierr.TransportError{Err: fmt.Errorf("respuesta HTTP incompleta")}
+		}
 
 		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 			return resp, nil
 		}
 
-		if isRetryable(resp.StatusCode) && attempt < c.maxRetries {
+		if mutating && (resp.StatusCode >= 500 || (resp.StatusCode >= 300 && resp.StatusCode < 400)) {
+			return resp, unconfirmed(parseCredentialError(resp, c.apiKey))
+		}
+		if isRetryable(resp.StatusCode) && attempt < maxRetries {
 			c.sleep(retryDelay(resp, attempt))
 			continue
 		}
-		return resp, parseError(resp)
+		return resp, parseCredentialError(resp, c.apiKey)
 	}
 	return nil, lastErr
 }
@@ -142,7 +206,15 @@ func backoff(attempt int) time.Duration {
 func retryDelay(resp *Response, attempt int) time.Duration {
 	if ra := resp.Header.Get("Retry-After"); ra != "" {
 		if secs, err := strconv.Atoi(ra); err == nil {
-			return time.Duration(secs) * time.Second
+			if secs >= 0 && secs <= 3600 {
+				return time.Duration(secs) * time.Second
+			}
+		}
+		if date, err := http.ParseTime(ra); err == nil {
+			delay := time.Until(date)
+			if delay >= 0 && delay <= time.Hour {
+				return delay
+			}
 		}
 	}
 	return backoff(attempt)

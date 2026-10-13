@@ -65,7 +65,10 @@ func baseURLClientOptions(allowInsecure bool) ([]client.Option, error) {
 func validateBaseURLTransport(base string, allowInsecure bool) error {
 	u, err := url.Parse(base)
 	if err != nil {
-		return apierr.Usagef("%s no es una URL válida: %v", envBaseURL, err)
+		return apierr.Usagef("%s no es una URL válida", envBaseURL)
+	}
+	if u.Hostname() == "" || u.User != nil || u.RawQuery != "" || u.Fragment != "" {
+		return apierr.Usagef("%s debe ser un servidor sin credenciales, query ni fragmento", envBaseURL)
 	}
 	if u.Scheme != "http" && u.Scheme != "https" {
 		return apierr.Usagef("%s debe usar http:// o https:// (got %q)", envBaseURL, u.Scheme)
@@ -80,7 +83,7 @@ func newCLIContext(g *GlobalFlags, stdinKey string) (*cliContext, error) {
 	store, _ := config.NewStore()
 	res, err := config.ResolveAPIKey(stdinKey, g.Profile, os.Getenv, store)
 	if err != nil {
-		return nil, err
+		return nil, apierr.Usagef("no hay credenciales para el perfil elegido; ejecuta factuarea login en ese perfil")
 	}
 	if !config.ValidKeyFormat(res.APIKey) {
 		return nil, apierr.Usagef("la API key resuelta no tiene formato válido (se espera fact_test_… o fact_live_… seguido de 24 caracteres). Ejecuta `factuarea login`.")

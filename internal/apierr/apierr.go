@@ -47,6 +47,7 @@ type APIError struct {
 	Data       json.RawMessage
 	Details    any
 	Errors     any
+	RetryAfter string
 }
 
 func (e *APIError) Error() string {
@@ -60,6 +61,21 @@ type TransportError struct{ Err error }
 
 func (e *TransportError) Error() string { return e.Err.Error() }
 func (e *TransportError) Unwrap() error { return e.Err }
+
+// WriteUnconfirmed preserves only the identity of the actual request, never its
+// credentials or private body. A receipt must be recovered before another write.
+type WriteUnconfirmed struct {
+	Err                error
+	Method             string
+	Path               string
+	IdempotencyKey     string
+	OriginalBodySHA256 string
+}
+
+func (e *WriteUnconfirmed) Error() string {
+	return "resultado de escritura sin confirmar; consulta el intento original antes de otra escritura"
+}
+func (e *WriteUnconfirmed) Unwrap() error { return e.Err }
 
 type UsageError struct{ Err error }
 

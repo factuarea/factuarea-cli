@@ -34,6 +34,7 @@ var reservedBuiltinFlagNames = map[string]struct{}{
 	"confirm":          {},
 	"output":           {},
 	"skip-scope-check": {},
+	"idempotency-key":  {},
 }
 
 func fieldFlagName(path []string) string {

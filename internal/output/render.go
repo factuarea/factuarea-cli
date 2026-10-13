@@ -29,6 +29,19 @@ func WantsJSON(jsonFlag bool, stdout *os.File) bool {
 }
 
 func PrintError(stderr io.Writer, err error, f Format) {
+	var unknown *apierr.WriteUnconfirmed
+	if errors.As(err, &unknown) {
+		if f == JSON {
+			_ = json.NewEncoder(stderr).Encode(map[string]any{"error": map[string]any{
+				"type": "write_unconfirmed", "state": "unconfirmed", "message": unknown.Error(),
+				"method": unknown.Method, "path": unknown.Path,
+				"idempotency_key": unknown.IdempotencyKey, "original_body_sha256": unknown.OriginalBodySHA256,
+			}})
+			return
+		}
+		fmt.Fprintf(stderr, "Error: %s\n  clave original: %s\n  SHA256 original: %s\n", unknown.Error(), unknown.IdempotencyKey, unknown.OriginalBodySHA256)
+		return
+	}
 	var api *apierr.APIError
 	if errors.As(err, &api) {
 		if f == JSON {
@@ -41,6 +54,10 @@ func PrintError(stderr io.Writer, err error, f Format) {
 				payload["data"] = api.Data
 			}
 			errorPayload := payload["error"].(map[string]any)
+			errorPayload["http_status"] = api.StatusCode
+			if api.RetryAfter != "" {
+				errorPayload["retry_after"] = api.RetryAfter
+			}
 			if api.Details != nil {
 				errorPayload["details"] = api.Details
 			}
@@ -52,6 +69,9 @@ func PrintError(stderr io.Writer, err error, f Format) {
 			return
 		}
 		fmt.Fprintf(stderr, "Error: %s\n", api.Message)
+		if api.RetryAfter != "" {
+			fmt.Fprintf(stderr, "  Retry-After: %s\n", api.RetryAfter)
+		}
 		if len(api.Data) > 0 {
 			fmt.Fprintf(stderr, "  detalle: %s\n", api.Data)
 		}

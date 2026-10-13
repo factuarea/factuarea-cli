@@ -4,8 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/url"
+	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/factuarea/factuarea-cli/internal/apierr"
 	"github.com/factuarea/factuarea-cli/internal/client"
@@ -22,11 +25,15 @@ func validateRawJSONBody(body []byte, requireObject bool) ([]byte, error) {
 		return body, nil
 	}
 	dec := json.NewDecoder(bytes.NewReader(trimmed))
+	dec.UseNumber()
+	if !utf8.Valid(body) {
+		return nil, apierr.Usagef("--data debe conservar UTF-8 válido")
+	}
 	var v any
 	if err := dec.Decode(&v); err != nil {
 		return nil, apierr.Usagef("JSON inválido en --data: %v", err)
 	}
-	if dec.More() {
+	if err := dec.Decode(new(any)); err != io.EOF {
 		return nil, apierr.Usagef("JSON inválido en --data: contenido extra tras el valor JSON")
 	}
 	if requireObject {
@@ -34,11 +41,9 @@ func validateRawJSONBody(body []byte, requireObject bool) ([]byte, error) {
 			return nil, apierr.Usagef("--data debe ser un objeto JSON (no un array ni un valor escalar)")
 		}
 	}
-	canonical, err := marshalNoEscape(v, false)
-	if err != nil {
-		return nil, apierr.Usagef("JSON inválido en --data: %v", err)
-	}
-	return canonical, nil
+	// Validation does not rewrite whitespace, decimals, nulls or JSON key order.
+	// Recovery hashes these exact bytes, the same bytes sent by Client.Do.
+	return body, nil
 }
 
 func bytesTrim(b []byte) []byte {
@@ -92,10 +97,22 @@ func validateResourceArgs(op genOp, args []string) error {
 			return apierr.Usagef("falta el id del recurso (%s)", op.PathParams[i].Name)
 		}
 	}
+	if isCRMCoreOperation(op) {
+		for i := range op.PathParams {
+			if i < len(args) && !regexp.MustCompile(`(?i)^[0-9a-f]{8}-[0-9a-f]{4}-7[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$`).MatchString(args[i]) {
+				return apierr.Usagef("%s debe conservar un UUID v7 público", op.PathParams[i].Name)
+			}
+		}
+	}
 	return nil
 }
 
 func (op genOp) isMutating() bool {
+	// Original receipt and preparation GETs require current writer authority.
+	// That scope does not turn their HTTP read into a mutation or a live write.
+	if op.Method == "GET" || op.Method == "HEAD" || op.Method == "OPTIONS" {
+		return false
+	}
 	if scope := op.RequiredScope; scope != "" {
 		return !strings.HasSuffix(scope, ":read")
 	}

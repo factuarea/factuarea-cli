@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"bufio"
-	"context"
 	"encoding/json"
 	"fmt"
 	"net/url"
@@ -17,12 +16,17 @@ import (
 )
 
 func buildGeneratedCommand(op genOp) *cobra.Command {
+	if command, native := crmOAuthGeneratedCommand(op); native {
+		return command
+	}
+	nativePages, hasNativePages := crmNativePaginationFor(op)
 	var data, dataFile, outputPath string
 	var paginate bool
 	var confirmFlag string
 	var skipScopeCheck bool
 	var dryRun, skeleton bool
 	var idempotencyKey string
+	var firstBodyOutput string
 	fileFlags := map[string]*string{}
 	fileArrayFlags := map[string]*[]string{}
 
@@ -35,6 +39,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		long += "\n\nEjemplo de body (--data):\n  " + op.Body.Example
 	}
 	long += bodyFieldsHelp(op)
+	if op.RequiredScope != "" {
+		long += "\n\nScope requerido: " + op.RequiredScope
+	}
 	if op.Body != nil && op.Body.Kind == "multipart" {
 		long += "\n\nSubida multipart: pasa el fichero con --file-<campo> y los" +
 			" campos de texto con --data como objeto JSON plano. En lotes, repite --file-<campo> por archivo."
@@ -56,6 +63,19 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		Args:       UsageArgs(argsRule),
 		Deprecated: deprecatedMsg(op),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
+			if hasNativePages || (isCRMCoreOperation(op) && op.Method == "GET" && len(op.PathParams) == 0) {
+				budget, _ := cmd.Flags().GetInt("max-pages")
+				if budget < 1 || budget > 1000 {
+					return apierr.Usagef("max-pages debe estar entre 1 y 1000")
+				}
+				all, _ := cmd.Flags().GetBool("all")
+				if all && nativePages.Parameter == "page" {
+					page, _ := cmd.Flags().GetString("page")
+					if _, err := crmNativePageNumber(page); err != nil {
+						return err
+					}
+				}
+			}
 			if hasPosField && len(args) > nPath {
 				if cmd.Flags().Changed(posField.flagName) {
 					return apierr.Usagef("no pases %s como argumento posicional y como --%s a la vez", posField.flagName, posField.flagName)
@@ -97,6 +117,26 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				return nil
 			}
 			var typedBody []byte
+			if dryRun && op.Body != nil && op.Body.Kind == "json" && !op.typedBody() {
+				resolvedData := data
+				if data != "" {
+					wire, err := readDataArg(data, cmd.InOrStdin())
+					if err != nil {
+						return err
+					}
+					resolvedData = string(wire)
+				}
+				body, _, err := op.buildBody(resolvedData, dataFile, fileFlags, fileArrayFlags)
+				if err != nil {
+					return err
+				}
+				body, err = validateRawJSONBody(body, true)
+				if err != nil {
+					return err
+				}
+				_, err = fmt.Fprintln(cmd.OutOrStdout(), string(body))
+				return err
+			}
 			if op.typedBody() {
 				b, berr := compileTypedBody(cmd, op, data, dataFile)
 				if berr != nil {
@@ -126,8 +166,11 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				}
 			}
 			if op.RequiredScope != "" && !skipScopeCheck {
-				scopes, serr := cc.scopes(context.Background())
+				scopes, serr := cc.scopes(cmd.Context())
 				if serr != nil {
+					if isCRMCoreOperation(op) {
+						return serr
+					}
 					fmt.Fprintf(cmd.ErrOrStderr(), "aviso: no pude verificar scopes (%v); continúo\n", serr)
 				} else if !safety.HasScope(scopes, op.RequiredScope) {
 					perr := apierr.Permf("la API key no tiene el scope %q requerido por esta operación", op.RequiredScope)
@@ -161,6 +204,18 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 
 			if op.isPaginated() && paginate {
 				return runPaginated(cmd, cc, path, q)
+			}
+			if isCRMCoreOperation(op) && op.Method == "GET" && len(op.PathParams) == 0 {
+				all, _ := cmd.Flags().GetBool("all")
+				if all {
+					return runCRMCorePages(cmd, cc, op, path, q)
+				}
+			}
+			if hasNativePages {
+				all, _ := cmd.Flags().GetBool("all")
+				if all {
+					return runCRMNativePages(cmd, cc, op, nativePages, path, q)
+				}
 			}
 
 			var body []byte
@@ -196,6 +251,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				full += "?" + q.Encode()
 			}
 			if idempotencyKey != "" {
+				if !crmOAuthRawKey(idempotencyKey) {
+					return apierr.Usagef("idempotency-key debe conservar ASCII original sin espacios de borde (1–255 bytes)")
+				}
 				if headers == nil {
 					headers = map[string]string{}
 				}
@@ -215,7 +273,12 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					headers["Idempotency-Key"] = client.NewIdempotencyKey()
 				}
 			}
-			resp, err := cc.client.Do(context.Background(), op.Method, full, body, headers)
+			if firstBodyOutput != "" {
+				if err := saveCRMFirstWire(firstBodyOutput, body); err != nil {
+					return err
+				}
+			}
+			resp, err := cc.client.Do(cmd.Context(), op.Method, full, body, headers)
 			if err != nil {
 				output.PrintError(cmd.ErrOrStderr(), err, cc.errorFormat)
 				return &AlreadyReported{Err: err}
@@ -231,6 +294,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					return writeDeleteConfirmation(cmd, op, args, cc.format)
 				}
 				return writeMutationConfirmation(cmd, op, args, cc.format)
+			}
+			if isCRMCoreOperation(op) {
+				return printCRMCoreBody(cmd, op, resp.Body, cc.format)
 			}
 			return output.PrintBody(cmd.OutOrStdout(), resp.Body, cc.format)
 		},
@@ -250,8 +316,15 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		}
 		c.Flags().String(p.Name, "", desc)
 	}
+	if hasNativePages || (isCRMCoreOperation(op) && op.Method == "GET" && len(op.PathParams) == 0) {
+		c.Flags().Bool("all", false, "recorre paginación nativa con máximo de páginas y sin prefetch")
+		c.Flags().Int("max-pages", 100, "presupuesto de páginas de --all (1–1000)")
+	}
 	if op.isMutating() {
-		c.Flags().StringVar(&idempotencyKey, "idempotency-key", "", "clave estable para repetir esta misma operación sin duplicarla")
+		c.Flags().StringVar(&idempotencyKey, "idempotency-key", "", "clave exacta del intento; una respuesta ambigua se recupera con GET original")
+		if crmOriginalForWrite(op.Method, op.Path) != "" {
+			c.Flags().StringVar(&firstBodyOutput, "first-body-output", "", "guarda bytes exactos antes del primer envío, archivo nuevo privado 0600 para GET original")
+		}
 	}
 	if op.Body != nil && op.Body.Kind == "json" {
 		c.Flags().StringVarP(&data, "data", "d", "", "cuerpo JSON de la petición (@fichero o - para stdin)")
@@ -305,7 +378,7 @@ func writeBinary(cmd *cobra.Command, body []byte, out string) error {
 func runPaginated(cmd *cobra.Command, cc *cliContext, path string, query url.Values) error {
 	w := cmd.OutOrStdout()
 	enc := json.NewEncoder(w)
-	err := cc.client.Paginate(context.Background(), path, query, func(item json.RawMessage) error {
+	err := cc.client.Paginate(cmd.Context(), path, query, func(item json.RawMessage) error {
 		return enc.Encode(item)
 	})
 	if err != nil {
