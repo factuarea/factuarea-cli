@@ -24,15 +24,20 @@ func ResolveAPIKey(stdinKey, profile string, getenv func(string) string, store S
 	if profile == "" {
 		profile = getenv(EnvProfile)
 	}
-	if profile == "" {
+	selectedProfile := profile != ""
+	if !selectedProfile {
 		profile = "default"
 	}
 
 	if stdinKey != "" {
 		return mk(stdinKey, "stdin", profile), nil
 	}
-	if v := getenv(EnvAPIKey); v != "" {
-		return mk(v, "env", profile), nil
+	// A selected profile binds the request to its stored credential. A generic
+	// environment key must not silently switch the selected company or sandbox.
+	if !selectedProfile {
+		if v := getenv(EnvAPIKey); v != "" {
+			return mk(v, "env", profile), nil
+		}
 	}
 	if store != nil {
 		if k, err := store.GetKey(profile); err == nil && k != "" {
