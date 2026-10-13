@@ -7,9 +7,12 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
+	"github.com/factuarea/factuarea-cli/internal/config"
 	"github.com/factuarea/factuarea-cli/internal/exit"
 	"github.com/factuarea/factuarea-cli/internal/output"
 )
@@ -17,9 +20,14 @@ import (
 const serviceLevelTestUUID = "01900000-0000-7000-8000-000000000001"
 
 func runServiceLevelTestCommand(t *testing.T, serverURL string, args ...string) (string, string, error) {
+	return runServiceLevelTestCommandWithKey(t, serverURL, "fact_test_"+strings.Repeat("a", 24), args...)
+}
+
+func runServiceLevelTestCommandWithKey(t *testing.T, serverURL, apiKey string, args ...string) (string, string, error) {
 	t.Helper()
-	t.Setenv("FACTUAREA_API_KEY", "fact_test_"+strings.Repeat("a", 24))
+	t.Setenv("FACTUAREA_API_KEY", apiKey)
 	t.Setenv("FACTUAREA_BASE_URL", serverURL)
+	t.Setenv("FACTUAREA_PROFILE", "")
 	root := NewRootCmd()
 	var stdout, stderr bytes.Buffer
 	root.SetOut(&stdout)
@@ -51,8 +59,9 @@ func TestServiceLevelSevenNativeRoutesAndOriginalIntent(t *testing.T) {
 					}
 					fmt.Fprintf(w, `{"data":{"id":%q,"version":2}}`, serviceLevelTestUUID)
 				} else if op.paginated {
-					if r.URL.Query().Get("page") != "2" || r.URL.Query().Get("per_page") != "3" || r.URL.Query().Has("cursor") {
-						t.Error("page/per_page wire contract changed")
+					query := r.URL.Query()
+					if query.Get("page") != "2" || query.Get("per_page") != "3" || query.Has("cursor") || query.Has("filters") || len(query) != 2 {
+						t.Error("page/per_page wire contract changed or unsupported filters/cursor were added")
 					}
 					fmt.Fprint(w, `{"data":{"items":[],"total":0,"page":2,"per_page":3}}`)
 				} else {
@@ -97,6 +106,201 @@ func TestServiceLevelSevenNativeRoutesAndOriginalIntent(t *testing.T) {
 	}
 	if count != 7 {
 		t.Fatalf("native discovery requires exactly seven entries, got %d", count)
+	}
+}
+
+func TestServiceLevelHelpAndPaginationRejectNonNativeFiltersAndCursor(t *testing.T) {
+	t.Setenv("FACTUAREA_API_KEY", "")
+	t.Setenv("FACTUAREA_PROFILE", "")
+	var requests int
+	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { requests++ }))
+	defer server.Close()
+	t.Setenv("FACTUAREA_BASE_URL", server.URL)
+
+	for _, args := range [][]string{
+		{"--json", "crm", "service-level", "--help"},
+		{"--json", "crm", "service-level", "calendars", "--help"},
+		{"--json", "crm", "service-level", "history", "--help"},
+	} {
+		root := NewRootCmd()
+		var stdout, stderr bytes.Buffer
+		root.SetOut(&stdout)
+		root.SetErr(&stderr)
+		root.SetArgs(args)
+		if err := root.Execute(); err != nil {
+			t.Fatalf("help failed for %v: %v (%s)", args, err, stderr.String())
+		}
+		text := stdout.String()
+		if strings.Contains(strings.Join(args, " "), "service-level --help") {
+			for _, command := range []string{"status", "history", "calendars", "configure", "pause", "resume", "update-calendar"} {
+				if !strings.Contains(text, command) {
+					t.Fatalf("native command group help omitted %q: %s", command, text)
+				}
+			}
+		}
+		if !strings.Contains(text, "--page") || !strings.Contains(text, "--per-page") || !strings.Contains(text, "--all") {
+			if strings.Contains(strings.Join(args, " "), "calendars") || strings.Contains(strings.Join(args, " "), "history") {
+				t.Fatalf("native page help omitted pagination flags: %s", text)
+			}
+		}
+		if strings.Contains(text, "--cursor") || strings.Contains(text, "--filters") {
+			t.Fatalf("help advertised unsupported query inputs: %s", text)
+		}
+	}
+
+	for _, flag := range []string{"--cursor", "--filters"} {
+		_, _, err := runServiceLevelTestCommand(t, server.URL, "calendars", flag, "opaque")
+		if err == nil || exit.ForError(err) != exit.Usage {
+			t.Fatalf("unsupported native query flag %s was accepted: %v", flag, err)
+		}
+	}
+	if requests != 0 {
+		t.Fatalf("unsupported query input reached the API (%d requests)", requests)
+	}
+}
+
+func TestServiceLevelDryRunValidatesOriginalBodyWithoutCredentialsOrHTTP(t *testing.T) {
+	var requests int
+	server := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { requests++ }))
+	defer server.Close()
+	t.Setenv("FACTUAREA_API_KEY", "")
+	t.Setenv("FACTUAREA_PROFILE", "")
+	t.Setenv("FACTUAREA_BASE_URL", server.URL)
+
+	root := NewRootCmd()
+	var stdout, stderr bytes.Buffer
+	root.SetOut(&stdout)
+	root.SetErr(&stderr)
+	root.SetArgs([]string{"--json", "crm", "service-level", "configure", serviceLevelTestUUID,
+		"--data", serviceLevelExamples["configure"], "--dry-run"})
+	if err := root.Execute(); err != nil {
+		t.Fatalf("dry-run resolved credentials or rejected the native body: %v (%s)", err, stderr.String())
+	}
+	if stdout.String() != serviceLevelExamples["configure"]+"\n" || requests != 0 {
+		t.Fatalf("dry-run rewrote the original JSON or performed I/O: requests=%d stdout=%q", requests, stdout.String())
+	}
+}
+
+func TestServiceLevelCAS409PreservesConflictAndRedactsCredential(t *testing.T) {
+	apiKey := "fact_test_" + strings.Repeat("c", 24)
+	var writes int
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		if r.URL.Path == "/v1/account" {
+			fmt.Fprint(w, `{"data":{"api_key":{"scopes":["crm:write","service_level:write"]}}}`)
+			return
+		}
+		writes++
+		body, _ := io.ReadAll(r.Body)
+		if r.Method != http.MethodPost || r.URL.Path != "/v1/crm/service-tickets/"+serviceLevelTestUUID+"/sla/resume" ||
+			r.Header.Get("Idempotency-Key") != "original-sla-cas-attempt" || string(body) != serviceLevelExamples["resume"] {
+			t.Error("CAS request changed its owner path, original key or exact body")
+		}
+		w.Header().Set("X-Request-Id", apiKey)
+		w.Header().Set("Retry-After", apiKey)
+		w.WriteHeader(http.StatusConflict)
+		fmt.Fprintf(w, `{"error":{"type":"owner_conflict","code":"version_conflict","message":"stale %s","details":{"field_errors":{"expected_version":["stale"]},"diagnostic":"%s"}},"errors":{"cycle_id":["%s"]}}`, apiKey, apiKey, apiKey)
+	}))
+	defer server.Close()
+
+	stdout, stderr, err := runServiceLevelTestCommandWithKey(t, server.URL, apiKey,
+		"resume", serviceLevelTestUUID, "--data", serviceLevelExamples["resume"], "--idempotency-key", "original-sla-cas-attempt")
+	if err == nil || exit.ForError(err) != exit.Conflict || writes != 1 || stdout != "" || !json.Valid([]byte(stderr)) {
+		t.Fatalf("CAS 409 was retried, confirmed or remapped: writes=%d err=%v stdout=%q stderr=%q", writes, err, stdout, stderr)
+	}
+	for _, field := range []string{"version_conflict", "expected_version", `"http_status":409`, `"retry_after":"[REDACTED]"`, `"request_id":"[REDACTED]"`, `"diagnostic":"[REDACTED]"`} {
+		if !strings.Contains(stderr, field) {
+			t.Fatalf("CAS response lost native/redacted field %q: %s", field, stderr)
+		}
+	}
+	if strings.Contains(stdout+stderr, apiKey) {
+		t.Fatal("CAS error disclosed the actual bearer credential")
+	}
+}
+
+func TestServiceLevelSelectedSandboxProfilesKeepCompanyReadsIsolated(t *testing.T) {
+	type fixture struct{ profile, key, company, ticket string }
+	fixtures := []fixture{
+		{"service-level-sandbox-a", "fact_test_" + strings.Repeat("a", 24), "01900000-0000-7000-8000-000000000011", "01900000-0000-7000-8000-000000000021"},
+		{"service-level-sandbox-b", "fact_test_" + strings.Repeat("b", 24), "01900000-0000-7000-8000-000000000012", "01900000-0000-7000-8000-000000000022"},
+	}
+	genericKey := "fact_test_" + strings.Repeat("c", 24)
+	byKey := map[string]fixture{}
+	for _, item := range fixtures {
+		byKey[item.key] = item
+	}
+	var requestsMu sync.Mutex
+	requestsByKey := map[string]int{}
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		key := strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer ")
+		item, ok := byKey[key]
+		if !ok {
+			http.Error(w, `{"error":{"message":"unknown credential"}}`, http.StatusUnauthorized)
+			return
+		}
+		requestsMu.Lock()
+		requestsByKey[key]++
+		requestsMu.Unlock()
+		w.Header().Set("Content-Type", "application/json")
+		if r.URL.Path == "/v1/account" {
+			fmt.Fprint(w, `{"data":{"api_key":{"scopes":["crm:read","service_level:read"]}}}`)
+			return
+		}
+		if r.Method != http.MethodGet || r.URL.Path != "/v1/crm/service-tickets/"+item.ticket+"/sla" || len(r.URL.Query()) != 0 {
+			http.Error(w, `{"error":{"message":"unexpected route or tenant override"}}`, http.StatusBadRequest)
+			return
+		}
+		fmt.Fprintf(w, `{"data":{"id":%q,"company_id":%q,"version":1,"state":"on_track"}}`, item.ticket, item.company)
+	}))
+	defer server.Close()
+
+	configHome := t.TempDir()
+	t.Setenv("XDG_CONFIG_HOME", configHome)
+	t.Setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path="+filepath.Join(configHome, "missing-session-bus"))
+	t.Setenv("DBUS_SYSTEM_BUS_ADDRESS", "unix:path="+filepath.Join(configHome, "missing-system-bus"))
+	t.Setenv("FACTUAREA_API_KEY", genericKey)
+	t.Setenv("FACTUAREA_PROFILE", "")
+	t.Setenv("FACTUAREA_BASE_URL", server.URL)
+	store := config.NewFileStore(filepath.Join(configHome, "factuarea", "config.toml"))
+	for _, item := range fixtures {
+		if err := store.SetKey(item.profile, item.key); err != nil {
+			t.Fatalf("cannot prepare isolated profile fixture: %v", err)
+		}
+	}
+
+	for _, item := range fixtures {
+		t.Run(item.profile, func(t *testing.T) {
+			root := NewRootCmd()
+			var stdout, stderr bytes.Buffer
+			root.SetOut(&stdout)
+			root.SetErr(&stderr)
+			root.SetArgs([]string{"--json", "--profile", item.profile, "crm", "service-level", "status", item.ticket})
+			if err := root.Execute(); err != nil {
+				t.Fatalf("selected tenant read failed: %v; stderr=%s", err, stderr.String())
+			}
+			if !strings.Contains(stdout.String(), item.company) || !strings.Contains(stdout.String(), item.ticket) {
+				t.Fatalf("profile %q returned another company's fixture: %s", item.profile, stdout.String())
+			}
+			for _, other := range fixtures {
+				if other.key != item.key && (strings.Contains(stdout.String(), other.company) || strings.Contains(stdout.String(), other.ticket)) {
+					t.Fatalf("profile %q exposed tenant %s: %s", item.profile, other.company, stdout.String())
+				}
+			}
+			if strings.Contains(stdout.String()+stderr.String(), item.key) || strings.Contains(stdout.String()+stderr.String(), genericKey) {
+				t.Fatal("tenant response disclosed a profile or fallback credential")
+			}
+		})
+	}
+
+	requestsMu.Lock()
+	defer requestsMu.Unlock()
+	for _, item := range fixtures {
+		if requestsByKey[item.key] != 2 {
+			t.Errorf("profile %q used %d requests; want account preflight and one native read", item.profile, requestsByKey[item.key])
+		}
+	}
+	if requestsByKey[genericKey] != 0 {
+		t.Fatalf("selected profiles fell back to the generic credential for %d requests", requestsByKey[genericKey])
 	}
 }
 
