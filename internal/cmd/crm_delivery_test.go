@@ -7,6 +7,10 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -18,8 +22,12 @@ const crmTestOtherID = "019c0511-1111-7111-8111-222222222222"
 const crmTestKey = "cli-original-intention-34"
 
 func crmRun(t *testing.T, server *httptest.Server, args ...string) (string, string, error) {
+	return crmRunWithKey(t, server, "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa", args...)
+}
+
+func crmRunWithKey(t *testing.T, server *httptest.Server, apiKey string, args ...string) (string, string, error) {
 	t.Helper()
-	t.Setenv("FACTUAREA_API_KEY", "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa")
+	t.Setenv("FACTUAREA_API_KEY", apiKey)
 	t.Setenv("FACTUAREA_BASE_URL", server.URL)
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
 	cmd := NewRootCmd()
@@ -30,6 +38,136 @@ func crmRun(t *testing.T, server *httptest.Server, args ...string) (string, stri
 	err := cmd.Execute()
 	return out.String(), errOut.String(), err
 }
+
+func crmInstalledBinary(t *testing.T) string {
+	t.Helper()
+	_, source, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("no pude localizar el módulo del CLI")
+	}
+	moduleRoot := filepath.Clean(filepath.Join(filepath.Dir(source), "../.."))
+	binDir := filepath.Join(t.TempDir(), "bin")
+	if err := os.MkdirAll(binDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	install := exec.Command("go", "install", "./cmd/factuarea")
+	install.Dir = moduleRoot
+	install.Env = crmReplaceEnv(crmBinaryEnv(t, "", ""), "GOBIN", binDir)
+	if output, err := install.CombinedOutput(); err != nil {
+		t.Fatalf("go install de la CLI falló: %v\n%s", err, output)
+	}
+	name := "factuarea"
+	if runtime.GOOS == "windows" {
+		name += ".exe"
+	}
+	binary := filepath.Join(binDir, name)
+	info, err := os.Stat(binary)
+	if err != nil {
+		t.Fatalf("go install no creó el binario: %v", err)
+	}
+	if !info.Mode().IsRegular() || info.Mode().Perm()&0o111 == 0 {
+		t.Fatalf("el binario instalado no es ejecutable: %s (%s)", binary, info.Mode())
+	}
+	return binary
+}
+
+func crmReplaceEnv(env []string, name, value string) []string {
+	prefix := name + "="
+	result := make([]string, 0, len(env)+1)
+	for _, item := range env {
+		if !strings.HasPrefix(item, prefix) {
+			result = append(result, item)
+		}
+	}
+	return append(result, prefix+value)
+}
+
+func crmBinaryEnv(t *testing.T, apiKey, baseURL string) []string {
+	t.Helper()
+	env := os.Environ()
+	for _, name := range []string{"FACTUAREA_API_KEY", "FACTUAREA_BASE_URL", "FACTUAREA_PROFILE", "XDG_CONFIG_HOME"} {
+		env = crmReplaceEnv(env, name, "")
+	}
+	if apiKey != "" {
+		env = crmReplaceEnv(env, "FACTUAREA_API_KEY", apiKey)
+	}
+	if baseURL != "" {
+		env = crmReplaceEnv(env, "FACTUAREA_BASE_URL", baseURL)
+	}
+	return crmReplaceEnv(env, "XDG_CONFIG_HOME", t.TempDir())
+}
+
+func crmRunInstalledBinary(t *testing.T, binary string, apiKey, baseURL string, args ...string) (string, string, error) {
+	t.Helper()
+	command := exec.Command(binary, args...)
+	command.Env = crmBinaryEnv(t, apiKey, baseURL)
+	var stdout, stderr bytes.Buffer
+	command.Stdout = &stdout
+	command.Stderr = &stderr
+	err := command.Run()
+	return stdout.String(), stderr.String(), err
+}
+
+func TestCRMInstalledBinaryHelpAndDryRunUseNoNetworkOrCredentials(t *testing.T) {
+	binary := crmInstalledBinary(t)
+	help, stderr, err := crmRunInstalledBinary(t, binary, "", "", "crm", "leads", "list", "--help")
+	if err != nil || !strings.Contains(help, "--cursor") || !strings.Contains(help, "--filters") || stderr != "" {
+		t.Fatalf("help del binario instalado incompleta: err=%v stdout=%s stderr=%s", err, help, stderr)
+	}
+
+	requests := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { requests++ }))
+	defer server.Close()
+	draft, stderr, err := crmRunInstalledBinary(t, binary, "", server.URL, "crm", "leads", "create", "--data", `{"name":"Draft","email":null}`, "--dry-run", "--json")
+	if err != nil || requests != 0 || !strings.Contains(draft, `"email":null`) || strings.Contains(draft, `"id"`) || stderr != "" {
+		t.Fatalf("dry-run del binario instalado realizó I/O o cambió el borrador: requests=%d err=%v stdout=%s stderr=%s", requests, err, draft, stderr)
+	}
+}
+
+func TestCRMTestSandboxAAndBKeepRequestsAndResultsIsolated(t *testing.T) {
+	testCases := []struct {
+		name   string
+		apiKey string
+		id     string
+	}{
+		{name: "sandbox-A", apiKey: "fact_test_aaaaaaaaaaaaaaaaaaaaaaaa", id: crmTestID},
+		{name: "sandbox-B", apiKey: "fact_test_bbbbbbbbbbbbbbbbbbbbbbbb", id: crmTestOtherID},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			requests := 0
+			server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				requests++
+				if got := r.Header.Get("Authorization"); got != "Bearer "+tc.apiKey {
+					t.Errorf("la credencial de %s cruzó el límite del fixture: %q", tc.name, got)
+				}
+				w.Header().Set("Content-Type", "application/json")
+				if r.URL.Path == "/v1/account" {
+					crmAccount(w, "crm_leads:read")
+					return
+				}
+				if r.URL.Path != "/v1/crm/leads" || r.URL.Query().Get("filters") != `{"score_min":0}` || r.URL.Query().Get("cursor") != "opaque+/cursor==" {
+					t.Errorf("el request de %s se salió del contrato: %s", tc.name, r.URL.String())
+				}
+				_, _ = io.WriteString(w, `{"data":{"data":[{"id":"`+tc.id+`","name":"`+tc.name+`"}],"has_more":false,"next_cursor":null}}`)
+			}))
+			defer server.Close()
+
+			stdout, stderr, err := crmRunWithKey(t, server, tc.apiKey, "crm", "leads", "list", "--filters", `{"score_min":0}`, "--cursor", "opaque+/cursor==", "--json")
+			if err != nil || requests != 2 || !strings.Contains(stdout, tc.id) || !strings.Contains(stdout, tc.name) || strings.Contains(stdout+stderr, "fact_test_") {
+				t.Fatalf("el CLI mezcló o filtró datos entre sandboxes: requests=%d err=%v stdout=%s stderr=%s", requests, err, stdout, stderr)
+			}
+			otherID := crmTestID
+			if tc.id == crmTestID {
+				otherID = crmTestOtherID
+			}
+			if strings.Contains(stdout, otherID) {
+				t.Fatalf("el resultado de %s incluyó la identidad del otro sandbox: %s", tc.name, stdout)
+			}
+		})
+	}
+}
+
 func crmAccount(w http.ResponseWriter, scopes ...string) {
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(map[string]any{"data": map[string]any{"api_key": map[string]any{"scopes": scopes}}})
