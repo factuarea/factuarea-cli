@@ -182,7 +182,7 @@ func TestCRMKnowledgeDiscoverySchemasScopesAndOriginalReceiptFlags(t *testing.T)
 	count := 0
 	commands := map[string]bool{}
 	for _, entry := range entries {
-		if len(entry.ResponseSchemas) == 0 {
+		if len(entry.ResponseSchemas) == 0 || entry.AuthRealm != "" {
 			continue
 		}
 		count++

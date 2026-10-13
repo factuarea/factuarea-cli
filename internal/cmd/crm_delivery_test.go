@@ -50,7 +50,7 @@ func TestCRMCommandsDiscoverOnlyNativeOperations(t *testing.T) {
 	count := 0
 	nativeIDs := map[string]bool{}
 	for _, entry := range entries {
-		if entry.CrmOperation == "" {
+		if entry.CrmOperation == "" || entry.AuthRealm != "" {
 			continue
 		}
 		count++

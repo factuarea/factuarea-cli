@@ -59,5 +59,11 @@ func NewRootCmd() *cobra.Command {
 		newDocsCmd(),
 	)
 	registerGeneratedCommands(root)
+	registerNativeOwnerCommands(root)
+	registerTaskTimeBillingCommands(root)
+	registerServiceInsightsCommands(root)
+	registerServiceFormReferencesCommand(root)
+	registerMailboxWriteOriginalCommands(root)
+	registerConversationReadCommands(root)
 	return root
 }
