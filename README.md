@@ -312,6 +312,36 @@ Los borrados de proyectos, columnas, campos personalizados, etiquetas, tareas (t
 
 **`task-timers` no es el fichaje de jornada.** El temporizador y las entradas de `tasks time-entries` registran el tiempo dedicado a una tarea, para medirlo y facturarlo; no son el registro de jornada del módulo de control horario (`factuarea time-entries clock-in`, arriba), que tiene su propio scope y su propio registro inalterable.
 
+### Documentos de control del transporte (DeCA)
+
+Con el módulo **documentos de control** (`transport_documents`, desde el plan Profesional y junto al de albaranes), el CLI expone el documento electrónico de control administrativo (DeCA) del transporte de mercancías por carretera: 17 comandos bajo `factuarea transport-documents`. Los scopes son `transport_documents:read|write|transition|delete`; el PDF de una versión pide `pdfs:read`, y el justificante de emisión `transport_documents:read`, porque contiene el registro de emisión.
+
+```bash
+# Alta en borrador a partir de albaranes (un envío por albarán) y emisión con el siguiente número de la serie DC.
+factuarea transport-documents create --json -d '{
+  "company_role": "shipper",
+  "carrier": {"contact_id": "<contact_id>"},
+  "delivery_note_ids": ["<delivery_note_id>"],
+  "vehicle": {"tractor_plate": "1234BCD"}
+}'
+factuarea transport-documents issue <id> --confirm <id>
+
+# Listar y filtrar (el listado se llama `index`, como su operación en la API).
+factuarea transport-documents index --status issued --company_role shipper --paginate --json
+
+# Modificar durante el servicio: mismo número, misma URL y mismo QR.
+factuarea transport-documents modify <id> --reason "Cambio de matrícula" --data-origin company \
+  --vehicle.tractor-plate 5678FGH --confirm <id>
+
+# Descargas: el PDF (versión actual o --version N), el QR (svg o png) y el justificante de emisión.
+factuarea transport-documents pdf <id> -o deca.pdf
+factuarea transport-documents qr <id> --format png -o deca-qr.png
+factuarea transport-documents issuance-proof <id> -o justificante.pdf
+factuarea transport-documents evidence <id> --json      # el registro de emisión, en JSON
+```
+
+Emitir (`issue`), modificar (`modify`), anular (`cancel`), sustituir (`supersede`) y enviar (`send`) son irreversibles: sin terminal interactiva hay que confirmarlos con `--confirm <id>`. Cerrar (`close`) y reabrir (`reopen`) no piden confirmación, y borrar (`delete`) solo admite borradores.
+
 ## Devloop (webhooks)
 
 Prueba tus webhooks en local sin desplegar ni ngrok, al estilo del CLI de Stripe:
