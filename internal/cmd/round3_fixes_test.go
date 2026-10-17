@@ -18,7 +18,7 @@ func TestMultipartMissingFileIsUsageError(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := runCmd(t, srv.URL, "products", "gallery", "upload", "prod_1", "--skip-scope-check")
+	_, err := runCmd(t, srv.URL, "products", "gallery", "upload", "--company", "acme_co", "prod_1", "--skip-scope-check")
 	if err == nil || !strings.Contains(err.Error(), "--file-<campo>") {
 		t.Fatalf("esperaba error de uso por falta de --file-image, got %v", err)
 	}
