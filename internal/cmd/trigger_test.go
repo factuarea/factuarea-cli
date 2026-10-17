@@ -17,7 +17,7 @@ func TestTriggerRejectsLiveKey(t *testing.T) {
 	var out bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&out)
-	root.SetArgs([]string{"trigger", "invoice.paid"})
+	root.SetArgs([]string{"trigger", "--company", "acme_co", "invoice.paid"})
 	err := root.Execute()
 	if err == nil {
 		t.Fatal("una key fact_live_ debe ser rechazada por el guard sandbox")
@@ -44,7 +44,7 @@ func TestTriggerListShowsSupported(t *testing.T) {
 func TestTriggerContactCreatedHitsAPI(t *testing.T) {
 	var posted bool
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/v1/contacts") {
+		if r.Method == http.MethodPost && strings.HasPrefix(r.URL.Path, "/v1/companies/acme_co/contacts") {
 			posted = true
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -59,11 +59,11 @@ func TestTriggerContactCreatedHitsAPI(t *testing.T) {
 	var out bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&out)
-	root.SetArgs([]string{"trigger", "contact.created"})
+	root.SetArgs([]string{"trigger", "--company", "acme_co", "contact.created"})
 	if err := root.Execute(); err != nil {
 		t.Fatalf("execute: %v", err)
 	}
 	if !posted {
-		t.Fatal("trigger contact.created debe hacer POST /v1/contacts")
+		t.Fatal("trigger contact.created debe hacer POST /v1/companies/acme_co/contacts")
 	}
 }

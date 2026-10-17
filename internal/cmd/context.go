@@ -28,7 +28,11 @@ type cliContext struct {
 
 func (cc *cliContext) scopes(ctx context.Context) ([]string, error) {
 	cc.scopesOnce.Do(func() {
-		resp, err := cc.client.Do(ctx, "GET", "/v1/account", nil, nil)
+		// La operación de identidad de la credencial la nombra el CONTRATO
+		// (`identityPath()`), no un literal: el eje la movió de `/v1/account` a
+		// `/v1/me` y un path escrito a mano se habría quedado apuntando a una
+		// ruta que la v1 ya no declara.
+		resp, err := cc.client.Do(ctx, "GET", identityPath(), nil, nil)
 		if err != nil {
 			cc.scopesErr = err
 			return

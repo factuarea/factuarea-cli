@@ -22,7 +22,7 @@ func TestScannerUploadSendsAllOriginals(t *testing.T) {
 		t.Fatal(err)
 	}
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/purchase_scans" || r.Method != "POST" {
+		if r.URL.Path != "/v1/companies/acme_co/purchase-scans" || r.Method != "POST" {
 			t.Errorf("unexpected request %s %s", r.Method, r.URL.Path)
 		}
 		if got := r.Header.Get("Idempotency-Key"); got != "scanner-batch-key-001" {
@@ -44,7 +44,7 @@ func TestScannerUploadSendsAllOriginals(t *testing.T) {
 		_, _ = w.Write([]byte(`{"data":{"accepted":[{"id":"` + scannerTestID + `","item_index":0}],"rejected":[],"idempotent_replay":false}}`))
 	}))
 	defer srv.Close()
-	out, err := runCmd(t, srv.URL, "purchase-scans", "create", "--file-files", first, "--file-files", second, "--idempotency-key", "scanner-batch-key-001", "--skip-scope-check", "--json")
+	out, err := runCmd(t, srv.URL, "purchase-scans", "create", "--company", "acme_co", "--file-files", first, "--file-files", second, "--idempotency-key", "scanner-batch-key-001", "--skip-scope-check", "--json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,7 +72,7 @@ func TestScannerArchiveSendsVersionAndIdempotency(t *testing.T) {
 		_, _ = w.Write([]byte(`{"data":{"status":"archived"}}`))
 	}))
 	defer srv.Close()
-	if _, err := runCmd(t, srv.URL, "purchase-scans", "archive", scannerTestID, "--expected-version", "4", "--skip-scope-check"); err != nil {
+	if _, err := runCmd(t, srv.URL, "purchase-scans", "archive", "--company", "acme_co", scannerTestID, "--expected-version", "4", "--skip-scope-check"); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -80,7 +80,7 @@ func TestScannerArchiveSendsVersionAndIdempotency(t *testing.T) {
 func TestScannerSourceDownloadsOriginalBytes(t *testing.T) {
 	want := []byte("original-image")
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/purchase_scans/"+scannerTestID+"/source" {
+		if r.URL.Path != "/v1/companies/acme_co/purchase-scans/"+scannerTestID+"/source" {
 			t.Errorf("path %s", r.URL.Path)
 		}
 		w.Header().Set("Content-Type", "image/png")
@@ -88,7 +88,7 @@ func TestScannerSourceDownloadsOriginalBytes(t *testing.T) {
 	}))
 	defer srv.Close()
 	path := filepath.Join(t.TempDir(), "source.png")
-	if _, err := runCmd(t, srv.URL, "purchase-scans", "source", scannerTestID, "-o", path, "--skip-scope-check"); err != nil {
+	if _, err := runCmd(t, srv.URL, "purchase-scans", "source", "--company", "acme_co", scannerTestID, "-o", path, "--skip-scope-check"); err != nil {
 		t.Fatal(err)
 	}
 	got, err := os.ReadFile(path)

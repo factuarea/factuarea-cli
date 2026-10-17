@@ -215,7 +215,11 @@ func TestTransportDocumentsMarksArgsAndFlags(t *testing.T) {
 		if wantArgs == nil {
 			wantArgs = []string{}
 		}
-		if gotArgs := manifestStringList(e, "args"); strings.Join(gotArgs, ",") != strings.Join(wantArgs, ",") {
+		gotArgs := manifestStringList(e, "args")
+		if opt, _ := e["optional_args"].(map[string]any); opt["company"] == "--company" && len(gotArgs) > 0 && gotArgs[0] == "company" {
+			gotArgs = gotArgs[1:]
+		}
+		if strings.Join(gotArgs, ",") != strings.Join(wantArgs, ",") {
 			t.Errorf("%s: args = %v, quiero %v", want.command, gotArgs, wantArgs)
 		}
 		have := map[string]bool{}
@@ -349,7 +353,7 @@ func TestTransportDocumentsTransitionsReachTheAPI(t *testing.T) {
 			if _, stderr, err := runTasksCLI(t, args...); err != nil {
 				t.Fatalf("execute: %v (stderr: %s)", err, stderr)
 			}
-			if want := "/v1/transport_documents/" + id + "/" + tc.action; method != http.MethodPost || path != want {
+			if want := "/v1/companies/acme_co/transport-documents/" + id + "/" + tc.action; method != http.MethodPost || path != want {
 				t.Fatalf("petición inesperada: %s %s, quiero POST %s", method, path, want)
 			}
 			if idempotency == "" {
@@ -380,11 +384,11 @@ func TestTransportDocumentsBinaryDownloadsWriteTheFileVerbatim(t *testing.T) {
 		served      []byte
 	}{
 		{"pdf de una versión", []string{"pdf", id, "--version", "2", "--download", "1"}, "pdfs:read",
-			"/v1/transport_documents/" + id + "/pdf", "download=1&version=2", "application/pdf", pdf},
+			"/v1/companies/acme_co/transport-documents/" + id + "/pdf", "download=1&version=2", "application/pdf", pdf},
 		{"qr en png", []string{"qr", id, "--format", "png"}, "transport_documents:read",
-			"/v1/transport_documents/" + id + "/qr", "format=png", "image/png", png},
+			"/v1/companies/acme_co/transport-documents/" + id + "/qr", "format=png", "image/png", png},
 		{"justificante de emisión", []string{"issuance-proof", id}, "transport_documents:read",
-			"/v1/transport_documents/" + id + "/issuance_proof", "", "application/pdf", pdf},
+			"/v1/companies/acme_co/transport-documents/" + id + "/issuance-proof", "", "application/pdf", pdf},
 	}
 
 	for _, tc := range cases {
