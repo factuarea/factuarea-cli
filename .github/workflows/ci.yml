@@ -40,6 +40,10 @@ jobs:
           fi
 
       - name: go test
+        env:
+          # El parser del contrato bajo -race necesita recoger memoria antes
+          # de alcanzar el limite fisico del runner.
+          GOMEMLIMIT: 3GiB
         run: go test ./... -race -count=1
 
   drift:

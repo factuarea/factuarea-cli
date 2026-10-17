@@ -157,8 +157,9 @@ factuarea commands --json | jq '.[] | select(.operation_id | startswith("public-
 
 ### Control horario (workforce)
 
-Con el add-on de **control horario** activo (módulo `control_horario`), el CLI
-expone los recursos de jornada, cada uno con su scope fino (`employees:*`,
+El módulo de **control horario** (`control_horario`) viene incluido en el plan
+desde Profesional; una clave solo puede llevar sus scopes si la empresa tiene el
+módulo. Con él, el CLI expone los recursos de jornada, cada uno con su scope fino (`employees:*`,
 `time_entries:*`, `absences:*`, `work_schedules:*`, `presence:read`,
 `holidays:read`, `payroll_exports:*`): `employees`, `employee-invitations`,
 `employee-seats`, `work-schedules`, `time-entries`, `time-corrections`,
@@ -166,6 +167,12 @@ expone los recursos de jornada, cada uno con su scope fino (`employees:*`,
 `payroll-export-formats`, `absence-types`, `absence-policies`,
 `absence-balances`, `absence-requests`, `absence-calendar`, `presence`,
 `holidays` y `gestoria workforce-summary`.
+
+`employee-seats` es el add-on de facturación por empleado: no concede el módulo,
+solo factura los asientos. Dar de alta o reactivar un empleado cobra su asiento
+siempre que el plan factura (quedan exentos Enterprise, las empresas gestionadas
+y el periodo de prueba) y, sin método de pago, responde `402`
+`employee_seat_payment_method_required`.
 
 ```bash
 # Fichar entrada y salida (cada asiento encadena su huella — RD-ley 8/2019)
@@ -187,15 +194,17 @@ factuarea monthly-time-record-closes export --company acme_co <uuid> --format rd
 
 ### Automatizaciones (automations)
 
-Con el add-on de **automatizaciones** activo (módulo `automations`, planes
-`empresario` y `enterprise`), el CLI expone el motor de reglas con sus cuatro
+Con el módulo de **automatizaciones** activo (`automations`, planes **Profesional**,
+**Avanzado** y **Enterprise**; slugs `empresario`, `integral` y `enterprise`), el
+CLI expone el motor de reglas con sus cuatro
 recursos y sus scopes finos (`automations:read` en 8 comandos,
 `automations:write` en 6, `automations:delete` en 1 y `automation_runs:read` en
 3): el catálogo de metadatos (`automations catalog show` y
 `automations catalog trigger-fields`), las reglas (`automations rules`, con su
 historial en `automations rules versions`), las ejecuciones (`automations runs`,
 con su detalle por paso en `automations runs steps`) y el consumo frente al
-presupuesto del plan (`automations usage show`).
+presupuesto del plan (`automations usage show`). Las cuotas de Enterprise se
+acuerdan según contrato; consulta el consumo y los límites vigentes con ese comando.
 
 ```bash
 # Qué se puede automatizar: disparadores, operadores y acciones registradas.
@@ -620,6 +629,36 @@ factuarea projects columns delete <project_id> <column_id> \
 Los borrados de proyectos, columnas, campos personalizados, etiquetas, tareas (también `tasks bulk-delete`), comentarios, adjuntos y entradas de tiempo son irreversibles y piden `--confirm`; las mutaciones generan la cabecera `Idempotency-Key` si no pasas `--idempotency-key`.
 
 **`task-timers` no es el fichaje de jornada.** El temporizador y las entradas de `tasks time-entries` registran el tiempo dedicado a una tarea, para medirlo y facturarlo; no son el registro de jornada del módulo de control horario (`factuarea time-entries clock-in`, arriba), que tiene su propio scope y su propio registro inalterable.
+
+### Documentos de control del transporte (DeCA)
+
+Con el módulo **documentos de control** (`transport_documents`, desde el plan Profesional y junto al de albaranes), el CLI expone el documento electrónico de control administrativo (DeCA) del transporte de mercancías por carretera: 17 comandos bajo `factuarea transport-documents`. Los scopes son `transport_documents:read|write|transition|delete`; el PDF de una versión pide `pdfs:read`, y el justificante de emisión `transport_documents:read`, porque contiene el registro de emisión.
+
+```bash
+# Alta en borrador a partir de albaranes (un envío por albarán) y emisión con el siguiente número de la serie DC.
+factuarea transport-documents create --company acme_co --json -d '{
+  "company_role": "shipper",
+  "carrier": {"contact_id": "<contact_id>"},
+  "delivery_note_ids": ["<delivery_note_id>"],
+  "vehicle": {"tractor_plate": "1234BCD"}
+}'
+factuarea transport-documents issue --company acme_co <id> --confirm <id>
+
+# Listar y filtrar (el listado se llama `index`, como su operación en la API).
+factuarea transport-documents index --company acme_co --status issued --company_role shipper --paginate --json
+
+# Modificar durante el servicio: mismo número, misma URL y mismo QR.
+factuarea transport-documents modify --company acme_co <id> --reason "Cambio de matrícula" --data-origin company \
+  --vehicle.tractor-plate 5678FGH --confirm <id>
+
+# Descargas: el PDF (versión actual o --version N), el QR (svg o png) y el justificante de emisión.
+factuarea transport-documents pdf --company acme_co <id> -o deca.pdf
+factuarea transport-documents qr --company acme_co <id> --format png -o deca-qr.png
+factuarea transport-documents issuance-proof --company acme_co <id> -o justificante.pdf
+factuarea transport-documents evidence --company acme_co <id> --json      # el registro de emisión, en JSON
+```
+
+Emitir (`issue`), modificar (`modify`), anular (`cancel`), sustituir (`supersede`) y enviar (`send`) son irreversibles: sin terminal interactiva hay que confirmarlos con `--confirm <id>`. Cerrar (`close`) y reabrir (`reopen`) no piden confirmación, y borrar (`delete`) solo admite borradores.
 
 ## Devloop (webhooks)
 

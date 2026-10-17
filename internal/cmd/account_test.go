@@ -126,7 +126,7 @@ func requireUsageError(t *testing.T, err error, what string) {
 	}
 }
 
-// TestAccountAxisClassificationFollowsInventoryC mide las 74 operaciones bajo
+// TestAccountAxisClassificationFollowsInventoryC mide las 76 operaciones bajo
 // `/accounts` del documento embebido contra las cinco clases de la tabla.
 func TestAccountAxisClassificationFollowsInventoryC(t *testing.T) {
 	var total, root, resource, explicit, read, write int
@@ -167,7 +167,7 @@ func TestAccountAxisClassificationFollowsInventoryC(t *testing.T) {
 		}
 	}
 	got := [6]int{total, read, write, explicit, resource, root}
-	want := [6]int{74, 28, 32, 3, 6, 5}
+	want := [6]int{76, 29, 32, 3, 6, 6}
 	if got != want {
 		t.Fatalf("[total lectura escritura irreversible recurso raíz] = %v, want %v (sección C del inventario)", got, want)
 	}
