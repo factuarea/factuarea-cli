@@ -11,6 +11,8 @@ anteriores (hasta `v0.4.0`) no tienen entrada aquí.
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-10-17
+
 El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spec/openapi.json` embebe el documento de **508 operaciones** en **418 paths** (digest canónico `811b3091237099073e8b5bbd0aa5c60ae8ff7c97202508c7c3cc2516ce0ad64e`) y `internal/cmd/resources_gen.go` se ha regenerado entero desde él.
 
 ### Cambiado — rotura
@@ -176,4 +178,5 @@ El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spe
   `deliveries`), `account request-logs`, `account nif-transfers` y la hoja
   `account provisioning-usage`.
 
-[Unreleased]: https://github.com/factuarea/factuarea-cli/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/factuarea/factuarea-cli/compare/v0.9.0...HEAD
+[0.9.0]: https://github.com/factuarea/factuarea-cli/compare/v0.8.0...v0.9.0
