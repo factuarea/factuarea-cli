@@ -60,24 +60,24 @@ type automationsCommand struct {
 }
 
 var automationsSurface = []automationsCommand{
-	{command: "factuarea automations catalog show", scope: "automations:read"},
-	{command: "factuarea automations catalog trigger-fields", scope: "automations:read", args: []string{"trigger"}},
-	{command: "factuarea automations rules list", scope: "automations:read", paginated: true},
-	{command: "factuarea automations rules create", scope: "automations:write"},
-	{command: "factuarea automations rules show", scope: "automations:read", args: []string{"rule"}},
-	{command: "factuarea automations rules update", scope: "automations:write", args: []string{"rule"}},
-	{command: "factuarea automations rules delete", scope: "automations:delete", args: []string{"rule"}, irreversible: true},
-	{command: "factuarea automations rules activate", scope: "automations:write", args: []string{"rule"}},
-	{command: "factuarea automations rules pause", scope: "automations:write", args: []string{"rule"}},
-	{command: "factuarea automations rules dry-run", scope: "automations:read", args: []string{"rule"}},
-	{command: "factuarea automations rules versions list", scope: "automations:read", args: []string{"rule"}, paginated: true},
-	{command: "factuarea automations rules versions show", scope: "automations:read", args: []string{"rule", "version"}},
-	{command: "factuarea automations runs list", scope: "automation_runs:read", paginated: true},
-	{command: "factuarea automations runs show", scope: "automation_runs:read", args: []string{"run"}},
-	{command: "factuarea automations runs replay", scope: "automations:write", args: []string{"run"}, irreversible: true},
-	{command: "factuarea automations runs steps list", scope: "automation_runs:read", args: []string{"run"}, paginated: true},
-	{command: "factuarea automations runs steps replay", scope: "automations:write", args: []string{"run", "step_index"}, irreversible: true},
-	{command: "factuarea automations usage show", scope: "automations:read"},
+	{command: "factuarea automations catalog show", scope: "automations:read", args: []string{"company"}},
+	{command: "factuarea automations catalog trigger-fields", scope: "automations:read", args: []string{"company", "trigger"}},
+	{command: "factuarea automations rules list", scope: "automations:read", args: []string{"company"}, paginated: true},
+	{command: "factuarea automations rules create", scope: "automations:write", args: []string{"company"}},
+	{command: "factuarea automations rules show", scope: "automations:read", args: []string{"company", "rule"}},
+	{command: "factuarea automations rules update", scope: "automations:write", args: []string{"company", "rule"}},
+	{command: "factuarea automations rules delete", scope: "automations:delete", args: []string{"company", "rule"}, irreversible: true},
+	{command: "factuarea automations rules activate", scope: "automations:write", args: []string{"company", "rule"}},
+	{command: "factuarea automations rules pause", scope: "automations:write", args: []string{"company", "rule"}},
+	{command: "factuarea automations rules dry-run", scope: "automations:read", args: []string{"company", "rule"}},
+	{command: "factuarea automations rules versions list", scope: "automations:read", args: []string{"company", "rule"}, paginated: true},
+	{command: "factuarea automations rules versions show", scope: "automations:read", args: []string{"company", "rule", "version"}},
+	{command: "factuarea automations runs list", scope: "automation_runs:read", args: []string{"company"}, paginated: true},
+	{command: "factuarea automations runs show", scope: "automation_runs:read", args: []string{"company", "run"}},
+	{command: "factuarea automations runs replay", scope: "automations:write", args: []string{"company", "run"}, irreversible: true},
+	{command: "factuarea automations runs steps list", scope: "automation_runs:read", args: []string{"company", "run"}, paginated: true},
+	{command: "factuarea automations runs steps replay", scope: "automations:write", args: []string{"company", "run", "step_index"}, irreversible: true},
+	{command: "factuarea automations usage show", scope: "automations:read", args: []string{"company"}},
 }
 
 // automationsScopeTally es el reparto de ámbitos congelado. Suma 18: son 8 de
@@ -294,11 +294,11 @@ func TestAutomationsRulesListJSONOutputIsCleanOnStdout(t *testing.T) {
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.URL.Path == "/v1/account" {
+		if r.URL.Path == identityPath() {
 			_, _ = w.Write([]byte(`{"data":{"api_key":{"scopes":["automations:read"]}}}`))
 			return
 		}
-		if r.URL.Path != "/v1/automations/rules" {
+		if r.URL.Path != "/v1/companies/acme_co/automations/rules" {
 			t.Errorf("path inesperado: %s %s", r.Method, r.URL.Path)
 		}
 		w.Header().Set("X-Request-Id", "req_automations_1")
@@ -312,7 +312,7 @@ func TestAutomationsRulesListJSONOutputIsCleanOnStdout(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	root.SetOut(&stdout)
 	root.SetErr(&stderr)
-	root.SetArgs([]string{"automations", "rules", "list", "--json", "--verbose"})
+	root.SetArgs([]string{"automations", "rules", "list", "--company", "acme_co", "--json", "--verbose"})
 	if err := root.Execute(); err != nil {
 		t.Fatalf("execute: %v (stderr: %s)", err, stderr.String())
 	}
@@ -338,11 +338,11 @@ func TestAutomationsRunsListFollowsCursor(t *testing.T) {
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.URL.Path == "/v1/account" {
+		if r.URL.Path == identityPath() {
 			_, _ = w.Write([]byte(`{"data":{"api_key":{"scopes":["automation_runs:read"]}}}`))
 			return
 		}
-		if r.URL.Path != "/v1/automations/runs" {
+		if r.URL.Path != "/v1/companies/acme_co/automations/runs" {
 			t.Errorf("path inesperado: %s %s", r.Method, r.URL.Path)
 			return
 		}
@@ -365,7 +365,7 @@ func TestAutomationsRunsListFollowsCursor(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	root.SetOut(&stdout)
 	root.SetErr(&stderr)
-	root.SetArgs([]string{"automations", "runs", "list", "--paginate", "--json"})
+	root.SetArgs([]string{"automations", "runs", "list", "--company", "acme_co", "--paginate", "--json"})
 	if err := root.Execute(); err != nil {
 		t.Fatalf("execute: %v (stderr: %s)", err, stderr.String())
 	}
@@ -415,7 +415,7 @@ func TestAutomationsRuleDeleteRefusesWithoutConfirm(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	root.SetOut(&stdout)
 	root.SetErr(&stderr)
-	root.SetArgs([]string{"automations", "rules", "delete", "aut_rule_123", "--skip-scope-check", "--no-input"})
+	root.SetArgs([]string{"automations", "rules", "delete", "--company", "acme_co", "aut_rule_123", "--skip-scope-check", "--no-input"})
 	err := root.Execute()
 
 	if err == nil || !strings.Contains(err.Error(), "--confirm") {

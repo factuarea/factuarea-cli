@@ -49,9 +49,36 @@ make generate        # baja el openapi vivo de prod y regenera resources_gen.go
 make generate-dev
 ```
 
-> **Elige la fuente a conciencia.** `GET https://api.factuarea.com/v1/openapi.json` (el `SPEC_URL` por defecto) sirve la spec completa que el backend genera en runtime, así que `make generate` es fiable. Lo que da es la superficie **de producción**, y producción va por detrás de `develop`: si el CLI ya embebe recursos que aún no se han desplegado, regenerar contra prod los BORRA. Para una release que deba adelantarse al deploy, usa `make generate-dev` (`scramble:export` del backend local).
+> **Elige la fuente a conciencia.** `GET https://api.factuarea.com/v1/openapi.json` (el `SPEC_URL` por defecto) sirve la spec completa que el backend genera en runtime, así que `make generate` es fiable. Lo que da es la superficie **de producción**, y producción va por detrás de `develop`: si el CLI ya embebe recursos que aún no se han desplegado, regenerar contra prod los BORRA. Para una release que deba adelantarse al deploy, usa `make generate-dev` (`php artisan public-api:export-spec` del backend local, **no** `scramble:export`: el primero aplica el transformador de webhooks y el segundo deja el spec embebido sin el bloque `webhooks` que el endpoint vivo sí sirve).
 >
 > El `spec drift-guard` de CI compara lo embebido con el spec vivo, pero es `continue-on-error: true` y trata "develop adelantado a prod" como resultado normal: su verde **no** demuestra paridad con producción. Si necesitas saber qué falta en prod, lee su log.
+
+### Prerrequisito vigente: la superficie del ERP omnicanal
+
+El spec embebido de `internal/spec/openapi.json` está fijado al **contrato
+público congelado** que incluye el ERP omnicanal: **830 operaciones en 666
+paths** (digest canónico del documento
+`17692e50578a8d5c42a3bd1abba1f97d496f6470f9c5e971bdbf92404374f24a`, el que declara
+`internal/cmd/testdata/v1-command-tree-manifest.json`). La foto anterior
+declaraba 664 operaciones: el delta es **+166**, todo el ERP.
+
+**Mientras esa superficie no esté desplegada en producción, `make generate` es
+destructivo**: `https://api.factuarea.com/v1/openapi.json` sigue sirviendo el
+contrato anterior, así que regenerar contra él retiraría del binario las 166
+operaciones nuevas. El orden correcto es:
+
+1. desplegar el ERP a producción;
+2. comprobar que el contrato publicado ya declara 830 operaciones
+   (`curl -fsSL https://api.factuarea.com/v1/openapi.json | jq '[.paths[] | keys[]] | length'`);
+3. sólo entonces `make generate`, y volver a dejar en verde el contraste del
+   árbol con
+   `go test ./internal/cmd/ -run TestCommandTreeMatchesGolden -update-command-tree`;
+4. etiquetar la release.
+
+Si el paso 2 mide menos de 830, **para**: la release se corta con
+`make generate-from-file SPEC_FILE=<contrato congelado>` y el paso 3 se pospone.
+El `spec drift-guard` de CI **no** protege de esto: es `continue-on-error` y su
+rojo es el resultado esperado mientras dure la ventana.
 
 ## Fase 2 (pendiente)
 

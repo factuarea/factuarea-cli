@@ -51,7 +51,7 @@ func TestListenForwardsNewEventsSigned(t *testing.T) {
 	defer cancel()
 
 	root := NewRootCmd()
-	root.SetArgs([]string{"listen", "--forward-to", local.URL, "--poll-interval", "20ms", "--exit-after", "10s"})
+	root.SetArgs([]string{"listen", "--company", "acme_co", "--forward-to", local.URL, "--poll-interval", "20ms", "--exit-after", "10s"})
 	done := make(chan error, 1)
 	go func() { done <- root.ExecuteContext(ctx) }()
 
@@ -125,7 +125,7 @@ func TestListenDoesNotReplayPreexistingEvents(t *testing.T) {
 	defer cancel()
 
 	root := NewRootCmd()
-	root.SetArgs([]string{"listen", "--forward-to", local.URL, "--poll-interval", "20ms", "--exit-after", "10s"})
+	root.SetArgs([]string{"listen", "--company", "acme_co", "--forward-to", local.URL, "--poll-interval", "20ms", "--exit-after", "10s"})
 	done := make(chan error, 1)
 	go func() { done <- root.ExecuteContext(ctx) }()
 

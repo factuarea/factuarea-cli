@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -421,6 +422,9 @@ func TestTasksPositionalArgsAndQueryFlags(t *testing.T) {
 		}
 
 		gotArgs := manifestStringList(e, "args")
+		if opt, _ := e["optional_args"].(map[string]any); opt["company"] == "--company" && len(gotArgs) > 0 && gotArgs[0] == "company" {
+			gotArgs = gotArgs[1:]
+		}
 		wantArgs := want.args
 		if wantArgs == nil {
 			wantArgs = []string{}
@@ -670,14 +674,14 @@ func TestTasksCustomFieldsSetDeclaresAUnionValue(t *testing.T) {
 	}
 }
 
-// tasksTestServer levanta un servidor que contesta el `GET /v1/account` de la
+// tasksTestServer levanta un servidor que contesta el `GET /v1/me` de la
 // comprobación de scopes y delega el resto en `handle`.
 func tasksTestServer(t *testing.T, scopes string, handle func(w http.ResponseWriter, r *http.Request)) {
 	t.Helper()
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		if r.URL.Path == "/v1/account" {
+		if r.URL.Path == "/v1/me" {
 			_, _ = w.Write([]byte(`{"data":{"api_key":{"scopes":[` + scopes + `]}}}`))
 			return
 		}
@@ -695,7 +699,12 @@ func runTasksCLI(t *testing.T, args ...string) (stdout, stderr string, err error
 	var out, errOut bytes.Buffer
 	root.SetOut(&out)
 	root.SetErr(&errOut)
+	if !slices.Contains(args, "acme_co") {
+		args = append(args, "--company", "acme_co")
+	}
 	root.SetArgs(args)
+	resetCompanyResolution()
+	t.Cleanup(resetCompanyResolution)
 	err = root.Execute()
 	return out.String(), errOut.String(), err
 }
@@ -741,7 +750,7 @@ func TestTasksCreateSendsTheEntityLinkInTheBody(t *testing.T) {
 				t.Fatalf("execute: %v (stderr: %s)", err, stderr)
 			}
 
-			if method != http.MethodPost || path != "/v1/tasks" {
+			if method != http.MethodPost || path != "/v1/companies/acme_co/tasks" {
 				t.Fatalf("petición inesperada: %s %s", method, path)
 			}
 			if body["project_id"] != projectID || body["title"] != "Llamar al cliente" {
@@ -873,7 +882,7 @@ func TestTasksSearchFollowsCursorAndSendsFilters(t *testing.T) {
 	var cursors, projects, statuses []string
 
 	tasksTestServer(t, `"tasks:read"`, func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/tasks" {
+		if r.URL.Path != "/v1/companies/acme_co/tasks" {
 			t.Errorf("path inesperado: %s %s", r.Method, r.URL.Path)
 			return
 		}
@@ -945,7 +954,7 @@ func TestTasksTimeEntriesListNestsUnderTheTask(t *testing.T) {
 	if !strings.Contains(stdout, "te_1") || !strings.Contains(stdout, "te_2") {
 		t.Errorf("faltan entradas de tiempo en la salida: %q", stdout)
 	}
-	want := "/v1/tasks/task_9/time-entries?,/v1/tasks/task_9/time-entries?starting_after=te_1"
+	want := "/v1/companies/acme_co/tasks/task_9/time-entries?,/v1/companies/acme_co/tasks/task_9/time-entries?starting_after=te_1"
 	if strings.Join(paths, ",") != want {
 		t.Errorf("peticiones = %v, quiero %s", paths, want)
 	}
@@ -975,7 +984,7 @@ func TestTasksTimeEntriesCreateSendsThePeriod(t *testing.T) {
 		t.Fatalf("execute: %v (stderr: %s)", err, stderr)
 	}
 
-	if method != http.MethodPost || path != "/v1/tasks/task_9/time-entries" {
+	if method != http.MethodPost || path != "/v1/companies/acme_co/tasks/task_9/time-entries" {
 		t.Fatalf("petición inesperada: %s %s", method, path)
 	}
 	if body["started_at"] != "2026-09-28T09:00:00+02:00" || body["ended_at"] != "2026-09-28T10:30:00+02:00" {
@@ -993,7 +1002,7 @@ func TestTasksTimeEntriesCreateSendsThePeriod(t *testing.T) {
 // API responde `data: null` y el CLI lo entrega tal cual, con éxito.
 func TestTaskTimersCurrentReturnsNullWithoutATimer(t *testing.T) {
 	tasksTestServer(t, `"tasks:read"`, func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet || r.URL.Path != "/v1/task-timers/current" {
+		if r.Method != http.MethodGet || r.URL.Path != "/v1/companies/acme_co/task-timers/current" {
 			t.Errorf("petición inesperada: %s %s", r.Method, r.URL.Path)
 		}
 		_, _ = w.Write([]byte(`{"data":null}`))
@@ -1019,11 +1028,11 @@ func TestTaskTimersCurrentReturnsNullWithoutATimer(t *testing.T) {
 //
 // `--skip-scope-check` no es adorno: el orden de guardas es RequireLive →
 // comprobación de ámbitos → Confirm, y la comprobación de ámbitos hace
-// `GET /v1/account`. Sin ese flag "falla sin tocar la red" sería falso.
+// `GET /v1/me`. Sin ese flag "falla sin tocar la red" sería falso.
 func TestTasksDeletesRefuseWithoutConfirm(t *testing.T) {
 	cases := [][]string{
 		{"tasks", "delete", "task_9"},
-		{"tasks", "bulk-delete", "--task-ids", "task_1,task_2"},
+		{"tasks", "bulk-delete", "acme_co", "--task-ids", "task_1,task_2"},
 		{"projects", "delete", "proj_1"},
 		{"projects", "columns", "delete", "proj_1", "col_1"},
 		{"task-labels", "delete", "label_1"},
@@ -1074,7 +1083,7 @@ func TestProjectsColumnsDeleteSendsTheMoveTarget(t *testing.T) {
 		t.Fatalf("execute: %v (stderr: %s)", err, stderr)
 	}
 
-	if method != http.MethodDelete || path != "/v1/projects/proj_1/columns/col_1" {
+	if method != http.MethodDelete || path != "/v1/companies/acme_co/projects/proj_1/columns/col_1" {
 		t.Fatalf("petición inesperada: %s %s", method, path)
 	}
 	if moveTo != "col_2" {
@@ -1117,8 +1126,8 @@ func TestTasksDeleteSendsAnIdempotencyKey(t *testing.T) {
 		args []string
 		path string
 	}{
-		{"delete", []string{"tasks", "delete", "task_9", "--confirm", "task_9", "--json"}, "/v1/tasks/task_9"},
-		{"bulk-delete", []string{"tasks", "bulk-delete", "--task-ids", "task_1,task_2", "--confirm", "bulk-delete", "--json"}, "/v1/tasks/bulk-delete"},
+		{"delete", []string{"tasks", "delete", "task_9", "--confirm", "task_9", "--json"}, "/v1/companies/acme_co/tasks/task_9"},
+		{"bulk-delete", []string{"tasks", "bulk-delete", "acme_co", "--task-ids", "task_1,task_2", "--confirm", "acme_co", "--json"}, "/v1/companies/acme_co/tasks/bulk-delete"},
 	}
 
 	for _, tc := range cases {

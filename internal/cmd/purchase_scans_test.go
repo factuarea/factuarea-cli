@@ -213,7 +213,7 @@ func TestPurchaseScanPaginatedAndBinary(t *testing.T) {
 func TestPurchaseScansCreateUploadsFileArray(t *testing.T) {
 	var gotFieldNames, gotFilenames []string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/purchase_scans" || r.Method != http.MethodPost {
+		if r.URL.Path != "/v1/companies/acme_co/purchase-scans" || r.Method != http.MethodPost {
 			t.Errorf("request inesperada: %s %s", r.Method, r.URL.Path)
 		}
 		_, params, err := mime.ParseMediaType(r.Header.Get("Content-Type"))
@@ -245,7 +245,7 @@ func TestPurchaseScansCreateUploadsFileArray(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := runCmd(t, srv.URL, "purchase-scans", "create",
+	_, err := runCmd(t, srv.URL, "purchase-scans", "create", "--company", "acme_co",
 		"--file-files", a, "--file-files", b, "--skip-scope-check", "--json")
 	if err != nil {
 		t.Fatalf("purchase-scans create: %v", err)
@@ -282,7 +282,7 @@ func TestPurchaseScansArchiveSendsIdempotencyKey(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
-	_, err := runCmd(t, srv.URL, "purchase-scans", "archive",
+	_, err := runCmd(t, srv.URL, "purchase-scans", "archive", "--company", "acme_co",
 		"01928f10-0000-7000-8000-000000000001", "-d", `{"expected_version":1}`, "--skip-scope-check", "--json")
 	if err != nil {
 		t.Fatalf("purchase-scans archive: %v", err)
@@ -296,7 +296,7 @@ func TestPurchaseScansArchiveSendsIdempotencyKey(t *testing.T) {
 // buffer separado de stderr.
 func TestPurchaseScansListJSONOnStdoutOnly(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/v1/purchase_scans" || r.Method != http.MethodGet {
+		if r.URL.Path != "/v1/companies/acme_co/purchase-scans" || r.Method != http.MethodGet {
 			t.Errorf("request inesperada: %s %s", r.Method, r.URL.Path)
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -311,7 +311,7 @@ func TestPurchaseScansListJSONOnStdoutOnly(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	root.SetOut(&stdout)
 	root.SetErr(&stderr)
-	root.SetArgs([]string{"purchase-scans", "list", "--skip-scope-check", "--json"})
+	root.SetArgs([]string{"purchase-scans", "list", "--company", "acme_co", "--skip-scope-check", "--json"})
 	if err := root.Execute(); err != nil {
 		t.Fatalf("purchase-scans list: %v (stderr: %s)", err, stderr.String())
 	}
@@ -328,7 +328,7 @@ func TestPurchaseScansListJSONOnStdoutOnly(t *testing.T) {
 	}
 }
 
-func TestPurchaseScanEmailsScalarAndArrayResultFilters(t *testing.T) {
+func TestPurchaseScanEmailsResultFilterSendsTheCommaSeparatedList(t *testing.T) {
 	for _, tc := range []struct {
 		flag  string
 		value string
@@ -336,9 +336,9 @@ func TestPurchaseScanEmailsScalarAndArrayResultFilters(t *testing.T) {
 		want  []string
 	}{
 		{"--result", "accepted", "result", []string{"accepted"}},
-		{"--result[]", "accepted,rejected", "result[]", []string{"accepted", "rejected"}},
+		{"--result", "accepted,rejected", "result", []string{"accepted,rejected"}},
 	} {
-		t.Run(tc.flag, func(t *testing.T) {
+		t.Run(tc.value, func(t *testing.T) {
 			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				got := r.URL.Query()[tc.key]
 				if strings.Join(got, ",") != strings.Join(tc.want, ",") {
@@ -348,7 +348,7 @@ func TestPurchaseScanEmailsScalarAndArrayResultFilters(t *testing.T) {
 				_, _ = w.Write([]byte(`{"data":[],"has_more":false,"next_cursor":null}`))
 			}))
 			t.Cleanup(srv.Close)
-			if _, err := runCmd(t, srv.URL, "purchase-scan-emails", "list", "--skip-scope-check", tc.flag, tc.value, "--json"); err != nil {
+			if _, err := runCmd(t, srv.URL, "purchase-scan-emails", "list", "--company", "acme_co", "--skip-scope-check", tc.flag, tc.value, "--json"); err != nil {
 				t.Fatal(err)
 			}
 		})
