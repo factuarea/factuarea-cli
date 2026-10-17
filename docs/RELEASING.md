@@ -53,32 +53,31 @@ make generate-dev
 >
 > El `spec drift-guard` de CI compara lo embebido con el spec vivo, pero es `continue-on-error: true` y trata "develop adelantado a prod" como resultado normal: su verde **no** demuestra paridad con producción. Si necesitas saber qué falta en prod, lee su log.
 
-### Prerrequisito vigente: la superficie del ERP omnicanal (2026-09-18)
+### Prerrequisito vigente: la superficie del ERP omnicanal
 
 El spec embebido de `internal/spec/openapi.json` está fijado al **contrato
-congelado** de la ola de sincronización del ERP omnicanal: **654 operaciones en
-532 paths**, exportado una sola vez desde el backend con la superficie del ERP
-ya fusionada (sha256 del artefacto de origen
-`687f70a156a90cd41c453e87cb6627b3cb3ff85c21db0ff81b392c7b1945f49c`). La foto
-anterior declaraba 470 operaciones en 386 paths: el delta es **+184**.
+público congelado** que incluye el ERP omnicanal: **830 operaciones en 666
+paths** (digest canónico del documento
+`97f5a78cacd59a59f1a98c361cd7af3883d67072a7f3c2a0c3d38cc93b5788a9`, el que declara
+`internal/cmd/testdata/v1-command-tree-manifest.json`). La foto anterior
+declaraba 664 operaciones: el delta es **+166**, todo el ERP.
 
 **Mientras esa superficie no esté desplegada en producción, `make generate` es
 destructivo**: `https://api.factuarea.com/v1/openapi.json` sigue sirviendo el
-contrato anterior, así que regenerar contra él retiraría del binario las 184
-operaciones nuevas —los 166 comandos del ERP y los 18 de contactos— sin que
-nada se ponga rojo salvo el contraste del árbol. El orden correcto es:
+contrato anterior, así que regenerar contra él retiraría del binario las 166
+operaciones nuevas. El orden correcto es:
 
 1. desplegar el ERP a producción;
-2. comprobar que el contrato publicado ya declara 654 operaciones
+2. comprobar que el contrato publicado ya declara 830 operaciones
    (`curl -fsSL https://api.factuarea.com/v1/openapi.json | jq '[.paths[] | keys[]] | length'`);
 3. sólo entonces `make generate`, y volver a dejar en verde el contraste del
    árbol con
    `go test ./internal/cmd/ -run TestCommandTreeMatchesGolden -update-command-tree`;
 4. etiquetar la release.
 
-Si el paso 2 mide menos de 654, **para**: la release se corta con
-`make generate-dev` (o con el artefacto congelado) y el paso 3 se pospone. El
-`spec drift-guard` de CI **no** protege de esto: es `continue-on-error` y su
+Si el paso 2 mide menos de 830, **para**: la release se corta con
+`make generate-from-file SPEC_FILE=<contrato congelado>` y el paso 3 se pospone.
+El `spec drift-guard` de CI **no** protege de esto: es `continue-on-error` y su
 rojo es el resultado esperado mientras dure la ventana.
 
 ## Fase 2 (pendiente)

@@ -90,7 +90,7 @@ admet el header `Idempotency-Key`.
 - **Authentication**: `Authorization: Bearer <api key>`, `X-API-Key: <api key>` or an OAuth 2.1 access token.
 - **Docs**: https://docs.factuarea.com/api-reference/invoices/public-api.v1.invoices.list
 
-List your sales invoices with cursor-based pagination. Supports filtering by `status[in]`, `client_id`, `series_id`, `issued_on[gte|lte]`, and `total[gte|lte]`.
+List your invoices with cursor-based pagination. Supports filtering by `status[in]`, `client_id`, `series_id`, `issued_on[gte|lte]`, and `total[gte|lte]`.
 
 ## Query parameters
 

@@ -33,7 +33,23 @@ curl -fsSL https://github.com/factuarea/factuarea-cli/releases/latest/download/i
 ```bash
 git clone https://github.com/factuarea/factuarea-cli && cd factuarea-cli
 make build        # genera ./factuarea
+make dist-assets  # regenera completions/ y manpages/ desde el árbol de comandos
 ```
+
+`completions/` y `manpages/` **no se versionan**: los produce `make dist-assets`
+y los empaqueta la release (`.goreleaser.yaml`). El completado de línea de
+órdenes es **dinámico**: los cuatro scripts (bash, zsh, fish, PowerShell) no
+llevan dentro ningún nombre de comando —le preguntan al propio binario
+(`factuarea __complete …`) en cada pulsación—, así que ofrecen siempre las hojas
+del árbol que tengas instalado, sin volver a generarse.
+
+> **Deuda conocida — página de manual.** El generador emite **una sola** página,
+> la raíz (`manpages/factuarea.1`), y su sección *SEE ALSO* remite a **57**
+> páginas por grupo (`factuarea-invoices(1)`, `factuarea-contacts(1)`…) que
+> **nadie emite**: no hay página por comando. Es anterior al eje de empresa, no
+> una regresión suya. Emitir el árbol entero pasaría de un fichero a varios
+> cientos y cambiaría lo que publica la release, así que queda registrado aquí en
+> vez de cambiarse de paso en esta entrega.
 
 > La notarización (macOS) y la firma Authenticode (Windows) llegan en una fase posterior; mientras tanto, en macOS usa `brew`/`npm`, o `xattr -d com.apple.quarantine ./factuarea` para un binario suelto.
 
@@ -55,40 +71,95 @@ La key se guarda en el **keyring del sistema** (con fallback a `~/.config/factua
 
 ## Uso
 
-El árbol de comandos cubre todos los recursos de la API (`factuarea <recurso> [<sub-recurso>] <acción>`), generado desde el OpenAPI (sin desincronización):
+El árbol de comandos cubre todos los recursos de la API (`factuarea <recurso> [<sub-recurso>] <acción>`), generado desde el OpenAPI (sin desincronización). Todo recurso de una empresa cuelga del **eje de empresa** (`/v1/companies/{company}/…`), así que su comando lleva la empresa delante: como primer argumento posicional, con la flag persistente `--company`, o sin escribirla si tu credencial alcanza una sola (ver «La empresa como eje», más abajo). Lo que cuelga de una cuenta (`account`: `api-keys`, `invitations`, `members`, `nif-transfers`, `owner`, `webhooks`, `request-logs`, `provisioning-usage`, `usage`) lleva la cuenta con la flag `--account`, y las cuentas gestionadas (`managed-accounts`, con `imports`, `plan`, `management`, `access-level` y `claim-tokens`) tienen su propia sección más abajo («La cuenta como eje», «Cuentas gestionadas»):
 
 ```bash
 # Listar (con paginación automática por cursor)
-factuarea invoices list --json
-factuarea clients list --paginate --json
+factuarea invoices list --company acme_co --json
+factuarea contacts list --company acme_co --roles customer --paginate --json
 
 # Obtener uno
-factuarea invoices show <uuid> --json
+factuarea invoices show --company acme_co <uuid> --json
 
 # Crear (cuerpo JSON por -d o --data-file)
-factuarea invoices create -d '{"client_id":"…","series_id":"…","lines":[…]}'
+factuarea invoices create --company acme_co -d '{"client_id":"…","series_id":"…","lines":[…]}'
 
 # Acciones de dominio
-factuarea invoices send <uuid>
-factuarea invoices mark-paid <uuid>
+factuarea invoices send --company acme_co <uuid>
+factuarea invoices mark-paid --company acme_co <uuid>
 
 # Descargas binarias (PDF/ZIP/XML)
-factuarea invoices pdf <uuid> -o factura.pdf
+factuarea invoices pdf --company acme_co <uuid> -o factura.pdf
 
 # Subidas (multipart)
-factuarea verifactu certificates upload -d '{"certificate_password":"…"}' --file-certificate_file cert.p12
+factuarea verifactu certificates upload --company acme_co -d '{"certificate_password":"…"}' --file-certificate_file cert.p12
 
-# Escape hatch genérico (cualquier endpoint)
-factuarea api get /v1/account --json
-factuarea api post /v1/invoices -d '{…}'
+# Escape hatch genérico (cualquier endpoint): el path va LITERAL, aquí no hay
+# resolución de empresa ni relleno de --company; el eje se escribe en la ruta.
+factuarea api get /v1/me --json
+factuarea api post /v1/companies/acme_co/invoices -d '{…}'
 ```
 
 **Operaciones en producción** (mutaciones con una key `fact_live_`) requieren el flag explícito `--live` como red de seguridad.
 
+**Clientes y proveedores son roles del mismo contacto.** No hay recursos `clients`
+ni `suppliers`: se opera sobre `contacts` y se filtra o asigna el rol
+(`customer`, `supplier`, `lead`) — `factuarea contacts create --name … --kind company --roles customer`,
+`factuarea contacts list --roles supplier`, `factuarea contacts assign-contact-role <uuid> supplier`.
+El `client_id` que piden los documentos es el UUID del contacto con rol `customer`.
+
+### Escáner de documentos
+
+El escáner conserva originales y permite revisar la extracción antes de convertirla en un **borrador de gasto**. Requiere el módulo OCR de la empresa y los scopes `purchase_invoices:read`, `purchase_invoices:write` o `purchase_invoices:delete` según la operación.
+
+```bash
+# Hasta 20 archivos PDF/JPEG/PNG; repite el flag, incluso si la ruta lleva comas.
+factuarea purchase-scans create \
+  --file-files factura.pdf --file-files ticket.png \
+  --idempotency-key compra-lote-2026-001 --json
+
+# La lectura es asíncrona: consulta estado, incidencias y available_actions.
+factuarea purchase-scans list --paginate --json
+factuarea purchase-scans show <uuid> --json
+factuarea purchase-scans stats --json
+factuarea purchase-scan-emails list --paginate --json
+
+# Categorías de gasto para clasificar la conversión (purchase-invoices, no purchase-scans).
+factuarea purchase-invoices expense-categories --json
+
+# Guarda solo los cambios; sustituye expected_version por la versión observada.
+factuarea purchase-scans review <uuid> --json -d '{
+  "expected_version": 3,
+  "fields": {"notes": {"value": "Documento revisado"}}
+}'
+
+# Convierte usando la nueva versión devuelta por review.
+factuarea purchase-scans convert <uuid> \
+  --expected-version 4 --idempotency-key compra-conversion-001 --json
+
+# Original sin alterar; archivado reversible con control de versión.
+factuarea purchase-scans source <uuid> -o original.pdf
+factuarea purchase-scans archive <uuid> --expected-version 5 --json
+factuarea purchase-scans restore <uuid> --expected-version 6 --json
+```
+
+Cada archivo admite 20 MiB y el lote 100 MiB. La respuesta `202` incluye aceptados y rechazados por índice; si todos se rechazan, el CLI conserva `data.rejected` en el error JSON y termina con código de validación. Reutiliza la misma `--idempotency-key` y el mismo orden de archivos al reintentar un lote. Las mutaciones generan una clave automáticamente si no la proporcionas.
+
+`retry` inicia los documentos `received` cuando la lectura automática está desactivada, o reintenta fallos recuperables según `available_actions`. Una versión obsoleta produce `409`: vuelve a consultar antes de aplicar cambios. Los errores de revisión mantienen `error.details.field_errors` con los campos pendientes. `duplicate-resolution` acepta `link_existing` (con `purchase_invoice_id`) o `archive`; el override y el alta automática de proveedor requieren administrador interactivo en la aplicación.
+
+La conversión devuelve `purchase_invoice_id`, mantiene el original adjunto y nunca emite una factura ni registra un pago. Usa importes decimales como cadenas en el JSON de revisión; los campos omitidos se conservan y `null` borra explícitamente el valor.
+
+**Descubrimiento.** El manifiesto de `commands --json` trae un campo `operation_id` (el `operationId` del OpenAPI, p. ej. `public-api.v1.purchase_scans.create`) además del `command` de la CLI: útil para que un agente relacione un endpoint del spec con su comando sin adivinar el mapeo de nombres.
+
+```bash
+factuarea commands --json | jq '.[] | select(.operation_id | startswith("public-api.v1.purchase_scan"))'
+```
+
 ### Control horario (workforce)
 
-Con el add-on de **control horario** activo (módulo `control_horario`), el CLI
-expone los recursos de jornada, cada uno con su scope fino (`employees:*`,
+El módulo de **control horario** (`control_horario`) viene incluido en el plan
+desde Profesional; una clave solo puede llevar sus scopes si la empresa tiene el
+módulo. Con él, el CLI expone los recursos de jornada, cada uno con su scope fino (`employees:*`,
 `time_entries:*`, `absences:*`, `work_schedules:*`, `presence:read`,
 `holidays:read`, `payroll_exports:*`): `employees`, `employee-invitations`,
 `employee-seats`, `work-schedules`, `time-entries`, `time-corrections`,
@@ -97,46 +168,56 @@ expone los recursos de jornada, cada uno con su scope fino (`employees:*`,
 `absence-balances`, `absence-requests`, `absence-calendar`, `presence`,
 `holidays` y `gestoria workforce-summary`.
 
+`employee-seats` es el add-on de facturación por empleado: no concede el módulo,
+solo factura los asientos. Dar de alta o reactivar un empleado cobra su asiento
+siempre que el plan factura (quedan exentos Enterprise, las empresas gestionadas
+y el periodo de prueba) y, sin método de pago, responde `402`
+`employee_seat_payment_method_required`.
+
 ```bash
 # Fichar entrada y salida (cada asiento encadena su huella — RD-ley 8/2019)
-factuarea time-entries clock-in  -d '{"employee_id":"…","source":"web"}'
-factuarea time-entries clock-out -d '{"employee_id":"…","source":"web"}'
+factuarea time-entries clock-in  --company acme_co -d '{"employee_id":"…","source":"web"}'
+factuarea time-entries clock-out --company acme_co -d '{"employee_id":"…","source":"web"}'
 
 # Solicitar una ausencia y aprobarla
-factuarea absence-requests create \
+factuarea absence-requests create --company acme_co \
   -d '{"employee_id":"…","absence_type_id":"…","start_date":"2026-08-01","end_date":"2026-08-05"}'
-factuarea absence-requests approve <uuid>
+factuarea absence-requests approve --company acme_co <uuid>
 
 # Presencia del equipo en vivo
-factuarea presence live --json
+factuarea presence live --company acme_co --json
 
 # Cerrar el registro mensual inalterable y exportarlo (ITSS RD-ley 8/2019)
-factuarea monthly-time-record-closes create -d '{"year":2026,"month":7}'
-factuarea monthly-time-record-closes export <uuid> --format rdley_8_2019 --json
+factuarea monthly-time-record-closes create --company acme_co -d '{"year":2026,"month":7}'
+factuarea monthly-time-record-closes export --company acme_co <uuid> --format rdley_8_2019 --json
 ```
 
 ### Automatizaciones (automations)
 
-Con el add-on de **automatizaciones** activo (módulo `automations`, planes
-`empresario` y `enterprise`), el CLI expone el motor de reglas con sus cuatro
+Con el módulo de **automatizaciones** activo (`automations`, planes **Profesional**,
+**Avanzado** y **Enterprise**; slugs `empresario`, `integral` y `enterprise`), el
+CLI expone el motor de reglas con sus cuatro
 recursos y sus scopes finos (`automations:read` en 8 comandos,
 `automations:write` en 6, `automations:delete` en 1 y `automation_runs:read` en
 3): el catálogo de metadatos (`automations catalog show` y
 `automations catalog trigger-fields`), las reglas (`automations rules`, con su
 historial en `automations rules versions`), las ejecuciones (`automations runs`,
 con su detalle por paso en `automations runs steps`) y el consumo frente al
-presupuesto del plan (`automations usage show`).
+presupuesto del plan (`automations usage show`). Las cuotas de Enterprise se
+acuerdan según contrato; consulta el consumo y los límites vigentes con ese comando.
 
 ```bash
 # Qué se puede automatizar: disparadores, operadores y acciones registradas.
-factuarea automations catalog show --json
+factuarea automations catalog show --company acme_co --json
 # Los campos evaluables NO están en el catálogo: son una segunda llamada, por disparador.
-factuarea automations catalog trigger-fields invoice.paid --json
+factuarea automations catalog trigger-fields --company acme_co invoice.paid --json
 
 # Crear una regla: `actions` es una lista de objetos, así que el alta va SIEMPRE con
-# el cuerpo completo (-d / --data-file). `--skeleton` imprime la plantilla en blanco.
-factuarea automations rules create --skeleton
-factuarea automations rules create --json -d '{
+# el cuerpo completo (-d / --data-file). `--skeleton` imprime la plantilla en blanco
+# sin llamar a la API y sin resolver la empresa; `--dry-run` compila el cuerpo y lo
+# imprime con las mismas dos garantías.
+factuarea automations rules create --company acme_co --skeleton
+factuarea automations rules create --company acme_co --json -d '{
   "name": "Aviso al cobrar una factura grande",
   "scope": "empresa",
   "trigger_type": "invoice.paid",
@@ -150,93 +231,434 @@ factuarea automations rules create --json -d '{
 }'
 
 # Ensayarla contra un evento de ejemplo: devuelve la traza por paso y no materializa nada.
-factuarea automations rules dry-run <rule_id> --json \
+factuarea automations rules dry-run --company acme_co <rule_id> --json \
   -d '{"event_type":"invoice.paid","event_payload":{"total":1200,"status":"paid"}}'
 
 # Activarla (y pausarla cuando toque).
-factuarea automations rules activate <rule_id>
-factuarea automations rules pause <rule_id>
+factuarea automations rules activate --company acme_co <rule_id>
+factuarea automations rules pause    --company acme_co <rule_id>
 
 # Qué ha disparado, recorriendo el cursor de forma transparente.
-factuarea automations runs list --paginate --json
-factuarea automations runs list --automation_rule_id <rule_id> --status failed --json
+factuarea automations runs list --company acme_co --paginate --json
+factuarea automations runs list --company acme_co --automation_rule_id <rule_id> --status failed --json
 
 # Una ejecución y sus pasos, con su estado y su motivo tipado.
-factuarea automations runs show <run_id> --json
-factuarea automations runs steps list <run_id> --json
+factuarea automations runs show --company acme_co <run_id> --json
+factuarea automations runs steps list --company acme_co <run_id> --json
 
 # Relanzar. Es irreversible: sin terminal interactiva hay que confirmar con --confirm,
-# y lo que se confirma es el ÚLTIMO argumento posicional (en un paso, su índice).
-factuarea automations runs replay <run_id> --confirm <run_id>
-factuarea automations runs steps replay <run_id> 0 --confirm 0
+# y lo que se confirma es el recurso —el último posicional que NO es la empresa—,
+# así que la empresa que aporta --company nunca es lo que se confirma.
+factuarea automations runs replay --company acme_co <run_id> --confirm <run_id>
+factuarea automations runs steps replay --company acme_co <run_id> 0 --confirm 0
 
 # Historial de versiones de la regla. Es el único listado que pagina por POSICIÓN
 # (cursor numérico opaco), no por identificador.
-factuarea automations rules versions list <rule_id> --json
-factuarea automations rules versions show <rule_id> 2 --json
+factuarea automations rules versions list --company acme_co <rule_id> --json
+factuarea automations rules versions show --company acme_co <rule_id> 2 --json
 
 # Borrar la regla (irreversible) y mirar el consumo frente al presupuesto del plan.
-factuarea automations rules delete <rule_id> --confirm <rule_id>
-factuarea automations usage show --json
+factuarea automations rules delete --company acme_co <rule_id> --confirm <rule_id>
+factuarea automations usage show --company acme_co --json
 ```
 
 El **alcance** se elige al crear la regla y no se puede cambiar después: `empresa`
-vigila sólo tu empresa, y `cartera` —para gestorías, con el módulo `gestoria`
-concedido— vigila las empresas que gestionas y te entrega a ti los avisos. En
-`cartera` sólo se admiten las cuatro acciones que avisan (`notify_in_app`,
-`notify_channel`, `emit_webhook`, `create_calendar_event`); las que actuarían
-sobre un documento de la empresa hija se rechazan al crear o editar la regla.
-`factuarea automations rules list --scope cartera` las filtra, y
-`factuarea automations runs list --subject_company_id <uuid>` filtra sus
-ejecuciones por la empresa sobre la que actuaron.
+vigila sólo tu empresa, y `cartera` vigila los OTROS NIF de tu cuenta y te entrega
+a ti los avisos. Sólo la **titular de su cuenta** puede crearlas, y con el módulo
+`gestoria` concedido (por plan o por override de empresa): un NIF adicional, sea
+cual sea su origen, nunca tiene cartera propia. Lo que vigilan son los NIF reales
+de la cuenta —el adscrito, uno comprado, uno traspasado— y los que otra cuenta te
+cede con nivel `operate`; nunca tu propia empresa. La regla se guarda con la
+empresa de la titular, sus avisos llegan a su buzón y cada ejecución lleva además
+la empresa sujeto, el NIF sobre el que actuó. En `cartera` sólo se admiten las
+cuatro acciones que avisan (`notify_in_app`, `notify_channel`, `emit_webhook`,
+`create_calendar_event`); las que actuarían en nombre de otro NIF
+(`send_document_email`, `send_payment_reminder`, `change_status`, `tag_entity`)
+se rechazan al crear o editar la regla.
+`factuarea automations rules list --company acme_co --scope cartera` las filtra,
+y `factuarea automations runs list --company acme_co --subject_company_id <uuid>`
+filtra sus ejecuciones por la empresa sobre la que actuaron (filtrar por una
+empresa fuera de la cartera devuelve una lista vacía, no un error). En las dos, la
+empresa del eje es la TUYA —la dueña de la regla—, no el NIF vigilado, que viaja
+en `--subject_company_id`.
 
-### La empresa como eje: la flag persistente `--company`
+### La empresa como eje: el segmento `{company}` y la flag `--company`
 
-**176** operaciones del contrato llevan la empresa en la ruta
-(`/v1/companies/{company}/…`): las **164** del ERP omnicanal y las **12** de
-`factuarea companies …`. El CLI convierte todo parámetro de ruta en argumento
-posicional, así que esas operaciones empiezan por la empresa. Para no repetirla
-en cada llamada existe la flag **persistente** `--company`, que vale en
-cualquier comando del árbol:
+En la v1, **toda** operación que toca datos de una empresa cuelga del mismo eje:
+su ruta empieza por `/v1/companies/{company}/…`. El segmento no es un prefijo
+decorativo ni un filtro opcional — es el primer tramo del recurso. Por eso
+aparece en todas: la empresa deja de deducirse en silencio de la credencial y
+pasa a viajar en la URL, donde se ve, se registra y se puede auditar; una clave
+que alcanza dos empresas ya no puede acabar escribiendo en la que no era sin que
+quede rastro de a cuál se apuntó.
+
+De las **508** operaciones del contrato, **432** cuelgan del eje de empresa y
+**60** del eje de cuenta (`/v1/accounts/{account}/…`: la cuenta propia, con su
+equipo, sus NIF, sus webhooks y sus request logs). Otras **16** no son de ninguno
+de los dos: **6** son las operaciones de cuentas gestionadas, donde `{account}`
+es la cuenta GESTIONADA y se trata como recurso; **5** son las rutas raíz de
+provisión e importación (`/v1/accounts` y `/v1/accounts/imports…`), sin cuenta en
+la ruta; y las **5** restantes son los catálogos y la identidad de raíz: `/v1/me`,
+`/v1/event-catalog`, `/v1/tax-catalog`, `/v1/payment-methods` y
+`/v1/payroll-export-formats` (6 + 5 + 5 = 16, y 432 + 60 + 16 = 508).
+
+Lo que se pasa en ese segmento es el **`id` de la empresa** —el que publica
+`factuarea account show` en `data.scope[].id`—, nunca su NIF ni su nombre. El
+NIF aparece al lado en los mensajes de error porque es lo que tú reconoces de un
+vistazo, pero lo que la ruta come es el `id`.
+
+Ojo con el marcador: `{company}` **no siempre es el eje**. Las **8** operaciones
+de `/v1/accounts/{account}/companies/{company}` —mostrar, activar, archivar… un
+NIF de la cuenta— declaran un parámetro que se llama igual pero que es el
+**recurso**, no el eje. El CLI las distingue por el PATH, nunca por el nombre del
+parámetro: en ellas `--company` no rellena nada (la cuenta se nombra con
+`--account`, ver más abajo) y el identificador confirmado es el de la empresa que
+se archiva, no el de la cuenta.
+
+#### Forma larga y forma corta
+
+El CLI convierte todo parámetro de ruta en argumento posicional, así que las
+operaciones del eje empiezan por la empresa, y la ayuda la declara **entre
+corchetes** para decir «este posicional puedes no escribirlo»:
 
 ```bash
-# 1) La empresa como primer posicional (el uso de siempre; sigue funcionando igual).
-factuarea sales-orders list acme_co --json
+# Forma larga: la empresa como primer argumento posicional.
+factuarea invoices show acme_co inv_01931b3e --json
 
-# 2) La empresa fijada con la flag persistente; el posicional se omite.
-factuarea sales-orders list --company acme_co --json
-factuarea sales-orders show --company acme_co so_01931b3e --json
+# La misma, con la flag persistente --company (vale en cualquier comando del árbol).
+factuarea invoices show --company acme_co inv_01931b3e --json
+
+# Forma corta: si tu credencial alcanza UNA sola empresa, no escribes la empresa.
+factuarea invoices show inv_01931b3e --json
 ```
 
-No hay variable de entorno equivalente: la flag es el único camino y es
-explícita en cada invocación, que es justo lo que evita operar sobre la empresa
-equivocada sin enterarse.
+La ayuda larga (`--help`) de todo comando con eje termina enseñando las dos
+formas y avisando de la tercera:
 
-La ayuda de cada comando con eje declara el posicional entre corchetes
-(`factuarea sales-orders show [company] <sales_order> [flags]`), que es como se
-lee «este posicional lo puede aportar `--company`». El manifiesto para agentes
-lo publica aparte, en `optional_args` (`{"company": "--company"}`), sin mover el
-orden ni los nombres de `args`:
+```
+Forma canónica:  factuarea invoices show [company] <invoice>
+Forma corta:     factuarea invoices show <invoice> --company <company>
+Si tu credencial alcanza una sola empresa, ni siquiera hace falta --company: se resuelve sola.
+```
+
+El manifiesto para agentes publica el hueco aparte, en `optional_args`
+(`{"company": "--company"}`), sin mover el orden ni los nombres de `args`:
 
 ```bash
-factuarea commands --json | jq '.[] | select(.optional_args) | .command' | wc -l   # 176
+# Cuántas operaciones llevan la empresa en la ruta, según el contrato que
+# embebe TU binario (no según este README).
+factuarea commands --json | jq '[.[] | select(.optional_args)] | length'
 ```
 
-**Aportar la empresa por las dos vías a la vez es un error de uso**, no una
-precedencia silenciosa: el CLI no elige por ti. Y no aportarla por ninguna
-también falla, antes de tocar la red:
+#### La cadena de precedencia: cuatro eslabones
+
+De mayor a menor precedencia, el valor de empresa sale de:
+
+1. **El argumento posicional**, si lo escribes. Gana siempre, y con él no se
+   consulta nada más.
+2. **La flag persistente `--company`**.
+3. **La resolución automática de un solo NIF**: si no has dado ninguna de las
+   dos, el CLI lee el ámbito de tu credencial (`GET /v1/me`, campo `data.scope`)
+   y, **solo si alcanza una única empresa**, usa su `id`. El valor se recuerda
+   durante esa invocación y **jamás se escribe en disco**: un valor persistido
+   sobreviviría a la rotación de la clave o al cambio de perfil, y acabarías
+   operando en silencio sobre una empresa fuera de tu ámbito.
+4. **Un error accionable** si nada de lo anterior resuelve: enumera las empresas
+   que alcanzas, con su `id` y su NIF, para que la orden siguiente se copie y
+   pegue.
+
+Y no hay más. **No existe `FACTUAREA_COMPANY`** ni ninguna clave de empresa en
+`config.toml` —el fichero de configuración solo persiste la API key por perfil—,
+y su ausencia es una decisión, no un olvido: la empresa se dice en cada
+invocación o se deduce de un ámbito de una sola, pero nunca se hereda de un
+estado invisible que no recuerdas haber fijado.
+
+Aportarla **por las dos vías a la vez es un error de uso**, no una precedencia
+silenciosa: el CLI no elige por ti.
+
+#### Los errores, con su texto
+
+Cuando la credencial alcanza varias empresas y no has dicho cuál, el mensaje
+enumera el ámbito —`id` a la izquierda, que es lo que la flag come; NIF y nombre
+a la derecha, que es lo que tú reconoces—:
 
 ```console
-$ factuarea sales-orders show acme_co so_01931b3e --company otra_co
-has aportado la empresa por las dos vías: como argumento posicional ("acme_co") y con la flag persistente --company ("otra_co"); quita una de las dos, no elijo por ti
-
-$ factuarea sales-orders show so_01931b3e
-falta la empresa: pásala como argumento posicional (<company>) o fíjala con la flag persistente --company
+$ factuarea invoices show inv_01931b3e
+Error: tu credencial alcanza 2 empresas y no elijo por ti; pasa una como argumento posicional (<company>) o fíjala con --company:
+  --company cmp_01931b3e7a2c   B12345678 — Acme Sillas SL
+  --company cmp_01934c8d2e5f   B87654321 — Nordic Muebles SL
 ```
 
-Dos operaciones del ERP **no** llevan eje porque cuelgan del documento de
-origen, no de la empresa: `factuarea quotes convert-to-sales-order <quote>` y
-`factuarea proformas convert-to-sales-order <proforma>`.
+Los otros dos fallos de la cadena:
+
+```console
+$ factuarea invoices show acme_co inv_01931b3e --company otra_co
+Error: has aportado la empresa por las dos vías: como argumento posicional ("acme_co") y con la flag persistente --company ("otra_co"); quita una de las dos, no elijo por ti
+
+$ factuarea invoices show inv_01931b3e
+Error: falta la empresa: pásala como argumento posicional (<company>) o fíjala con la flag persistente --company
+```
+
+Los tres son **errores de uso**: salen por **stderr**, terminan con código **2**
+y ocurren **antes de ejecutar la operación**. Lo que sí hace el tercer eslabón es
+leer el ámbito de tu credencial: enumerar los NIF exige haberlos pedido, así que
+el criterio es «sin llamar a la operación», no «sin tocar la red». Con `--json`
+—o con stderr redirigido— el mismo mensaje sale como
+`{"error":{"message":"…"}}`, para que un script no tenga que parsear texto.
+
+#### Aridad: cuántos posicionales admite un comando con eje
+
+En las operaciones del eje el rango de posicionales baja en uno, porque el slot
+de empresa es opcional: `factuarea invoices show` acepta **1 o 2**. Si te pasas,
+el error dice cuántos esperaba:
+
+```console
+$ factuarea invoices show a b c
+Error: este comando acepta entre 1 y 2 argumento(s), recibió 3
+```
+
+**Aridad ambigua.** Si una operación pudiera a la vez omitir el eje y aceptar el
+atajo del campo único de cuerpo como posicional, «2 argumentos» tendría dos
+lecturas —«empresa omitida + campo escrito» y «empresa escrita + sin campo»—. En
+este contrato **no puede pasar**: el atajo del campo único exige que la operación
+no declare ningún parámetro de ruta, así que ninguna operación de eje lo tiene, y
+el CLI no emite hoy ningún mensaje para ese caso. La regla queda decidida de
+antemano para que nadie improvise otra el día que esa guarda se ensanche: la
+invocación se **rechaza** nombrando las dos lecturas y la forma explícita de
+resolver cada una (`--company <id>` para la primera, `--<campo> <valor>` para la
+segunda). Lo que **nunca** se hace es adivinar por la FORMA del argumento: un
+identificador de recurso tiene exactamente la misma pinta que uno de empresa, así
+que el heurístico acertaría casi siempre y fallaría en silencio justo cuando te
+equivocas de valor, que es cuando importa.
+
+#### Las que exigen la empresa escrita
+
+**11** operaciones son irreversibles y actúan sobre la empresa **entera** —su
+último parámetro de ruta es el propio eje—: los `bulk-delete` de facturas,
+presupuestos, proformas, albaranes, facturas de compra, productos, recurrentes y
+contactos, el `bulk-archive` de contactos, la sustitución de una simplificada y
+el cambio de ajustes de VeriFactu. En ellas `--company` **no rellena nada** y la
+ayuda escribe el posicional sin corchetes (`<company>`), porque confirmar un
+borrado masivo contra un identificador que no has tecleado no confirma nada:
+
+```console
+$ factuarea invoices bulk-delete --company acme_co
+Error: esta operación es irreversible y actúa sobre la empresa ENTERA: escribe su identificador como argumento posicional (<company>). La flag persistente --company no lo rellena por defecto a propósito, porque confirmar sobre un identificador que no has escrito no confirma nada
+```
+
+`--company` no rellena nunca el hueco de la cuenta: cada eje tiene su flag.
+
+Las operaciones **irreversibles** del contrato (anular, sustituir, convertir,
+revocar, rotar, borrar en lote…) exigen `--confirm <id del recurso>` cuando no
+hay terminal interactiva, y lo que se confirma es el **recurso**, nunca la
+empresa: `--company acme_co inv_01931b3e --confirm inv_01931b3e`. Con una key
+`fact_live_` hacen falta además `--live`. La lista exacta, con su scope y sus
+marcas, sale del propio binario:
+
+```bash
+factuarea commands --json | jq '.[] | select(.irreversible) | {command, required_scope}'
+factuarea commands --json | jq '.[] | select(.binary)       | .command'
+```
+
+### La cuenta como eje: el segmento `{account}` y la flag `--account`
+
+Las operaciones de la cuenta propia cuelgan de `/v1/accounts/{account}/…`, con el
+`id` de la cuenta (el que publica `factuarea account show --json`, es decir
+`GET /v1/me`, en `data.account.id`). El hueco de la cuenta se decide por el PATH: es el primer
+parámetro de ruta cuando la ruta empieza por `/accounts/{account}`. Hay dos
+excepciones, y en ninguna la flag `--account` rellena nada:
+
+- **Cuentas gestionadas (`managed-accounts`).** Ahí `{account}` es la cuenta
+  GESTIONADA sobre la que actúas: es el recurso, se escribe siempre como
+  argumento posicional y no hay flag ni relleno.
+- **Rutas raíz de provisión e importación** (`POST|GET /v1/accounts` y
+  `/v1/accounts/imports…`): no llevan cuenta en la ruta.
+
+Para el resto, el valor de la cuenta sale de esta cadena, de mayor a menor:
+
+1. el argumento posicional (`factuarea account members show <account> <member>`);
+2. la flag persistente `--account`, que también hace opcional ese posicional;
+3. solo en las **lecturas** (`GET`), la cuenta propia que publica tu credencial
+   (`GET /v1/me`, `data.account.id`), que se recuerda durante la invocación y
+   jamás se escribe en disco.
+
+En una **escritura** la cuenta no se deduce: sin posicional ni `--account`, la CLI
+termina con error de uso (código `2`) sin enviar la escritura, y el mensaje nombra
+la cuenta propia de tu credencial y las dos formas de pasarla (para nombrarla
+hace un único `GET /v1/me`, cuyo resultado no usa como destino). Una escritura no
+puede ir a parar a una cuenta que no has nombrado. Aportar la cuenta por el
+posicional y por la flag a la vez también es error de uso. Y en las operaciones
+irreversibles cuyo último parámetro de ruta es la propia cuenta —`account
+nif-transfers create`, `account nif-transfers accept` y `account owner
+transfer`— ni la flag vale: hay que escribir `<account>` como posicional.
+`factuarea commands --json` publica el hueco en `optional_args`
+(`{"account": "--account"}`) en los comandos donde la flag lo rellena.
+
+```bash
+# 1) Una lectura resuelve la cuenta sola (GET /v1/me → GET /v1/accounts/<tu cuenta>/members)
+factuarea account members list --json
+
+# 2) Una escritura exige nombrar la cuenta: sin ella falla con código 2 y sin enviar nada;
+#    con --account, la petición va a POST /v1/accounts/<account>/webhooks
+factuarea account webhooks create --url https://example.com/hooks --enabled-events account.member_added
+factuarea account webhooks create --account <account> --url https://example.com/hooks --enabled-events account.member_added
+
+# 3) Una cuenta gestionada es el recurso: va siempre como posicional (GET /v1/accounts/<managed_account>);
+#    --account no la rellena
+factuarea managed-accounts show <managed_account> --json
+
+# 4) Una provisión raíz no lleva cuenta (POST /v1/accounts), aunque pongas --account
+factuarea managed-accounts create --external-ref cliente-0042 --plan emprendedor \
+  --tax-id B12345674 --legal-name "Talleres García SL" --confirm create
+```
+
+### Cuentas gestionadas (`managed-accounts`)
+
+Para quien provisiona NIF o cuentas de terceros. El token de `--confirm` es el
+literal `create` en las operaciones raíz y el `id` del recurso en el resto:
+
+```bash
+factuarea managed-accounts list --json                          # GET  /v1/accounts
+factuarea managed-accounts show <managed_account>               # GET  /v1/accounts/{account}
+factuarea managed-accounts plan preview <managed_account>       # GET  /v1/accounts/{account}/plan/preview
+factuarea managed-accounts plan update <managed_account> --plan empresario --confirm <managed_account>
+factuarea managed-accounts access-level update <managed_account> --level view
+factuarea managed-accounts claim-tokens create <managed_account> --send-email --confirm <managed_account>
+factuarea managed-accounts management end <managed_account> --confirm <managed_account>
+```
+
+`managed-accounts claim-tokens create` reemite el vale de reclamación de una
+cuenta GESTIONADA; no tiene relación con el vale de la cuenta propia, que se
+sustituyó por el traspaso de NIF (`factuarea account nif-transfers
+{create,accept,list,revoke}`, ver el CHANGELOG).
+
+### Importación con ficheros
+
+`managed-accounts imports` es multipart: cada fichero va con `--file-<campo>`
+(`--file-accounts_file` y `--file-customers_file`) y las
+opciones, por `-d` como objeto JSON plano cuyas claves son los nombres de campo
+del formulario. Solo se aceptan `options[send_email]`,
+`options[apply_customers_to_own_company]` y `options[confirm_plan_changes]`
+(booleanas, `false` por defecto). La CLI solo comprueba que haya algún fichero;
+quien exige `accounts_file` es el BACKEND (`customers_file` es opcional). Si
+falta, el contrato declara para estas operaciones un 422 de validación, con el
+campo inválido en `error.param`, y la CLI lo muestra tal cual.
+
+```bash
+factuarea managed-accounts imports template -o plantilla.csv    # GET /v1/accounts/imports/template
+factuarea managed-accounts imports preview \
+  --file-accounts_file cuentas.csv --file-customers_file clientes.csv   # no escribe
+factuarea managed-accounts imports create \
+  --file-accounts_file cuentas.csv --file-customers_file clientes.csv \
+  -d '{"options[send_email]":true}' --confirm create            # irreversible
+```
+
+### Webhooks y request logs de cuenta
+
+Los endpoints de webhook de la cuenta (`account webhooks`, con sus entregas en
+`account webhooks deliveries`) y los registros de peticiones de la cuenta
+(`account request-logs`) usan el eje de cuenta de arriba: lecturas sin cuenta se
+deducen, escrituras la piden.
+
+```bash
+factuarea account webhooks list --json
+factuarea account webhooks create --account <account> --url https://example.com/hooks \
+  --enabled-events account.member_added --account-relationship own
+factuarea account webhooks deliveries list <webhook> --status failed --json
+factuarea account webhooks deliveries retry --account <account> <webhook> <delivery>
+factuarea account request-logs list --only_errors true --json
+factuarea account request-logs show <request_id> --json
+```
+
+### Tareas y proyectos (tasks)
+
+Con el módulo **tareas** (`tasks`, incluido en todos los planes), el CLI expone los proyectos con su tablero de columnas, las tareas, las etiquetas, el tiempo imputado y la agenda: 80 comandos en siete grupos, cada uno con su scope fino. Los scopes son `projects:read|write|delete`, `tasks:read|write|delete`, `users:read` y `notifications:read|write`; la factura de horas de un proyecto (`projects time-invoices create`) pide además `invoices:write`, porque crea una factura.
+
+| Grupo | Qué cubre |
+| --- | --- |
+| `projects` | proyectos, columnas (`projects columns`), campos personalizados, exportar e importar tareas (`projects tasks`), resumen de tiempo y factura de horas |
+| `tasks` | tareas y sus subrecursos: comentarios, adjuntos, entradas de tiempo (`tasks time-entries`), etiquetas, relaciones, vínculos con documentos y contactos, actividad |
+| `task-labels` | etiquetas de tarea de la empresa |
+| `task-timers` | el temporizador en marcha del titular de la key |
+| `users` | miembros de la empresa a los que se puede asignar una tarea |
+| `notifications` | avisos del titular de la key |
+| `agenda` | agenda combinada: tareas con vencimiento, vencimientos de documentos, plazos fiscales y ausencias |
+
+```bash
+# Un proyecto: su clave (una letra y hasta nueve letras o números) prefija la de sus tareas (WEB-1, WEB-2…).
+factuarea projects create --name "Web corporativa" --key WEB --json
+factuarea projects columns list <project_id> --json
+
+# Crear una tarea. El cuerpo completo permite, además, vincularla a un documento o contacto
+# en la misma petición con `entity_link` (invoice, quote, contact, product…).
+factuarea tasks create --json -d '{
+  "project_id": "<project_id>",
+  "title": "Preparar el presupuesto",
+  "priority": "high",
+  "due_on": "2026-10-15",
+  "entity_link": {"type": "quote", "id": "<quote_id>"}
+}'
+
+# Los comandos piden el UUID; con la clave de la tarea se resuelve primero.
+factuarea tasks find-by-key WEB-1 --json
+
+# Cambiar su estado: a una columna del proyecto o a un estado virtual (`planned` es el backlog).
+factuarea tasks status <task_id> --column-id <column_id>
+factuarea tasks status <task_id> --status planned
+
+# Buscar y recorrer el cursor de forma transparente.
+factuarea tasks search --project_id <project_id> --status active --paginate --json
+
+# Imputar tiempo: un periodo cerrado (ISO 8601 con zona horaria)…
+factuarea tasks time-entries create <task_id> \
+  --started-at 2026-09-28T09:00:00+02:00 --ended-at 2026-09-28T10:30:00+02:00 \
+  --description "Revisión del presupuesto"
+
+# …o con el temporizador del titular de la key, que solo admite uno en marcha.
+factuarea tasks timer start <task_id>
+factuarea task-timers current --json      # `{"data": null}` si no hay ninguno
+factuarea task-timers stop --json
+
+# Borrar una columna con tareas exige decir dónde van. Es irreversible: sin terminal
+# interactiva hay que confirmar con --confirm, y lo que se confirma es el ÚLTIMO
+# argumento posicional (aquí, la columna borrada).
+factuarea projects columns delete <project_id> <column_id> \
+  --move_to_column_id <other_column_id> --confirm <column_id>
+```
+
+Los borrados de proyectos, columnas, campos personalizados, etiquetas, tareas (también `tasks bulk-delete`), comentarios, adjuntos y entradas de tiempo son irreversibles y piden `--confirm`; las mutaciones generan la cabecera `Idempotency-Key` si no pasas `--idempotency-key`.
+
+**`task-timers` no es el fichaje de jornada.** El temporizador y las entradas de `tasks time-entries` registran el tiempo dedicado a una tarea, para medirlo y facturarlo; no son el registro de jornada del módulo de control horario (`factuarea time-entries clock-in`, arriba), que tiene su propio scope y su propio registro inalterable.
+
+### Documentos de control del transporte (DeCA)
+
+Con el módulo **documentos de control** (`transport_documents`, desde el plan Profesional y junto al de albaranes), el CLI expone el documento electrónico de control administrativo (DeCA) del transporte de mercancías por carretera: 17 comandos bajo `factuarea transport-documents`. Los scopes son `transport_documents:read|write|transition|delete`; el PDF de una versión pide `pdfs:read`, y el justificante de emisión `transport_documents:read`, porque contiene el registro de emisión.
+
+```bash
+# Alta en borrador a partir de albaranes (un envío por albarán) y emisión con el siguiente número de la serie DC.
+factuarea transport-documents create --company acme_co --json -d '{
+  "company_role": "shipper",
+  "carrier": {"contact_id": "<contact_id>"},
+  "delivery_note_ids": ["<delivery_note_id>"],
+  "vehicle": {"tractor_plate": "1234BCD"}
+}'
+factuarea transport-documents issue --company acme_co <id> --confirm <id>
+
+# Listar y filtrar (el listado se llama `index`, como su operación en la API).
+factuarea transport-documents index --company acme_co --status issued --company_role shipper --paginate --json
+
+# Modificar durante el servicio: mismo número, misma URL y mismo QR.
+factuarea transport-documents modify --company acme_co <id> --reason "Cambio de matrícula" --data-origin company \
+  --vehicle.tractor-plate 5678FGH --confirm <id>
+
+# Descargas: el PDF (versión actual o --version N), el QR (svg o png) y el justificante de emisión.
+factuarea transport-documents pdf --company acme_co <id> -o deca.pdf
+factuarea transport-documents qr --company acme_co <id> --format png -o deca-qr.png
+factuarea transport-documents issuance-proof --company acme_co <id> -o justificante.pdf
+factuarea transport-documents evidence --company acme_co <id> --json      # el registro de emisión, en JSON
+```
+
+Emitir (`issue`), modificar (`modify`), anular (`cancel`), sustituir (`supersede`) y enviar (`send`) son irreversibles: sin terminal interactiva hay que confirmarlos con `--confirm <id>`. Cerrar (`close`) y reabrir (`reopen`) no piden confirmación, y borrar (`delete`) solo admite borradores.
 
 ### ERP omnicanal (pedidos, compras, almacén, envíos, devoluciones y storefront)
 
@@ -270,23 +692,23 @@ factuarea sales-orders create --company acme_co --json -d '{
   "order_date": "2026-03-12",
   "buyer_name": "Laura Giménez",
   "expected_delivery_date": "2026-03-19",
-  "lines": [{"description": "Silla ergonómica Nordic", "quantity": 12, "unit_price": 45, "vat_rate": 21}]
+  "lines": [{"description": "Silla ergonómica Nordic", "quantity": "12", "unit_price": "45", "vat_rate": "21"}]
 }'
 
 # Una línea suelta sobre el pedido ya creado (sub-recurso anidado, no aplanado).
-factuarea sales-orders lines create --company acme_co so_01931b3e --quantity 2 \
+factuarea sales-orders lines create --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01 --quantity 2.0000 \
   --description "Montaje e instalación" --unit-price 120 --json
 
 # Confirmar estampa el número de serie y es IRREVERSIBLE: hay que confirmar.
-factuarea sales-orders confirm --company acme_co so_01931b3e --confirm so_01931b3e
+factuarea sales-orders confirm --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01 --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01
 
 # Servir y facturar (las dos, irreversibles).
-factuarea sales-orders convert-to-delivery-note --company acme_co so_01931b3e --confirm so_01931b3e
-factuarea sales-orders convert-to-invoice      --company acme_co so_01931b3e --confirm so_01931b3e
+factuarea sales-orders convert-to-delivery-note --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01 --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01
+factuarea sales-orders convert-to-invoice      --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01 --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01
 
 # Cartera, con el cursor recorrido de forma transparente, y el PDF del pedido.
 factuarea sales-orders list --company acme_co --status confirmed --paginate --json
-factuarea sales-orders pdf  --company acme_co so_01931b3e -o pedido.pdf
+factuarea sales-orders pdf  --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01 -o pedido.pdf
 
 # --- Compra: pedido al proveedor, envío, recepción y asiento de existencias --
 # `lines` es lista de objetos ⇒ cuerpo completo; `--skeleton` da la plantilla.
@@ -294,99 +716,99 @@ factuarea purchase-orders create --company acme_co --json -d '{
   "supplier_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8c01",
   "warehouse_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8c02",
   "expected_date": "2026-03-24",
-  "lines": [{"product_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8c21", "quantity": 8, "unit_price": 187.5, "tax_rate": 21}]
+  "lines": [{"product_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8c21", "quantity": "8", "unit_price": "187.5", "tax_rate": "21"}]
 }'
-factuarea purchase-orders send --company acme_co po_0193 --confirm po_0193
-factuarea purchase-orders receipts create --company acme_co po_0193 --json -d '{
+factuarea purchase-orders send --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d02 --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d02
+factuarea purchase-orders receipts create --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d02 --json -d '{
   "received_on": "2026-03-18",
-  "lines": [{"purchase_order_line_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8c11", "quantity": 5}]
+  "lines": [{"purchase_order_line_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8c11", "quantity": "5"}]
 }'
 # `post` asienta la recepción en el ledger de existencias: irreversible.
-factuarea goods-receipts post --company acme_co gr_0193 --confirm gr_0193
+factuarea goods-receipts post --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d03 --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d03
 # Qué reponer, y el pedido de compra que sale de ahí (la clave del lote es `items`).
 factuarea purchase-reorder-suggestions list   --company acme_co --json
 factuarea purchase-reorder-suggestions accept --company acme_co --json -d '{
-  "items": [{"product_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8c21", "offer_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8c31", "quantity": 4}]
+  "items": [{"product_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8c21", "offer_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8c31", "quantity": "4"}]
 }'
 
 # --- Almacén: altas, ubicaciones, traspasos y reservas ----------------------
 # `type` es un catálogo cerrado: own, external, store, transit.
 factuarea warehouses create --company acme_co --code ALM-BCN --name "Almacén Barcelona" --type own --json
-factuarea warehouses locations create --company acme_co wh_0193 --code PAS-A --name "Pasillo A" --json
+factuarea warehouses locations create --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d04 --code PAS-A --name "Pasillo A" --json
 factuarea stock-transfers create --company acme_co --json -d '{
-  "origin_warehouse_id": "wh_0193", "destination_warehouse_id": "wh_0194",
-  "lines": [{"product_id": "0199aa00-0000-7000-8000-0000000000a1", "quantity": 10}]
+  "origin_warehouse_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d04", "destination_warehouse_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d05",
+  "lines": [{"product_id": "0199aa00-0000-7000-8000-0000000000a1", "quantity": "10"}]
 }'
-factuarea stock-transfers dispatch --company acme_co st_0193 --confirm st_0193
+factuarea stock-transfers dispatch --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d06 --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d06
 # En la recepción, `lines` es un MAPA «id de línea → cantidad recibida ahora».
-factuarea stock-transfers receive --company acme_co st_0193 --confirm st_0193 \
+factuarea stock-transfers receive --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d06 --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d06 \
   -d '{"lines": {"0199aa00-0000-7000-8000-000000000001": "10.0000"}}'
 # `holder_type` NO es catálogo cerrado: lo eliges tú (minúsculas, hasta 40 car.)
 # y es la mitad de la clave con la que luego consultas o liberas lo retenido.
 factuarea stock-reservations create --company acme_co --json -d '{
-  "holder_type": "sales_order", "holder_id": "so_01931b3e", "expires_in_seconds": 900,
-  "lines": [{"product_id": "0199aa00-0000-7000-8000-0000000000a1", "quantity": 2}]
+  "holder_type": "sales_order", "holder_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01", "expires_in_seconds": 900,
+  "lines": [{"product_id": "0199aa00-0000-7000-8000-0000000000a1", "quantity": "2"}]
 }'
-factuarea stock-reservations find-by-holder --company acme_co --json -d '{"holder_type": "sales_order", "holder_id": "so_01931b3e"}'
-factuarea stock-reservations release --company acme_co res_0193 --confirm res_0193
+factuarea stock-reservations find-by-holder --company acme_co --json -d '{"holder_type": "sales_order", "holder_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01"}'
+factuarea stock-reservations release --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d07 --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d07
 # Disponibilidad y compromisos vivos de un producto (scope `products:read`).
-factuarea stock-availability show --company acme_co prod_019 --json
-factuarea stock-availability commitments list --company acme_co prod_019 --json
+factuarea stock-availability show --company acme_co 0199aa00-0000-7000-8000-0000000000a1 --json
+factuarea stock-availability commitments list --company acme_co 0199aa00-0000-7000-8000-0000000000a1 --json
 
 # --- Envíos: preparación, bultos, transportista y estado de cumplimiento ----
 factuarea delivery-notes picking-queue list --company acme_co --json
-factuarea delivery-notes picking-list open  --company acme_co dn_0193 --confirm dn_0193
-factuarea delivery-notes picking-lines pick --company acme_co dn_0193 pl_0193 --picked-quantity 12 --json
-factuarea delivery-notes packages create    --company acme_co dn_0193 --reference BULTO-1/2 --weight-kg 10.5 --json
+factuarea delivery-notes picking-list open  --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08 --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08
+factuarea delivery-notes picking-lines pick --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d09 --picked-quantity 12 --json
+factuarea delivery-notes packages create    --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08 --reference BULTO-1/2 --weight-kg 10.5 --json
 # `tracking-kind`: url_template, manual o store_provided (catálogo cerrado).
 factuarea carriers create --company acme_co --name SEUR --code SEUR-24H \
   --tracking-kind url_template --tracking-url-template "https://seguimiento.example/{tracking_number}" --json
-factuarea delivery-notes shipment update    --company acme_co dn_0193 --carrier-id car_0193 --json
+factuarea delivery-notes shipment update    --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08 --carrier-id 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0a --json
 # La transición de cumplimiento es irreversible y pide el estado destino.
 factuarea delivery-notes fulfilment-statuses --company acme_co --json   # los valores admitidos
-factuarea delivery-notes fulfilment-status transition --company acme_co dn_0193 \
-  --target-status in_transit --confirm dn_0193
+factuarea delivery-notes fulfilment-status transition --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08 \
+  --target-status in_transit --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08
 # Los tres documentos de la preparación (binarios: siempre con -o).
-factuarea delivery-notes picking-list pdf --company acme_co dn_0193 -o picking.pdf
-factuarea delivery-notes packing-list     --company acme_co dn_0193 -o packing.pdf
-factuarea delivery-notes shipping-label   --company acme_co dn_0193 -o etiqueta.pdf
+factuarea delivery-notes picking-list pdf --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08 -o picking.pdf
+factuarea delivery-notes packing-list     --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08 -o packing.pdf
+factuarea delivery-notes shipping-label   --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08 -o etiqueta.pdf
 
 # --- Devoluciones: alta, aprobación, recepción y abono ----------------------
 # `origin-type`: delivery_note, invoice o sales_order (catálogo cerrado).
-factuarea returns returnable-lines --company acme_co --origin_type delivery_note --origin_id dn_0193 --json
+factuarea returns returnable-lines --company acme_co --origin_type delivery_note --origin_id 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08 --json
 factuarea returns create --company acme_co --json -d '{
-  "origin_type": "delivery_note", "origin_id": "dn_0193", "reason": "product_defective",
-  "lines": [{"origin_line_id": 8814, "quantity": 2, "reason": "product_defective"}]
+  "origin_type": "delivery_note", "origin_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d08", "reason": "product_defective",
+  "lines": [{"origin_line_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0f", "quantity": "2", "reason": "product_defective"}]
 }'
-factuarea returns approve  --company acme_co ret_0193 --confirm ret_0193
-factuarea returns receive  --company acme_co ret_0193 --confirm ret_0193
-factuarea returns refund   --company acme_co ret_0193 --confirm ret_0193
+factuarea returns approve  --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0b --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0b
+factuarea returns receive  --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0b --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0b
+factuarea returns refund   --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0b --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0b
 
 # --- Storefront: credencial del comerciante y carril del comprador ----------
 # La clave PUBLICABLE se emite (y se rota) con credencial de integrador.
 factuarea storefront-keys scopes --company acme_co --json          # el catálogo cerrado
 factuarea storefront-keys create --company acme_co --json \
   -d '{"name": "Web pública", "allowed_origins": ["https://tienda.example"], "scopes": ["storefront:read", "storefront:write"]}'
-factuarea storefront-keys rotate-secret --company acme_co sk_0193 --confirm sk_0193
+factuarea storefront-keys rotate-secret --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0c --confirm 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0c
 # El carril del comprador (catálogo → precio → disponibilidad → sesión → pedido).
 factuarea storefront products list     --company acme_co --json
-factuarea storefront prices resolve    --company acme_co --json -d '{"product_id": "prod_019", "quantity": 2}'
-factuarea storefront availability show --company acme_co prod_019 --json
-factuarea storefront sessions create   --company acme_co --json -d '{"lines": [{"product_id": "prod_019", "quantity": 2}]}'
+factuarea storefront prices resolve    --company acme_co --json -d '{"product_id": "0199aa00-0000-7000-8000-0000000000a1", "quantity": "2"}'
+factuarea storefront availability show --company acme_co 0199aa00-0000-7000-8000-0000000000a1 --json
+factuarea storefront sessions create   --company acme_co --json -d '{"lines": [{"product_id": "0199aa00-0000-7000-8000-0000000000a1", "quantity": "2"}]}'
 factuarea storefront orders create     --company acme_co --json -d '{
-  "session_id": "ses_0193", "marketing_consent": true,
+  "session_id": "01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0d", "marketing_consent": true,
   "buyer_name": "Ana Ruiz Molina", "buyer_email": "ana.ruiz@example.com",
   "shipping_address_line": "Calle Mayor 12, 3º B", "shipping_city": "Alicante", "shipping_country": "ES",
-  "lines": [{"product_id": "prod_019", "quantity": 2}]
+  "lines": [{"product_id": "0199aa00-0000-7000-8000-0000000000a1", "quantity": "2"}]
 }'
-factuarea storefront orders tracking   --company acme_co sfo_0193 --json
+factuarea storefront orders tracking   --company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d0e --json
 ```
 
 Las **41** operaciones irreversibles del ERP (confirmar, cancelar, cerrar,
 asentar, despachar, recibir, abonar, revocar, rotar, borrar…) exigen `--confirm
 <id del recurso>` cuando no hay terminal interactiva, y lo que se confirma es el
-**recurso**, nunca la empresa: `--company acme_co so_01931b3e --confirm
-so_01931b3e`. Con una key `fact_live_` hacen falta además `--live`. La lista
+**recurso**, nunca la empresa: `--company acme_co 01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01 --confirm
+01934c8d-2e5f-7a1b-8c9d-4e5f6a7b8d01`. Con una key `fact_live_` hacen falta además `--live`. La lista
 exacta, con su scope y sus marcas, sale del propio binario:
 
 ```bash
@@ -448,3 +870,5 @@ API pública, SDKs y MCP: [docs.factuarea.com](https://docs.factuarea.com).
 ## Licencia
 
 MIT.
+
+To discover expense categories for scanner review, run `factuarea purchase-invoices expense-categories`. Use the returned `id` in the `expense_category` field.

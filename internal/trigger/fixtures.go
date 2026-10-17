@@ -6,84 +6,126 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/factuarea/factuarea-cli/internal/client"
 )
 
 func init() {
-	registry["client.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		_, err := c.Do(ctx, http.MethodPost, "/v1/clients", mustJSON(map[string]any{
-			"name":   orDefault(ov, "name", "Cliente de prueba (trigger)"),
-			"tax_id": orDefault(ov, "tax_id", "12345678Z"),
-		}), nil)
+	// La API pública ya no expone `/v1/clients`: clientes y proveedores son roles
+	// (`customer`/`supplier`) de un contacto canónico. Una escritura canónica emite
+	// `contact.created`, NO el `client.created` de compatibilidad del borde legacy.
+	registry["contact.created"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		_, err := createCustomerContact(ctx, c, base, ov)
 		return err
 	}
 
-	registry["product.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		_, err := c.Do(ctx, http.MethodPost, "/v1/products", mustJSON(map[string]any{
+	registry["product.created"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		_, err := c.Do(ctx, http.MethodPost, base+"/products", mustJSON(map[string]any{
 			"name":  orDefault(ov, "name", "Producto de prueba (trigger)"),
 			"price": orDefault(ov, "price", "100"),
 		}), nil)
 		return err
 	}
 
-	registry["invoice.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		_, err := createInvoice(ctx, c, ov)
+	registry["invoice.created"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		_, err := createInvoice(ctx, c, base, ov)
 		return err
 	}
 
-	registry["invoice.sent"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		id, err := createInvoice(ctx, c, ov)
+	registry["invoice.sent"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		id, err := createInvoice(ctx, c, base, ov)
 		if err != nil {
 			return err
 		}
-		_, err = c.Do(ctx, http.MethodPost, "/v1/invoices/"+id+"/mark-sent", nil, nil)
+		_, err = c.Do(ctx, http.MethodPost, base+"/invoices/"+id+"/mark-sent", nil, nil)
 		return err
 	}
 
-	registry["invoice.paid"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		id, err := createInvoice(ctx, c, ov)
+	registry["invoice.paid"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		id, err := createInvoice(ctx, c, base, ov)
 		if err != nil {
 			return err
 		}
-		if _, err = c.Do(ctx, http.MethodPost, "/v1/invoices/"+id+"/mark-sent", nil, nil); err != nil {
+		if _, err = c.Do(ctx, http.MethodPost, base+"/invoices/"+id+"/mark-sent", nil, nil); err != nil {
 			return err
 		}
-		_, err = c.Do(ctx, http.MethodPost, "/v1/invoices/"+id+"/mark-paid", nil, nil)
+		_, err = c.Do(ctx, http.MethodPost, base+"/invoices/"+id+"/mark-paid", nil, nil)
 		return err
 	}
 
-	registry["quote.created"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		_, err := createQuote(ctx, c, ov)
+	registry["quote.created"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		_, err := createQuote(ctx, c, base, ov)
 		return err
 	}
 
-	registry["quote.approved"] = func(ctx context.Context, c *client.Client, ov map[string]string) error {
-		id, err := createQuote(ctx, c, ov)
+	registry["quote.approved"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		id, err := createQuote(ctx, c, base, ov)
 		if err != nil {
 			return err
 		}
-		_, err = c.Do(ctx, http.MethodPost, "/v1/quotes/"+id+"/accept", nil, nil)
+		_, err = c.Do(ctx, http.MethodPost, base+"/quotes/"+id+"/accept", nil, nil)
+		return err
+	}
+
+	registry["project.created"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		_, err := createProject(ctx, c, base, ov)
+		return err
+	}
+
+	// Una tarea vive siempre dentro de un proyecto: el fixture crea uno nuevo (su
+	// propia clave, sin depender de ninguno previo de la cuenta sandbox) y una
+	// tarea en él. Por eso este evento también emite `project.created`.
+	registry["task.created"] = func(ctx context.Context, c *client.Client, base string, ov map[string]string) error {
+		projectID, err := createProject(ctx, c, base, ov)
+		if err != nil {
+			return err
+		}
+		_, err = c.Do(ctx, http.MethodPost, base+"/tasks", mustJSON(map[string]any{
+			"project_id": projectID,
+			"title":      orDefault(ov, "title", "Tarea de prueba (trigger)"),
+		}), nil)
 		return err
 	}
 }
 
-func createInvoice(ctx context.Context, c *client.Client, ov map[string]string) (string, error) {
-	clientID, err := ensureClientID(ctx, c)
+// createProject crea un proyecto de tareas con el mínimo que exige la API
+// (nombre y clave). La clave es única por empresa y no se puede repetir, así que
+// por defecto se deriva del reloj: una letra y hasta nueve letras o números.
+func createProject(ctx context.Context, c *client.Client, base string, ov map[string]string) (string, error) {
+	resp, err := c.Do(ctx, http.MethodPost, base+"/projects", mustJSON(map[string]any{
+		"name": orDefault(ov, "name", "Proyecto de prueba (trigger)"),
+		"key":  orDefault(ov, "key", uniqueProjectKey(time.Now())),
+	}), nil)
 	if err != nil {
 		return "", err
 	}
-	seriesID, err := defaultSeriesID(ctx, c)
+	return extractID(resp.Body)
+}
+
+// uniqueProjectKey devuelve `T` seguida de los milisegundos de `now` en base 36
+// y mayúsculas (9 caracteres a día de hoy), válida para `^[A-Z][A-Z0-9]{0,9}$`.
+func uniqueProjectKey(now time.Time) string {
+	return "T" + strings.ToUpper(strconv.FormatInt(now.UnixMilli(), 36))
+}
+
+func createInvoice(ctx context.Context, c *client.Client, base string, ov map[string]string) (string, error) {
+	contactID, err := ensureCustomerContactID(ctx, c, base)
 	if err != nil {
 		return "", err
 	}
-	taxID, err := defaultTaxID(ctx, c)
+	seriesID, err := defaultSeriesID(ctx, c, base)
 	if err != nil {
 		return "", err
 	}
-	resp, err := c.Do(ctx, http.MethodPost, "/v1/invoices", mustJSON(map[string]any{
-		"client_id": clientID,
+	taxID, err := defaultTaxID(ctx, c, base)
+	if err != nil {
+		return "", err
+	}
+	resp, err := c.Do(ctx, http.MethodPost, base+"/invoices", mustJSON(map[string]any{
+		"client_id": contactID,
 		"series_id": seriesID,
 		"issued_on": time.Now().Format("2006-01-02"),
 		"due_on":    time.Now().AddDate(0, 0, 30).Format("2006-01-02"),
@@ -100,21 +142,21 @@ func createInvoice(ctx context.Context, c *client.Client, ov map[string]string) 
 	return extractID(resp.Body)
 }
 
-func createQuote(ctx context.Context, c *client.Client, ov map[string]string) (string, error) {
-	clientID, err := ensureClientID(ctx, c)
+func createQuote(ctx context.Context, c *client.Client, base string, ov map[string]string) (string, error) {
+	contactID, err := ensureCustomerContactID(ctx, c, base)
 	if err != nil {
 		return "", err
 	}
-	seriesID, err := defaultSeriesID(ctx, c)
+	seriesID, err := defaultSeriesID(ctx, c, base)
 	if err != nil {
 		return "", err
 	}
-	taxID, err := defaultTaxID(ctx, c)
+	taxID, err := defaultTaxID(ctx, c, base)
 	if err != nil {
 		return "", err
 	}
-	resp, err := c.Do(ctx, http.MethodPost, "/v1/quotes", mustJSON(map[string]any{
-		"client_id": clientID,
+	resp, err := c.Do(ctx, http.MethodPost, base+"/quotes", mustJSON(map[string]any{
+		"client_id": contactID,
 		"series_id": seriesID,
 		"issued_on": time.Now().Format("2006-01-02"),
 		"due_on":    time.Now().AddDate(0, 0, 30).Format("2006-01-02"),
@@ -131,17 +173,27 @@ func createQuote(ctx context.Context, c *client.Client, ov map[string]string) (s
 	return extractID(resp.Body)
 }
 
-func ensureClientID(ctx context.Context, c *client.Client) (string, error) {
-	resp, err := c.Do(ctx, http.MethodGet, "/v1/clients?"+url.Values{"limit": {"1"}}.Encode(), nil, nil)
+// ensureCustomerContactID reutiliza el primer contacto con rol `customer` de la
+// cuenta sandbox y, si no hay ninguno, crea uno. Los documentos siguen pidiendo
+// `client_id` en el cuerpo, pero su valor es el UUID del contacto.
+func ensureCustomerContactID(ctx context.Context, c *client.Client, base string) (string, error) {
+	q := url.Values{"limit": {"1"}, "roles[]": {"customer"}}
+	resp, err := c.Do(ctx, http.MethodGet, base+"/contacts?"+q.Encode(), nil, nil)
 	if err != nil {
 		return "", err
 	}
 	if id := firstListID(resp.Body); id != "" {
 		return id, nil
 	}
-	created, err := c.Do(ctx, http.MethodPost, "/v1/clients", mustJSON(map[string]any{
-		"name":   "Cliente de prueba (trigger)",
-		"tax_id": "12345678Z",
+	return createCustomerContact(ctx, c, base, nil)
+}
+
+func createCustomerContact(ctx context.Context, c *client.Client, base string, ov map[string]string) (string, error) {
+	created, err := c.Do(ctx, http.MethodPost, base+"/contacts", mustJSON(map[string]any{
+		"name":   orDefault(ov, "name", "Cliente de prueba (trigger)"),
+		"kind":   orDefault(ov, "kind", "person"),
+		"tax_id": orDefault(ov, "tax_id", "12345678Z"),
+		"roles":  []string{"customer"},
 	}), nil)
 	if err != nil {
 		return "", err
@@ -149,8 +201,8 @@ func ensureClientID(ctx context.Context, c *client.Client) (string, error) {
 	return extractID(created.Body)
 }
 
-func defaultSeriesID(ctx context.Context, c *client.Client) (string, error) {
-	resp, err := c.Do(ctx, http.MethodGet, "/v1/series?"+url.Values{"limit": {"100"}}.Encode(), nil, nil)
+func defaultSeriesID(ctx context.Context, c *client.Client, base string) (string, error) {
+	resp, err := c.Do(ctx, http.MethodGet, base+"/series?"+url.Values{"limit": {"100"}}.Encode(), nil, nil)
 	if err != nil {
 		return "", err
 	}
@@ -169,8 +221,8 @@ func defaultSeriesID(ctx context.Context, c *client.Client) (string, error) {
 	return items[0].ID, nil
 }
 
-func defaultTaxID(ctx context.Context, c *client.Client) (string, error) {
-	resp, err := c.Do(ctx, http.MethodGet, "/v1/taxes/active?"+url.Values{"limit": {"1"}}.Encode(), nil, nil)
+func defaultTaxID(ctx context.Context, c *client.Client, base string) (string, error) {
+	resp, err := c.Do(ctx, http.MethodGet, base+"/taxes/active?"+url.Values{"limit": {"1"}}.Encode(), nil, nil)
 	if err != nil {
 		return "", err
 	}

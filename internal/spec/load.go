@@ -18,10 +18,14 @@ func Load() (ops []Operation, nonConforming []string, err error) {
 	if err != nil {
 		return nil, nil, fmt.Errorf("parse spec: %w", err)
 	}
+	defer doc.Release()
 	model, err := doc.BuildV3Model()
 	if err != nil {
 		return nil, nil, fmt.Errorf("build v3 model: %w", err)
 	}
+	// Operations contain detached values; release the parser's index after
+	// extraction as well as the document to avoid retaining its YAML tree.
+	defer model.Index.Release()
 	if model.Model.Paths == nil || model.Model.Paths.PathItems == nil {
 		return nil, nil, fmt.Errorf("spec sin paths")
 	}
@@ -106,8 +110,29 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 	o.BinaryResponse = buildBinaryResponse(op)
 	o.RequiredScope = stringExt(op.Extensions, "x-required-scope")
 	o.Irreversible = boolExt(op.Extensions, "x-irreversible")
+	o.IdempotencyRequired = idempotencyRequired(op)
 	applyOverrides(&o)
 	return o
+}
+
+// idempotencyRequired detecta el parámetro `in: header`, `name: Idempotency-Key`
+// (sin distinguir mayúsculas) y `required: true`. Es solo informativo: el
+// cliente (`internal/client/client.go`) ya autogenera la cabecera en todo
+// verbo mutador (POST/PUT/PATCH/DELETE), un superconjunto seguro de lo que
+// exige el spec — ver `design.md` D6 y el hallazgo de `anchors/contract.md`.
+func idempotencyRequired(op *v3.Operation) bool {
+	for _, p := range op.Parameters {
+		if p == nil || p.In != "header" {
+			continue
+		}
+		if !strings.EqualFold(p.Name, "Idempotency-Key") {
+			continue
+		}
+		if p.Required != nil && *p.Required {
+			return true
+		}
+	}
+	return false
 }
 
 // Ya no hay lista de correcciones binarias a mano: el spec declara el
@@ -222,14 +247,15 @@ func buildBody(op *v3.Operation) *Body {
 	if mt, ok := content.Get("multipart/form-data"); ok && mt != nil && mt.Schema != nil {
 		b := &Body{Kind: "multipart"}
 		if sc := mt.Schema.Schema(); sc != nil {
-			b.FileFields = binaryFields(sc)
+			b.FileFields = binaryFields(sc, false)
+			b.FileArrayFields = binaryFields(sc, true)
 		}
 		return b
 	}
 	return nil
 }
 
-func binaryFields(sc *base.Schema) []string {
+func binaryFields(sc *base.Schema, multiple bool) []string {
 	if sc == nil {
 		return nil
 	}
@@ -240,8 +266,18 @@ func binaryFields(sc *base.Schema) []string {
 			if ps == nil {
 				continue
 			}
-			if s := ps.Schema(); s != nil && s.Format == "binary" {
-				fields = append(fields, prop.Key())
+			s := ps.Schema()
+			if s != nil && multiple {
+				s = arrayItemSchema(s)
+			}
+			if s != nil && s.Format == "binary" {
+				// El backend nombra la propiedad multipart de array con el
+				// sufijo `[]` ya incluido en la clave (p. ej. `files[]`, el
+				// nombre de la PARTE HTTP real, ver `anchors/contract.md`
+				// §1.4). Aquí se guarda el campo pelado: quien construye la
+				// petición (`genop_helpers.go`) es quien vuelve a añadir el
+				// sufijo al formar el nombre de la parte.
+				fields = append(fields, strings.TrimSuffix(prop.Key(), "[]"))
 			}
 		}
 	}
@@ -249,7 +285,7 @@ func binaryFields(sc *base.Schema) []string {
 		if sub == nil {
 			continue
 		}
-		fields = append(fields, binaryFields(sub.Schema())...)
+		fields = append(fields, binaryFields(sub.Schema(), multiple)...)
 	}
 	return fields
 }
@@ -269,7 +305,7 @@ func bodyFields(sc *base.Schema, depth int) []BodyField {
 		if ps == nil {
 			continue
 		}
-		s := ps.Schema()
+		s := fieldSchema(ps)
 		if s == nil {
 			continue
 		}
@@ -280,13 +316,41 @@ func bodyFields(sc *base.Schema, depth int) []BodyField {
 	return fields
 }
 
+// fieldSchema devuelve el esquema que clasifica un campo del cuerpo. Un campo
+// OpenAPI 3.1 que es un `$ref` con palabras clave hermanas (por ejemplo
+// `remission_mode`: `description` más `$ref` a un enum) lo entrega libopenapi
+// como la vista de solo los hermanos, sin tipo ni enum. En ese caso se clasifica
+// por el esquema referido.
+func fieldSchema(ps *base.SchemaProxy) *base.Schema {
+	s := ps.Schema()
+	if s == nil || !ps.IsTransformedRefWithSiblings() {
+		return s
+	}
+	semantic, err := ps.BuildTransformedRefSemanticSchema(s)
+	if err != nil || semantic == nil || len(semantic.AllOf) != 2 {
+		return s
+	}
+	if target := semantic.AllOf[1].Schema(); target != nil {
+		return target
+	}
+	return s
+}
+
 func classifyField(f *BodyField, s *base.Schema, depth int) {
-	jsonType, nullable := scalarType(s.Type)
+	jsonType, nullable, union := fieldType(s)
 	if s.Nullable != nil && *s.Nullable {
 		nullable = true
 	}
 	f.Nullable = nullable
 	f.Enum = enumValues(s.Enum)
+
+	if union {
+		// Un tipo unión (`string|number|boolean|array|null`) no es un array ni un
+		// objeto aunque uno de sus miembros lo sea: es un escalar de tipo libre.
+		f.Kind = "scalar"
+		f.Type = jsonType
+		return
+	}
 
 	switch jsonType {
 	case "array":
@@ -348,6 +412,68 @@ func requiredSet(sc *base.Schema) map[string]bool {
 		}
 	}
 	return set
+}
+
+// unionSeparator une los tipos de un campo de tipo unión: `string|number|null`.
+const unionSeparator = "|"
+
+// maxUnionDepth acota la recursión por `anyOf`/`oneOf` anidados.
+const maxUnionDepth = 4
+
+// fieldType devuelve el tipo de un campo de cuerpo. Un campo de un solo tipo
+// (`type: string`, `type: [string, null]`, `anyOf: [string, null]`) devuelve ese
+// tipo y su nulabilidad, con `union` a false. Un campo con VARIOS tipos distintos
+// —`type: [string, number]` o `anyOf`/`oneOf` de miembros de tipos distintos—
+// devuelve la unión de sus tipos en orden de declaración, con `null` al final si
+// alguno lo admite (`string|number|boolean|array|null`), y `union` a true.
+func fieldType(s *base.Schema) (jsonType string, nullable, union bool) {
+	names := schemaTypeNames(s, 0)
+	var concrete []string
+	for _, n := range names {
+		if n == "null" {
+			nullable = true
+			continue
+		}
+		concrete = append(concrete, n)
+	}
+	switch len(concrete) {
+	case 0:
+		return "", nullable, false
+	case 1:
+		return concrete[0], nullable, false
+	}
+	if nullable {
+		concrete = append(concrete, "null")
+	}
+	return strings.Join(concrete, unionSeparator), nullable, true
+}
+
+// schemaTypeNames recoge, sin repetir y en orden de declaración, los tipos que
+// declara el esquema: su `type` y los de sus miembros `anyOf`/`oneOf`.
+func schemaTypeNames(s *base.Schema, depth int) []string {
+	if s == nil || depth > maxUnionDepth {
+		return nil
+	}
+	var names []string
+	seen := map[string]bool{}
+	add := func(list []string) {
+		for _, n := range list {
+			if n != "" && !seen[n] {
+				seen[n] = true
+				names = append(names, n)
+			}
+		}
+	}
+	add(s.Type)
+	for _, members := range [][]*base.SchemaProxy{s.AnyOf, s.OneOf} {
+		for _, m := range members {
+			if m == nil {
+				continue
+			}
+			add(schemaTypeNames(m.Schema(), depth+1))
+		}
+	}
+	return names
 }
 
 func scalarType(types []string) (jsonType string, nullable bool) {

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/factuarea/factuarea-cli/internal/apierr"
+	"github.com/factuarea/factuarea-cli/internal/client"
 	"github.com/factuarea/factuarea-cli/internal/output"
 	"github.com/factuarea/factuarea-cli/internal/safety"
 	"github.com/spf13/cobra"
@@ -21,15 +22,19 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	var confirmFlag string
 	var skipScopeCheck bool
 	var dryRun, skeleton bool
+	var idempotencyKey string
 	fileFlags := map[string]*string{}
+	fileArrayFlags := map[string]*[]string{}
 
-	companyIdx := op.companyPathParamIndex()
+	// `axisFillIndex` —no el índice del path— es lo que manda aquí: cubre el eje
+	// de empresa y el de cuenta, que un comando nunca tiene a la vez.
+	axisIdx := op.axisFillIndex()
 	use := op.Action
 	for i, p := range op.PathParams {
-		// El eje de empresa se declara OPCIONAL en el uso porque la flag
-		// persistente `--company` puede aportarlo; el resto sigue siendo
-		// obligatorio exactamente como antes.
-		if i == companyIdx {
+		// El eje (de empresa o de cuenta) se declara OPCIONAL en el uso porque la
+		// flag persistente `--company` o `--account` puede aportarlo; el resto
+		// sigue siendo obligatorio exactamente como antes.
+		if i == axisIdx {
 			use += " [" + p.Name + "]"
 			continue
 		}
@@ -42,21 +47,34 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	long += bodyFieldsHelp(op)
 	if op.Body != nil && op.Body.Kind == "multipart" {
 		long += "\n\nSubida multipart: pasa el fichero con --file-<campo> y los" +
-			" campos de texto con --data como objeto JSON plano."
+			" campos de texto con --data como objeto JSON plano. En lotes, repite --file-<campo> por archivo."
 	}
 
 	posField, hasPosField := singlePositionalField(op)
 	nPath := len(op.PathParams)
 	// La aridad deja de ser exacta en cuanto uno de los posicionales es
-	// opcional. Los dos motivos son independientes y se componen: el eje de
-	// empresa quita uno por abajo y el atajo del campo único de cuerpo añade
-	// uno por arriba. Hoy no coinciden nunca —`singlePositionalField` exige
-	// cero parámetros de ruta— pero el cálculo no lo da por supuesto.
+	// opcional: el eje quita uno por abajo y el atajo del campo único de cuerpo
+	// añade uno por arriba. Si algún día coincidieran, `len(args) == nPath`
+	// tendría DOS lecturas y la invocación se RECHAZA nombrando las dos, nunca
+	// se desambigua por la FORMA del argumento. Hoy el universo es vacío:
+	// `singlePositionalField` exige cero parámetros de ruta.
 	minArgs, maxArgs := nPath, nPath
-	if companyIdx >= 0 {
+	if axisIdx >= 0 {
 		minArgs--
-		long += "\n\nPuedes fijar la empresa con la flag persistente --company en vez de" +
-			" pasarla como argumento posicional. Aportarla por las dos vías a la vez es un error de uso."
+		if op.accountFillIndex() >= 0 {
+			long += accountAxisHelp(op, use, axisIdx)
+		} else {
+			long += "\n\nPuedes fijar la empresa con la flag persistente --company en vez de" +
+				" pasarla como argumento posicional. Aportarla por las dos vías a la vez es un error de uso." +
+				"\n\nForma canónica:  factuarea " + strings.Join(op.Groups, " ") + " " + use +
+				"\nForma corta:     factuarea " + strings.Join(op.Groups, " ") + " " + shortUsage(op, use, axisIdx) +
+				" --company <" + op.PathParams[axisIdx].Name + ">" +
+				"\nSi tu credencial alcanza una sola empresa, ni siquiera hace falta --company: se resuelve sola."
+		}
+	}
+	if op.requiresExplicitAccount() {
+		long += "\n\nEsta operación es irreversible y nombra la cuenta como último argumento (en una transferencia de NIF es la cuenta que cede o recibe el NIF, no solo la que opera): la cuenta se escribe siempre como" +
+			" argumento posicional <" + accountPathParam + ">. La flag persistente --account no la rellena a propósito."
 	}
 	if hasPosField {
 		maxArgs++
@@ -67,6 +85,22 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	if maxArgs != minArgs {
 		argsRule = cobra.RangeArgs(minArgs, maxArgs)
 	}
+	if op.requiresExplicitCompany() || op.requiresExplicitAccount() {
+		// La aridad exacta ya obliga a escribir el eje; lo que falta es DECIR por
+		// qué, porque el usuario que viene de otra operación del eje espera que
+		// `--company` o `--account` se lo rellene.
+		base := argsRule
+		explicitErr := op.explicitCompanyError
+		if op.requiresExplicitAccount() {
+			explicitErr = op.explicitAccountError
+		}
+		argsRule = func(cmd *cobra.Command, args []string) error {
+			if len(args) < nPath {
+				return explicitErr()
+			}
+			return base(cmd, args)
+		}
+	}
 
 	c := &cobra.Command{
 		Use:        use,
@@ -75,9 +109,21 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		Args:       UsageArgs(argsRule),
 		Deprecated: deprecatedMsg(op),
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			_, extra, err := op.splitPositionals(args, globalsFrom(cmd).Company)
-			if err != nil {
-				return err
+			// `--skeleton` y `--dry-run` prometen en su propia ayuda imprimir «sin
+			// llamar a la API».
+			printsOnly := skeleton || (dryRun && op.typedBody())
+			var extra []string
+			if printsOnly {
+				extra = op.extraPositionals(args)
+			} else {
+				// La lista de argumentos se NORMALIZA antes de que nadie la lea.
+				axis, err := op.resolveAxisForArgs(cmd.Context(), globalsFrom(cmd), args)
+				if err != nil {
+					return err
+				}
+				if _, extra, err = op.splitAxisPositionals(args, axis); err != nil {
+					return err
+				}
 			}
 			if hasPosField && len(extra) > 0 {
 				if cmd.Flags().Changed(posField.flagName) {
@@ -108,14 +154,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			g := globalsFrom(cmd)
-			pathValues, _, err := op.splitPositionals(args, g.Company)
-			if err != nil {
-				return err
-			}
-			if err := validateResourceArgs(op, pathValues); err != nil {
-				return err
-			}
+			// Mismo corte que en `PreRunE`, y por el mismo motivo: la plantilla se
+			// deriva del contrato de la operación, no de la invocación, así que no
+			// necesita empresa, ni path compuesto, ni red.
 			if skeleton && op.typedBody() {
 				out, err := skeletonBody(op)
 				if err != nil {
@@ -123,6 +164,24 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				}
 				fmt.Fprintln(cmd.OutOrStdout(), string(out))
 				return nil
+			}
+			g := globalsFrom(cmd)
+			// Mismo gateo que en `PreRunE`: `--dry-run` imprime el cuerpo compilado y
+			// vuelve, así que no hay path que componer ni empresa que resolver.
+			var pathValues []string
+			if !(dryRun && op.typedBody()) {
+				axis, err := op.resolveAxisForArgs(cmd.Context(), g, args)
+				if err != nil {
+					return err
+				}
+				values, _, serr := op.splitAxisPositionals(args, axis)
+				if serr != nil {
+					return serr
+				}
+				if verr := validateResourceArgs(op, values); verr != nil {
+					return verr
+				}
+				pathValues = values
 			}
 			var typedBody []byte
 			if op.typedBody() {
@@ -175,8 +234,14 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			path := op.buildPath(pathValues)
 			q := url.Values{}
 			for _, p := range op.QueryParams {
+				if strings.HasSuffix(p.Name, "[]") {
+					values, _ := cmd.Flags().GetStringSlice(op.arrayQueryFlag(p.Name))
+					for _, value := range values {
+						q.Add(p.Name, value)
+					}
+				}
 				if v, _ := cmd.Flags().GetString(p.Name); v != "" {
-					q.Set(p.Name, v)
+					q.Add(p.Name, v)
 				}
 			}
 
@@ -197,7 +262,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					}
 					resolvedData = string(b)
 				}
-				body, headers, err = op.buildBody(resolvedData, dataFile, fileFlags)
+				body, headers, err = op.buildBody(resolvedData, dataFile, fileFlags, fileArrayFlags)
 				if err != nil {
 					return err
 				}
@@ -215,6 +280,26 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			full := path
 			if len(q) > 0 {
 				full += "?" + q.Encode()
+			}
+			if idempotencyKey != "" {
+				if headers == nil {
+					headers = map[string]string{}
+				}
+				headers["Idempotency-Key"] = idempotencyKey
+			}
+			// El spec exige `Idempotency-Key` en esta operación y el método no
+			// es POST: `client.Do` ya la autogenera para todo verbo mutador
+			// (POST/PUT/PATCH/DELETE, ver `design.md` D6 y el hallazgo de
+			// `anchors/contract.md`), así que esto es aditivo y nunca pisa una
+			// cabecera ya presente (ni la del flag de arriba, ni una explícita
+			// de `--data`/multipart).
+			if op.IdempotencyRequired && op.Method != "POST" {
+				if headers == nil {
+					headers = map[string]string{}
+				}
+				if _, present := headers["Idempotency-Key"]; !present {
+					headers["Idempotency-Key"] = client.NewIdempotencyKey()
+				}
 			}
 			resp, err := cc.client.Do(context.Background(), op.Method, full, body, headers)
 			if err != nil {
@@ -238,11 +323,21 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	}
 
 	for _, p := range op.QueryParams {
-		desc := p.Description
+		desc := flagUsage(p.Description)
 		if p.Required {
 			desc = strings.TrimSpace("(requerido) " + desc)
 		}
+		if strings.HasSuffix(p.Name, "[]") {
+			name := op.arrayQueryFlag(p.Name)
+			c.Flags().StringSlice(name, nil, desc)
+			if name == p.Name {
+				continue
+			}
+		}
 		c.Flags().String(p.Name, "", desc)
+	}
+	if op.isMutating() {
+		c.Flags().StringVar(&idempotencyKey, "idempotency-key", "", "clave estable para repetir esta misma operación sin duplicarla")
 	}
 	if op.Body != nil && op.Body.Kind == "json" {
 		c.Flags().StringVarP(&data, "data", "d", "", "cuerpo JSON de la petición (@fichero o - para stdin)")
@@ -259,6 +354,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			v := c.Flags().String("file-"+ff, "", "ruta al fichero para el campo "+ff)
 			fileFlags[ff] = v
 		}
+		for _, ff := range op.Body.FileArrayFields {
+			fileArrayFlags[ff] = c.Flags().StringArray("file-"+ff, nil, "ruta al fichero para "+ff+" (repite el flag por archivo)")
+		}
 	}
 	if op.BinaryContentType != "" {
 		c.Flags().StringVarP(&outputPath, "output", "o", "", "escribe la respuesta binaria a este fichero")
@@ -271,7 +369,7 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		if len(op.PathParams) == 0 {
 			confirmHelp = "confirma la operación irreversible pasando el token literal " + op.Action
 		}
-		c.Flags().StringVar(&confirmFlag, "confirm", "", confirmHelp)
+		c.Flags().StringVar(&confirmFlag, "confirm", "", flagUsage(confirmHelp))
 	}
 	if op.RequiredScope != "" {
 		c.Flags().BoolVar(&skipScopeCheck, "skip-scope-check", false, "no verificar scopes localmente antes de la llamada")
@@ -308,4 +406,56 @@ func deprecatedMsg(op genOp) string {
 		return "esta operación está deprecada en la API"
 	}
 	return ""
+}
+
+// resolveAxisForArgs resuelve los dos ejes de UNA invocación. Cada resolución
+// devuelve sin tocar la red cuando la operación no tiene su slot rellenable, así
+// que solo la del eje que la operación tiene puede consultar la identidad.
+func (op genOp) resolveAxisForArgs(ctx context.Context, g *GlobalFlags, args []string) (axisValues, error) {
+	company, err := op.resolveCompanyForArgs(ctx, g, args)
+	if err != nil {
+		return axisValues{}, err
+	}
+	account, err := op.resolveAccountForArgs(ctx, g, args)
+	if err != nil {
+		return axisValues{}, err
+	}
+	return axisValues{Company: company, Account: account}, nil
+}
+
+// accountAxisHelp es el párrafo de la ayuda larga de los comandos con slot de
+// cuenta rellenable: explica `--account` y la regla de escrituras.
+func accountAxisHelp(op genOp, use string, axisIdx int) string {
+	groups := strings.Join(op.Groups, " ")
+	help := "\n\nPuedes fijar la cuenta con la flag persistente --account en vez de" +
+		" pasarla como argumento posicional. Aportarla por las dos vías a la vez es un error de uso." +
+		"\n\nForma canónica:  factuarea " + groups + " " + use +
+		"\nForma corta:     factuarea " + groups + " " + shortUsage(op, use, axisIdx) +
+		" --account <" + op.PathParams[axisIdx].Name + ">"
+	if op.autoResolvesAccount() {
+		help += "\nEs una lectura: si no pasas la cuenta, se deduce de la identidad de tu credencial."
+	} else {
+		help += "\nEs una escritura: la cuenta no se deduce, hay que nombrarla (como argumento posicional o con --account)." +
+			" Sin ella, la CLI termina con un error de uso, sin enviar nada, y te dice cuál es la cuenta de tu credencial."
+	}
+	return help
+}
+
+// shortUsage compone el literal del uso SIN el slot de eje, para enseñar en
+// la ayuda larga la forma corta junto a la canónica.
+func shortUsage(op genOp, use string, axisIdx int) string {
+	if axisIdx < 0 {
+		return use
+	}
+	slot := " [" + op.PathParams[axisIdx].Name + "]"
+	return strings.Replace(use, slot, "", 1)
+}
+
+// flagUsage prepara un texto para el uso de un flag. pflag (UnquoteUsage) toma la
+// primera palabra entre comillas invertidas como NOMBRE DEL TIPO del flag, así que
+// una descripción del spec con `código` hacía que la ayuda mostrara «--flag código»
+// en vez de su tipo real. Se sustituyen por comillas simples: el texto se lee igual
+// y el tipo sale del valor del flag.
+func flagUsage(s string) string {
+	return strings.ReplaceAll(s, "`", "'")
 }

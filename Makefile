@@ -1,6 +1,7 @@
 BINARY := factuarea
 PKG := github.com/factuarea/factuarea-cli
 SPEC_URL ?= https://api.factuarea.com/v1/openapi.json
+BACKEND_CONTAINER ?= factuarea-backend
 
 VERSION ?= dev
 COMMIT  := $(shell git rev-parse --short HEAD 2>/dev/null || echo none)
@@ -8,7 +9,7 @@ LDFLAGS := -s -w \
   -X github.com/factuarea/factuarea-cli/internal/buildinfo.Version=$(VERSION) \
   -X github.com/factuarea/factuarea-cli/internal/buildinfo.Commit=$(COMMIT)
 
-.PHONY: build test lint fmt run generate generate-dev completions manpages dist-assets build-release
+.PHONY: build test lint fmt run generate generate-dev generate-from-file completions manpages dist-assets build-release
 build:
 	go build -o $(BINARY) ./cmd/factuarea
 test:
@@ -27,8 +28,18 @@ generate:
 # WebhooksBlockTransformer y el segundo no, así que con scramble el spec embebido
 # perdía el bloque `webhooks` que el endpoint vivo SÍ sirve.
 generate-dev:
-	docker exec factuarea-backend php artisan public-api:export-spec --api=public-api --path=/tmp/openapi.json
-	docker cp factuarea-backend:/tmp/openapi.json internal/spec/openapi.json
+	docker exec -u www-data $(BACKEND_CONTAINER) php artisan public-api:export-spec --api=public-api --path=/tmp/openapi.json
+	docker cp $(BACKEND_CONTAINER):/tmp/openapi.json internal/spec/openapi.json
+	$(MAKE) --no-print-directory normalize-spec
+	go run internal/gen/main.go
+# Como `generate-dev`, pero desde un fichero ya exportado (p. ej. por otra fase
+# que ya corrió `public-api:export-spec` y congeló su sha256): no vuelve a
+# tocar Docker ni artisan.
+generate-from-file:
+ifndef SPEC_FILE
+	$(error uso: make generate-from-file SPEC_FILE=<ruta al openapi.json exportado>)
+endif
+	cp $(SPEC_FILE) internal/spec/openapi.json
 	$(MAKE) --no-print-directory normalize-spec
 	go run internal/gen/main.go
 # El endpoint vivo sirve JSON compacto y el export de PHP lo sirve indentado: sin

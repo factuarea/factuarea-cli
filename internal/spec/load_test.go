@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pb33f/libopenapi"
+	"github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/orderedmap"
 	"go.yaml.in/yaml/v4"
 )
@@ -35,9 +37,15 @@ func TestLoadParsesRealSpec(t *testing.T) {
 		t.Error("invoices.list debe detectarse como paginado (starting_after)")
 	}
 
+	// Con el EJE DE EMPRESA, toda operación de un recurso de empresa declara DOS
+	// parámetros de ruta: el eje delante (`/companies/{company}/…`) y el recurso
+	// detrás. El orden importa: es el que el CLI convierte en posicionales.
 	get := by["public-api.v1.invoices.show"]
-	if len(get.PathParams) != 1 || get.PathParams[0].Name == "" {
-		t.Errorf("invoices.show debe tener 1 path param: %+v", get.PathParams)
+	if len(get.PathParams) != 2 {
+		t.Fatalf("invoices.show debe tener 2 path params (eje + recurso): %+v", get.PathParams)
+	}
+	if get.PathParams[0].Name != "company" || get.PathParams[1].Name == "" {
+		t.Errorf("invoices.show debe declarar company delante: %+v", get.PathParams)
 	}
 
 	pdf := by["public-api.v1.invoices.pdf"]
@@ -132,6 +140,122 @@ func TestNonConformingOperationsAreBaseline(t *testing.T) {
 	}
 }
 
+// TestPurchaseScanUploadDeclaresFileArray cubre D5 (`design.md`) para la
+// subida del escáner: el nombre de campo congelado en `anchors/contract.md`
+// §1.4 es `files[]` en la parte HTTP, pero el checkout YA implementaba el
+// array de binarios con una lista separada (`FileArrayFields`, sin el sufijo
+// `[]` en el propio nombre) en vez del sufijo `[]` sobre `FileFields` que
+// describía `design.md` D5 literal (ver `anchors/factuarea-cli.md` "Hallazgo
+// principal"). Este test mide el comportamiento YA shippeado, que sigue
+// siendo D5-compatible (multipart de N ficheros bajo el mismo campo): no lo
+// reescribe a la forma literal del diseño.
+func TestPurchaseScanUploadDeclaresFileArray(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	create := by["public-api.v1.purchase_scans.create"]
+	if create.Body == nil || create.Body.Kind != "multipart" {
+		t.Fatalf("purchase_scans.create debe ser multipart: %+v", create.Body)
+	}
+	if !contains(create.Body.FileArrayFields, "files") {
+		t.Errorf("purchase_scans.create debe declarar FileArrayFields con el campo congelado en anchors/contract.md §1.4 (files, sin el sufijo []): %v", create.Body.FileArrayFields)
+	}
+}
+
+// TestIdempotencyRequiredFromSpec cubre D6 (`design.md`): `IdempotencyRequired`
+// se deriva del parámetro `in: header`, `name: Idempotency-Key`, `required:
+// true`. Es solo informativo — `internal/client/client.go` ya autogenera la
+// cabecera en todo verbo mutador — pero debe reflejar fielmente lo que
+// declara el spec, congelado en `anchors/contract.md` §1.5.
+func TestIdempotencyRequiredFromSpec(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	for _, id := range []string{
+		"public-api.v1.purchase_scans.archive",
+		"public-api.v1.purchase_scans.create",
+		"public-api.v1.purchase_scans.retry",
+		"public-api.v1.purchase_scans.duplicate_resolution",
+		"public-api.v1.purchase_scans.convert",
+		"public-api.v1.purchase_scans.restore",
+		// DELETE ajeno al escáner: la lista completa vive en anchors/contract.md §1.5.
+		"public-api.v1.invoices.delete",
+	} {
+		if op, ok := by[id]; !ok || !op.IdempotencyRequired {
+			t.Errorf("%s debe tener IdempotencyRequired=true", id)
+		}
+	}
+
+	if op := by["public-api.v1.purchase_scans.list"]; op.IdempotencyRequired {
+		t.Error("purchase_scans.list (GET) NO debe tener IdempotencyRequired")
+	}
+	if op := by["public-api.v1.purchase_scans.review"]; op.IdempotencyRequired {
+		t.Error("purchase_scans.review NO debe tener IdempotencyRequired (medido no-requerida en anchors/contract.md §1.5)")
+	}
+}
+
+// TestPurchaseScanOperationsResolve comprueba que las 13 operaciones del
+// escáner resuelven a los grupos y a la acción de la tabla CLI de
+// `design.md` (misma regla que `internal/spec/namespace.go`).
+func TestPurchaseScanOperationsResolve(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	cases := []struct {
+		id     string
+		groups []string
+		action string
+	}{
+		{"public-api.v1.purchase_scans.list", []string{"purchase-scans"}, "list"},
+		{"public-api.v1.purchase_scans.create", []string{"purchase-scans"}, "create"},
+		{"public-api.v1.purchase_scans.stats", []string{"purchase-scans"}, "stats"},
+		{"public-api.v1.purchase_scans.show", []string{"purchase-scans"}, "show"},
+		{"public-api.v1.purchase_scans.source", []string{"purchase-scans"}, "source"},
+		{"public-api.v1.purchase_scans.retry", []string{"purchase-scans"}, "retry"},
+		{"public-api.v1.purchase_scans.review", []string{"purchase-scans"}, "review"},
+		{"public-api.v1.purchase_scans.duplicate_resolution", []string{"purchase-scans"}, "duplicate-resolution"},
+		{"public-api.v1.purchase_scans.convert", []string{"purchase-scans"}, "convert"},
+		{"public-api.v1.purchase_scans.archive", []string{"purchase-scans"}, "archive"},
+		{"public-api.v1.purchase_scans.restore", []string{"purchase-scans"}, "restore"},
+		{"public-api.v1.purchase_scan_emails.list", []string{"purchase-scan-emails"}, "list"},
+		{"public-api.v1.purchase_invoices.expense_categories", []string{"purchase-invoices"}, "expense-categories"},
+	}
+	if len(cases) != 13 {
+		t.Fatalf("tabla de prueba incompleta: %d casos, want 13", len(cases))
+	}
+	for _, c := range cases {
+		op, ok := by[c.id]
+		if !ok {
+			t.Errorf("%s ausente de Load()", c.id)
+			continue
+		}
+		if !reflect.DeepEqual(op.Groups, c.groups) {
+			t.Errorf("%s: Groups = %v, want %v", c.id, op.Groups, c.groups)
+		}
+		if op.Action != c.action {
+			t.Errorf("%s: Action = %q, want %q", c.id, op.Action, c.action)
+		}
+	}
+}
+
 func TestLoadParsesOperationMetadata(t *testing.T) {
 	ops, _, err := Load()
 	if err != nil {
@@ -203,9 +327,9 @@ func TestBodyFieldsScalarEnumNested(t *testing.T) {
 		by[o.OperationID] = o
 	}
 
-	create := by["public-api.v1.clients.create"]
+	create := by["public-api.v1.contacts.create"]
 	if create.Body == nil || len(create.Body.Fields) == 0 {
-		t.Fatalf("clients.create debe tener Body.Fields: %+v", create.Body)
+		t.Fatalf("contacts.create debe tener Body.Fields: %+v", create.Body)
 	}
 	fields := indexFields(create.Body.Fields)
 
@@ -217,17 +341,36 @@ func TestBodyFieldsScalarEnumNested(t *testing.T) {
 		t.Errorf("name no es nullable: %+v", name)
 	}
 
-	terms := fields["payment_terms_days"]
-	if terms == nil || terms.Kind != "scalar" || terms.Type != "integer" || !terms.Nullable {
-		t.Errorf("payment_terms_days debe ser scalar/integer/nullable: %+v", terms)
+	taxID := fields["tax_id"]
+	if taxID == nil || taxID.Kind != "scalar" || taxID.Type != "string" || !taxID.Nullable {
+		t.Errorf("tax_id debe ser scalar/string/nullable: %+v", taxID)
 	}
 
-	pm := fields["payment_method"]
+	altIDType := fields["alternative_id_type"]
+	if altIDType == nil || len(altIDType.Enum) == 0 {
+		t.Fatalf("alternative_id_type debe traer enum: %+v", altIDType)
+	}
+	if !contains(altIDType.Enum, "passport") {
+		t.Errorf("alternative_id_type enum debe incluir passport: %v", altIDType.Enum)
+	}
+
+	profile := fields["customer_profile"]
+	if profile == nil || profile.Kind != "object" {
+		t.Fatalf("customer_profile debe ser object: %+v", profile)
+	}
+	pf := indexFields(profile.Children)
+
+	terms := pf["payment_terms_days"]
+	if terms == nil || terms.Kind != "scalar" || terms.Type != "integer" || !terms.Nullable {
+		t.Errorf("customer_profile.payment_terms_days debe ser scalar/integer/nullable: %+v", terms)
+	}
+
+	pm := pf["payment_method"]
 	if pm == nil || len(pm.Enum) == 0 {
-		t.Fatalf("payment_method debe traer enum: %+v", pm)
+		t.Fatalf("customer_profile.payment_method debe traer enum: %+v", pm)
 	}
 	if !contains(pm.Enum, "direct_debit") {
-		t.Errorf("payment_method enum debe incluir direct_debit: %v", pm.Enum)
+		t.Errorf("customer_profile.payment_method enum debe incluir direct_debit: %v", pm.Enum)
 	}
 
 	addr := fields["address"]
@@ -250,8 +393,8 @@ func TestBodyFieldsArraysAndMap(t *testing.T) {
 		by[o.OperationID] = o
 	}
 
-	client := by["public-api.v1.clients.create"]
-	cf := indexFields(client.Body.Fields)
+	contact := by["public-api.v1.contacts.create"]
+	cf := indexFields(contact.Body.Fields)
 
 	emails := cf["billing_emails"]
 	if emails == nil || emails.Kind != "scalar_array" || emails.Type != "string" {
@@ -280,8 +423,13 @@ func TestBodyFieldsArraysAndMap(t *testing.T) {
 	if len(lines.Children) != 0 {
 		t.Errorf("lines object_array NO debe expandir Children: %+v", lines.Children)
 	}
-	if cid := invf["client_id"]; cid == nil || !cid.Required {
-		t.Errorf("client_id debe ser required: %+v", cid)
+	// `client_id` es opcional desde el cajero desatendido: una F2 sin cliente es
+	// un ticket anónimo. Lo que sigue siendo obligatorio son las líneas.
+	if cid := invf["client_id"]; cid == nil || cid.Required {
+		t.Errorf("client_id debe existir y ser opcional: %+v", cid)
+	}
+	if lines == nil || !lines.Required {
+		t.Errorf("lines debe ser required: %+v", lines)
 	}
 }
 
@@ -336,4 +484,170 @@ func boolNode(value bool) *yaml.Node {
 		v = "true"
 	}
 	return &yaml.Node{Kind: yaml.ScalarNode, Tag: "!!bool", Value: v}
+}
+
+// schemaFromJSON construye un esquema real de libopenapi a partir de su JSON, para
+// probar la clasificación de campos sin depender del spec embebido.
+func schemaFromJSON(t *testing.T, raw string) *base.Schema {
+	t.Helper()
+	doc, err := libopenapi.NewDocument([]byte(`{"openapi":"3.1.0","info":{"title":"t","version":"1"},"paths":{},"components":{"schemas":{"S":` + raw + `}}}`))
+	if err != nil {
+		t.Fatalf("documento: %v", err)
+	}
+	model, err := doc.BuildV3Model()
+	if err != nil {
+		t.Fatalf("modelo: %v", err)
+	}
+	proxy, ok := model.Model.Components.Schemas.Get("S")
+	if !ok || proxy.Schema() == nil {
+		t.Fatalf("esquema S ausente: %s", raw)
+	}
+	return proxy.Schema()
+}
+
+func TestFieldTypeNamesUnions(t *testing.T) {
+	cases := []struct {
+		name         string
+		schema       string
+		wantType     string
+		wantNullable bool
+		wantUnion    bool
+	}{
+		{"un solo tipo", `{"type":"string"}`, "string", false, false},
+		{"tipo nullable", `{"type":["string","null"]}`, "string", true, false},
+		{"tipos distintos", `{"type":["string","number"]}`, "string|number", false, true},
+		{"tipos distintos y null", `{"type":["string","number","null"]}`, "string|number|null", true, true},
+		{"anyOf con cinco miembros",
+			`{"anyOf":[{"type":"string"},{"type":"number"},{"type":"boolean"},{"type":"array","items":{"type":"string"}},{"type":"null"}]}`,
+			"string|number|boolean|array|null", true, true},
+		{"oneOf sin null", `{"oneOf":[{"type":"integer"},{"type":"string"}]}`, "integer|string", false, true},
+		{"anyOf de un tipo y null", `{"anyOf":[{"type":"integer"},{"type":"null"}]}`, "integer", true, false},
+		{"anyOf con tipos repetidos", `{"anyOf":[{"type":"string"},{"type":"string","enum":["a"]}]}`, "string", false, false},
+		{"anyOf anidado", `{"anyOf":[{"type":"string"},{"anyOf":[{"type":"number"},{"type":"null"}]}]}`, "string|number|null", true, true},
+		{"sin tipo", `{}`, "", false, false},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			gotType, gotNullable, gotUnion := fieldType(schemaFromJSON(t, tc.schema))
+			if gotType != tc.wantType || gotNullable != tc.wantNullable || gotUnion != tc.wantUnion {
+				t.Errorf("fieldType(%s) = (%q, nullable=%v, union=%v), quiero (%q, %v, %v)",
+					tc.schema, gotType, gotNullable, gotUnion, tc.wantType, tc.wantNullable, tc.wantUnion)
+			}
+		})
+	}
+}
+
+func TestClassifyFieldUnionIsAFreeTypedScalar(t *testing.T) {
+	cases := []struct {
+		name   string
+		schema string
+	}{
+		{"con un miembro lista", `{"anyOf":[{"type":"array","items":{"type":"string"}},{"type":"string"}]}`},
+		{"con un miembro objeto", `{"oneOf":[{"type":"object"},{"type":"string"}]}`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			var f BodyField
+			classifyField(&f, schemaFromJSON(t, tc.schema), 0)
+			if f.Kind != "scalar" || f.Children != nil {
+				t.Errorf("un tipo unión es un escalar de tipo libre, no una lista ni un objeto: %+v", f)
+			}
+			if f.Type == "" || !contains([]string{"array|string", "object|string"}, f.Type) {
+				t.Errorf("tipo = %q, quiero la unión de sus miembros", f.Type)
+			}
+		})
+	}
+}
+
+// TestCustomFieldValuesAreUnionTyped — `value` y `default_value` de los campos
+// personalizados admiten texto, número, booleano, lista o null: su tipo no es "".
+func TestCustomFieldValuesAreUnionTyped(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	const union = "string|number|boolean|array|null"
+	cases := []struct {
+		operation string
+		field     string
+		required  bool
+	}{
+		{"public-api.v1.tasks.custom_fields.set", "value", true},
+		{"public-api.v1.projects.custom_fields.create", "default_value", false},
+		{"public-api.v1.projects.custom_fields.update", "default_value", false},
+	}
+	for _, tc := range cases {
+		op, ok := by[tc.operation]
+		if !ok || op.Body == nil {
+			t.Errorf("%s: ausente de Load() o sin cuerpo", tc.operation)
+			continue
+		}
+		f := indexFields(op.Body.Fields)[tc.field]
+		if f == nil {
+			t.Errorf("%s: el cuerpo no declara %s", tc.operation, tc.field)
+			continue
+		}
+		if f.Kind != "scalar" || f.Type != union || !f.Nullable || f.Required != tc.required {
+			t.Errorf("%s.%s = %+v, quiero scalar de tipo %q, nullable y required=%v", tc.operation, tc.field, *f, union, tc.required)
+		}
+	}
+}
+
+// TestBodyFieldFollowsRefWithSiblingKeywords fija que un campo `$ref` con
+// `description` hermana se clasifica por el esquema referido. Sin eso,
+// `remission_mode` de los ajustes de VERI*FACTU salía sin tipo ni valores
+// permitidos.
+func TestBodyFieldFollowsRefWithSiblingKeywords(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	by := map[string]Operation{}
+	for _, o := range ops {
+		by[o.OperationID] = o
+	}
+
+	op, ok := by["public-api.v1.verifactu.settings.update"]
+	if !ok || op.Body == nil {
+		t.Fatal("public-api.v1.verifactu.settings.update: ausente de Load() o sin cuerpo")
+	}
+	f := indexFields(op.Body.Fields)["remission_mode"]
+	if f == nil {
+		t.Fatal("el cuerpo no declara remission_mode")
+	}
+	want := []string{"own_certificate", "social_collaborator", "power_of_attorney"}
+	if f.Kind != "scalar" || f.Type != "string" || !reflect.DeepEqual(f.Enum, want) {
+		t.Errorf("remission_mode = %+v, quiero scalar de tipo string con enum %v", *f, want)
+	}
+}
+
+// TestBodyFieldTypesAreNeverEmptyExceptUntypedEnums fija que ningún campo de
+// cuerpo escalar vuelve a salir sin tipo por ser una unión. La única excepción es
+// un `enum` sin `type` (el `confirm` de la baja definitiva de tarifas), que no es
+// una unión de tipos.
+func TestBodyFieldTypesAreNeverEmptyExceptUntypedEnums(t *testing.T) {
+	ops, _, err := Load()
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	var walk func(op string, fields []BodyField)
+	walk = func(op string, fields []BodyField) {
+		for _, f := range fields {
+			if f.Kind == "scalar" && f.Type == "" && len(f.Enum) == 0 {
+				t.Errorf("%s: el campo %s es escalar y no tiene tipo", op, f.Name)
+			}
+			walk(op, f.Children)
+		}
+	}
+	for _, o := range ops {
+		if o.Body != nil {
+			walk(o.OperationID, o.Body.Fields)
+		}
+	}
 }

@@ -31,11 +31,11 @@ func main() {
 	}
 }
 
-// reportNonConforming imprime el fallo duro del generador. Hasta 2026-09-18
-// esto era un `AVISO` por stderr con salida 0: una operación sin el prefijo
-// canónico desaparecía del binario publicado sin romper nada, y la misma
-// ausencia la heredaban las completions, las manpages y el manifiesto que
-// consumen los agentes. Ahora el proceso termina con código 1.
+// reportNonConforming imprime el fallo duro del generador: una operación sin el
+// prefijo canónico desaparecería del binario, de las completions, de las
+// manpages y del manifiesto sin romper nada, así que el proceso termina con
+// código 1. El gate corre ANTES de regenerar porque después el identificador
+// que la delata ya no existe en el árbol.
 func reportNonConforming(ids []string) {
 	fmt.Fprintf(os.Stderr, "ERROR: %d operationId sin el prefijo canónico %q; NO se han generado comandos para ellos:\n",
 		len(ids), spec.OperationIDPrefix)
@@ -47,7 +47,7 @@ El arreglo va en el BACKEND, no aquí: nombra la ruta con
 ->name('%s<recurso>.<accion>') en su fichero de rutas de la API pública v1 y
 vuelve a exportar el contrato. Un identificador canónico tiene AL MENOS dos
 segmentos tras el prefijo (recurso y acción); los recursos anidados añaden
-segmentos intermedios (por ejemplo '%ssales_orders.lines.list').
+segmentos intermedios (por ejemplo '%sproducts.variants.list').
 
 NUNCA lo tapes dando de alta la operación en el mapa `+"`overrides`"+` de
 internal/cmd/register.go: ese mapa corrige la FORMA de un comando que ya
