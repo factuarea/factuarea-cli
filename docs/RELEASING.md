@@ -58,7 +58,7 @@ make generate-dev
 El spec embebido de `internal/spec/openapi.json` está fijado al **contrato
 público congelado** que incluye el ERP omnicanal: **830 operaciones en 666
 paths** (digest canónico del documento
-`97f5a78cacd59a59f1a98c361cd7af3883d67072a7f3c2a0c3d38cc93b5788a9`, el que declara
+`17692e50578a8d5c42a3bd1abba1f97d496f6470f9c5e971bdbf92404374f24a`, el que declara
 `internal/cmd/testdata/v1-command-tree-manifest.json`). La foto anterior
 declaraba 664 operaciones: el delta es **+166**, todo el ERP.
 

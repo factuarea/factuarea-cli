@@ -17,7 +17,7 @@ El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spe
 
 - **Comandos del ERP omnicanal.** El árbol de comandos pasa a **830 operaciones**
   en 666 paths (digest canónico
-  `97f5a78cacd59a59f1a98c361cd7af3883d67072a7f3c2a0c3d38cc93b5788a9`): 166
+  `17692e50578a8d5c42a3bd1abba1f97d496f6470f9c5e971bdbf92404374f24a`): 166
   comandos nuevos para pedidos de venta y de compra, recepciones, almacenes,
   traspasos, reservas, disponibilidad, transportistas, bultos, devoluciones y
   escaparate con sus credenciales. Usan el mismo eje de empresa que el resto.

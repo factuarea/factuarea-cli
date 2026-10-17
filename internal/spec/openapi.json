@@ -87197,6 +87197,21 @@
                             "application/json": {
                                 "schema": {
                                     "$ref": "#/components/schemas/Error"
+                                },
+                                "examples": {
+                                    "idempotency_key_in_use": {
+                                        "summary": "POST /v1/companies/{company}/storefront/sessions \u00b7 409 idempotency_key_in_use",
+                                        "value": {
+                                            "error": {
+                                                "type": "idempotency_error",
+                                                "code": "idempotency_key_in_use",
+                                                "message": "La clave de idempotencia \u00abchk-7f3a2c91\u00bb est\u00e1 siendo usada ahora mismo por otra petici\u00f3n que todav\u00eda no ha terminado. Espera unos segundos y reintenta con esa MISMA clave: el reintento devolver\u00e1 el resultado de la primera en vez de repetir la operaci\u00f3n.",
+                                                "param": "Idempotency-Key",
+                                                "doc_url": "https://docs.factuarea.com/guides/errors#idempotency_key_in_use",
+                                                "request_id": "req_01HKQS5NSTOREFRONTSESS0409"
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -301970,7 +301985,7 @@
                                 "buyer_name": "Comercial Arganda, S.L.",
                                 "buyer_email": "compras@arganda.example",
                                 "buyer_phone": "+34 918 765 432",
-                                "buyer_tax_id": "B86544321",
+                                "buyer_tax_id": "B86544327",
                                 "billing_address_line": "Pol\u00edgono Industrial Las Eras, nave 7",
                                 "billing_city": "Arganda del Rey",
                                 "billing_province": "Madrid",
@@ -302043,7 +302058,7 @@
                                             "name": "Comercial Arganda, S.L.",
                                             "email": "compras@arganda.example",
                                             "phone": "+34 918 765 432",
-                                            "tax_id": "B86544321",
+                                            "tax_id": "B86544327",
                                             "billing_address": {
                                                 "address_line": "Pol\u00edgono Industrial Las Eras, nave 7",
                                                 "city": "Arganda del Rey",
@@ -319323,7 +319338,7 @@
                                 "buyer_name": "Laura Gim\u00e9nez Puig",
                                 "buyer_email": "laura.gimenez@example.com",
                                 "buyer_phone": "+34 655 12 34 56",
-                                "buyer_tax_id": "48291746K",
+                                "buyer_tax_id": "48291746A",
                                 "billing_address_line": "Carrer de Mallorca 401, 3r 2a",
                                 "billing_city": "Barcelona",
                                 "billing_province": "Barcelona",
