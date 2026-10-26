@@ -34,15 +34,18 @@ generate-dev:
 	go run internal/gen/main.go
 # Como `generate-dev`, pero desde un fichero ya exportado (p. ej. por otra fase
 # que ya corrió `public-api:export-spec` y congeló su sha256): no vuelve a
-# tocar Docker ni artisan.
+# tocar Docker ni artisan. La copia es byte a byte y NO se normaliza: el export
+# de PHP ya viene indentado y normalizar (que añade un salto de línea final)
+# cambiaría el sha256 congelado. Comprueba `sha256sum internal/spec/openapi.json`
+# contra el del fichero de origen; `factuarea version` muestra el hash embebido.
 generate-from-file:
 ifndef SPEC_FILE
 	$(error uso: make generate-from-file SPEC_FILE=<ruta al openapi.json exportado>)
 endif
 	cp $(SPEC_FILE) internal/spec/openapi.json
-	$(MAKE) --no-print-directory normalize-spec
 	go run internal/gen/main.go
-# El endpoint vivo sirve JSON compacto y el export de PHP lo sirve indentado: sin
+# Solo para fuentes compactas (`generate`, `generate-dev`): el endpoint vivo sirve JSON
+# compacto y el export de PHP lo sirve indentado: sin
 # normalizar, alternar fuentes produce un diff de ~98k líneas que oculta el cambio real.
 normalize-spec:
 	@python3 -c "import json,sys;p='internal/spec/openapi.json';d=json.load(open(p));open(p,'w').write(json.dumps(d,indent=4)+chr(10))" \

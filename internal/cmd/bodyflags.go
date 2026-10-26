@@ -15,6 +15,24 @@ type fieldFlag struct {
 	jsonPath []string
 	kind     string
 	jsonType string
+	// nullable: el esquema admite `null` para este campo; entonces hay un flag
+	// `--null-<campo>` que lo envía como null explícito.
+	nullable bool
+}
+
+// nullFlagPrefix prefija el flag que envía un campo nullable a null explícito.
+// Un flag de campo omitido no viaja, uno con valor vacío/cero/false viaja tal cual
+// y `--null-<campo>` es la única vía de mandar null por flags.
+const nullFlagPrefix = "null-"
+
+func (ff fieldFlag) nullFlagName() string { return nullFlagPrefix + ff.flagName }
+
+func nullFlagSet(cmd *cobra.Command, ff fieldFlag) bool {
+	if !ff.nullable {
+		return false
+	}
+	v, err := cmd.Flags().GetBool(ff.nullFlagName())
+	return err == nil && v
 }
 
 func (op genOp) typedBody() bool {
@@ -34,6 +52,9 @@ var reservedBuiltinFlagNames = map[string]struct{}{
 	"confirm":          {},
 	"output":           {},
 	"skip-scope-check": {},
+	"show-etag":        {},
+	"if-match":         {},
+	"if-none-match":    {},
 }
 
 func fieldFlagName(path []string) string {
@@ -54,11 +75,11 @@ func collectFieldFlags(fields []genBodyField, parent []string) []fieldFlag {
 		path := append(append([]string{}, parent...), f.Name)
 		switch f.Kind {
 		case "scalar":
-			flags = append(flags, fieldFlag{flagName: fieldFlagName(path), jsonPath: path, kind: "scalar", jsonType: f.Type})
+			flags = append(flags, fieldFlag{flagName: fieldFlagName(path), jsonPath: path, kind: "scalar", jsonType: f.Type, nullable: f.Nullable})
 		case "scalar_array":
-			flags = append(flags, fieldFlag{flagName: fieldFlagName(path), jsonPath: path, kind: "scalar_array", jsonType: f.Type})
+			flags = append(flags, fieldFlag{flagName: fieldFlagName(path), jsonPath: path, kind: "scalar_array", jsonType: f.Type, nullable: f.Nullable})
 		case "map":
-			flags = append(flags, fieldFlag{flagName: fieldFlagName(path), jsonPath: path, kind: "map"})
+			flags = append(flags, fieldFlag{flagName: fieldFlagName(path), jsonPath: path, kind: "map", nullable: f.Nullable})
 		case "object":
 			if len(parent) == 0 {
 				flags = append(flags, collectFieldFlags(f.Children, path)...)
@@ -90,6 +111,9 @@ func registerFieldFlags(c *cobra.Command, op genOp) {
 			c.Flags().StringSlice(ff.flagName, nil, desc)
 		case "map":
 			c.Flags().StringToString(ff.flagName, nil, desc)
+		}
+		if ff.nullable {
+			c.Flags().Bool(ff.nullFlagName(), false, "envía "+ff.flagName+" como null explícito (borra el valor)")
 		}
 	}
 	registerEnumCompletions(c, op)
@@ -330,6 +354,9 @@ func validateRequiredBodyFlags(cmd *cobra.Command, op genOp) error {
 	var missing []string
 	required := append(requiredBodyFlags(op), requiredChildFlagsOfUsedObjects(cmd, op)...)
 	for _, ff := range required {
+		if nullFlagSet(cmd, ff) && !cmd.Flags().Changed(ff.flagName) {
+			continue
+		}
 		if !cmd.Flags().Changed(ff.flagName) || flagIsEmpty(cmd, ff) {
 			missing = append(missing, "--"+ff.flagName)
 		}
@@ -373,7 +400,7 @@ func findField(fields []genBodyField, path []string) *genBodyField {
 
 func anyFieldFlagChanged(cmd *cobra.Command, op genOp) bool {
 	for _, ff := range collectFieldFlags(op.Body.Fields, nil) {
-		if cmd.Flags().Changed(ff.flagName) {
+		if cmd.Flags().Changed(ff.flagName) || nullFlagSet(cmd, ff) {
 			return true
 		}
 	}
@@ -383,6 +410,13 @@ func anyFieldFlagChanged(cmd *cobra.Command, op genOp) bool {
 func bodyFromFieldFlags(cmd *cobra.Command, op genOp) (map[string]any, error) {
 	root := map[string]any{}
 	for _, ff := range collectFieldFlags(op.Body.Fields, nil) {
+		if nullFlagSet(cmd, ff) {
+			if cmd.Flags().Changed(ff.flagName) {
+				return nil, apierr.Usagef("no pases --%s y --%s a la vez: o das un valor o lo envías como null", ff.flagName, ff.nullFlagName())
+			}
+			setPath(root, ff.jsonPath, nil)
+			continue
+		}
 		if !cmd.Flags().Changed(ff.flagName) {
 			continue
 		}
@@ -565,7 +599,7 @@ func bodyFieldsHelp(op genOp) string {
 		b.WriteString("\n\nLos flags de tipo unión (" + strings.Join(flags, ", ") + ") envían texto; para un número, un booleano, una lista o null pasa el cuerpo con -d/--data-file (JSON).")
 	}
 	if op.isUpdate() {
-		b.WriteString("\n\nEdición parcial: solo se actualizan los campos que envíes; los omitidos se conservan. Para vaciar un campo, pásalo con valor vacío/null.")
+		b.WriteString("\n\nEdición parcial: solo se actualizan los campos que envíes; los omitidos se conservan. Un valor vacío, 0, false o [] se envía tal cual; para borrar un campo que admite null usa su flag --null-<campo> (o null en -d/--data-file).")
 	}
 	return b.String()
 }

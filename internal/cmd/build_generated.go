@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -23,6 +24,8 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 	var skipScopeCheck bool
 	var dryRun, skeleton bool
 	var idempotencyKey string
+	var showETag bool
+	headerFlags := map[string]*string{}
 	fileFlags := map[string]*string{}
 	fileArrayFlags := map[string]*[]string{}
 
@@ -137,6 +140,9 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 				return apierr.Usagef("no uses --data y --data-file a la vez: elige una sola fuente del cuerpo")
 			}
 			if err := validateRequiredQueryFlags(cmd, op); err != nil {
+				return err
+			}
+			if err := validateHeaderFlags(cmd, op); err != nil {
 				return err
 			}
 			if err := validateEnumFlags(cmd, op); err != nil {
@@ -281,6 +287,16 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			if len(q) > 0 {
 				full += "?" + q.Encode()
 			}
+			// Cabeceras declaradas por el spec (If-Match, If-None-Match…): el valor
+			// viaja literal, sin comillas añadidas ni recortes.
+			for _, p := range op.HeaderParams {
+				if cmd.Flags().Changed(headerFlagName(p)) {
+					if headers == nil {
+						headers = map[string]string{}
+					}
+					headers[p.Name] = *headerFlags[p.Name]
+				}
+			}
 			if idempotencyKey != "" {
 				if headers == nil {
 					headers = map[string]string{}
@@ -301,13 +317,32 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 					headers["Idempotency-Key"] = client.NewIdempotencyKey()
 				}
 			}
-			resp, err := cc.client.Do(context.Background(), op.Method, full, body, headers)
+			httpClient := cc.client
+			if op.NoRetry {
+				// Una sola llamada: un reintento ciego podría duplicar el efecto.
+				httpClient = httpClient.WithoutRetry()
+			}
+			resp, err := httpClient.Do(context.Background(), op.Method, full, body, headers)
 			if err != nil {
 				output.PrintError(cmd.ErrOrStderr(), err, cc.errorFormat)
 				return &AlreadyReported{Err: err}
 			}
-			if op.BinaryContentType != "" {
+			if showETag {
+				if etag := resp.Header.Get("ETag"); etag != "" {
+					fmt.Fprintf(cmd.ErrOrStderr(), "etag: %s\n", etag)
+				}
+			}
+			if resp.StatusCode == http.StatusNotModified {
+				fmt.Fprintln(cmd.ErrOrStderr(), "304: sin cambios; no se escribe salida")
+				return nil
+			}
+			if op.BinaryContentType != "" && resp.StatusCode == http.StatusOK && (!op.DualBinary || !isJSONContentType(resp.ContentType)) {
 				return writeBinary(cmd, resp.Body, outputPath)
+			}
+			if resp.StatusCode == http.StatusAccepted {
+				if ra := resp.Header.Get("Retry-After"); ra != "" {
+					fmt.Fprintf(cmd.ErrOrStderr(), "retry-after: %s\n", ra)
+				}
 			}
 			if g.Verbose && resp.RequestID != "" {
 				fmt.Fprintf(cmd.ErrOrStderr(), "request_id: %s\n", resp.RequestID)
@@ -335,6 +370,19 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 			}
 		}
 		c.Flags().String(p.Name, "", desc)
+	}
+	for _, p := range op.HeaderParams {
+		desc := flagUsage(p.Description)
+		if desc == "" {
+			desc = "cabecera " + p.Name + " (se envía tal cual)"
+		}
+		if p.Required {
+			desc = strings.TrimSpace("(requerido) " + desc)
+		}
+		headerFlags[p.Name] = c.Flags().String(headerFlagName(p), "", desc)
+	}
+	if op.ReturnsETag {
+		c.Flags().BoolVar(&showETag, "show-etag", false, "escribe el ETag de la respuesta en stderr (stdout no cambia)")
 	}
 	if op.isMutating() {
 		c.Flags().StringVar(&idempotencyKey, "idempotency-key", "", "clave estable para repetir esta misma operación sin duplicarla")
@@ -375,6 +423,13 @@ func buildGeneratedCommand(op genOp) *cobra.Command {
 		c.Flags().BoolVar(&skipScopeCheck, "skip-scope-check", false, "no verificar scopes localmente antes de la llamada")
 	}
 	return c
+}
+
+// isJSONContentType dice si un Content-Type es JSON (`application/json`,
+// `application/problem+json`…), ignorando parámetros y mayúsculas.
+func isJSONContentType(ct string) bool {
+	mediaType, _, _ := strings.Cut(strings.ToLower(ct), ";")
+	return strings.HasSuffix(strings.TrimSpace(mediaType), "json")
 }
 
 func writeBinary(cmd *cobra.Command, body []byte, out string) error {
@@ -458,4 +513,30 @@ func shortUsage(op genOp, use string, axisIdx int) string {
 // y el tipo sale del valor del flag.
 func flagUsage(s string) string {
 	return strings.ReplaceAll(s, "`", "'")
+}
+
+// headerFlagName es el flag de una cabecera declarada: su nombre en minúsculas
+// (`If-Match` -> `--if-match`).
+func headerFlagName(p genParam) string { return strings.ToLower(p.Name) }
+
+// validateHeaderFlags exige las cabeceras requeridas y rechaza un valor vacío:
+// una cabecera condicional vacía no significa nada y el servidor la ignoraría.
+func validateHeaderFlags(cmd *cobra.Command, op genOp) error {
+	var missing []string
+	for _, p := range op.HeaderParams {
+		name := headerFlagName(p)
+		if !cmd.Flags().Changed(name) {
+			if p.Required {
+				missing = append(missing, "--"+name)
+			}
+			continue
+		}
+		if v, _ := cmd.Flags().GetString(name); v == "" {
+			return apierr.Usagef("--%s no puede estar vacío", name)
+		}
+	}
+	if len(missing) > 0 {
+		return apierr.Usagef("faltan flags requeridos: %s", strings.Join(missing, ", "))
+	}
+	return nil
 }

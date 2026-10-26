@@ -104,3 +104,71 @@ func TestGenerateReportsEveryNonCanonicalOperationID(t *testing.T) {
 		}
 	}
 }
+
+// opBlock devuelve el texto generado de una operación: desde su OperationID hasta
+// el de la siguiente.
+func opBlock(t *testing.T, src, id string) string {
+	t.Helper()
+	marker := `OperationID: "` + id + `"`
+	start := strings.Index(src, marker)
+	if start < 0 {
+		t.Fatalf("la tabla generada no contiene %s", id)
+	}
+	block := src[start+len(marker):]
+	if end := strings.Index(block, "OperationID:"); end >= 0 {
+		block = block[:end]
+	}
+	return strings.Join(strings.Fields(marker+block), " ")
+}
+
+// TestGeneratedMetadataOfRepresentativeDocumentTemplateOperations fija, para unas
+// pocas operaciones nuevas representativas, los metadatos que el CLI necesita:
+// método, cabeceras condicionales, descarga binaria o dual, multipart, noRetry y
+// campo requerido y nullable. No es un snapshot de la tabla entera.
+func TestGeneratedMetadataOfRepresentativeDocumentTemplateOperations(t *testing.T) {
+	out, nonConforming, err := Generate()
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	if len(nonConforming) > 0 {
+		t.Fatalf("operationId sin namespacear: %v", nonConforming)
+	}
+	src := string(out)
+
+	cases := []struct {
+		id   string
+		want []string
+	}{
+		{"public-api.v1.series.update", []string{`Method: "PATCH"`, `Path: "/companies/{company}/series/{series}"`, `Action: "update"`, `RequiredScope: "series:write"`}},
+		{"public-api.v1.pdf_templates.update", []string{`Method: "PATCH"`, `HeaderParams: []genParam{{Name: "If-Match"`, `ReturnsETag: true`}},
+		{"public-api.v1.pdf_artifacts.download", []string{`BinaryContentType: "application/pdf"`, `Name: "If-None-Match"`, `ReturnsETag: true`}},
+		{"public-api.v1.pdf_templates.asset_get", []string{`DualBinary: true`}},
+		{"public-api.v1.pdf_templates.asset_upload", []string{`genBody{Kind: "multipart"`, `FileFields: []string{"file"}`, `IdempotencyRequired: true`}},
+		{"public-api.v1.invoices.face_submissions.submit", []string{`NoRetry: true`, `Irreversible: true`}},
+		{"public-api.v1.invoices.assign_presentation", []string{`Name: "template_id", Type: "string", Kind: "scalar", Required: true, Nullable: true`}},
+		{"public-api.v1.invoices.list_presentations", []string{`Name: "page"`, `Name: "per_page"`}},
+	}
+	for _, tc := range cases {
+		block := opBlock(t, src, tc.id)
+		for _, want := range tc.want {
+			if !strings.Contains(block, want) {
+				t.Errorf("%s: falta %q en la tabla generada", tc.id, want)
+			}
+		}
+	}
+
+	// Un listado por offset (page/per_page) no es de cursor: no declara
+	// starting_after, así que el CLI lo pide en una sola petición.
+	if strings.Contains(opBlock(t, src, "public-api.v1.invoices.list_presentations"), "starting_after") {
+		t.Error("list_presentations es offset: no debe declarar starting_after")
+	}
+	// Solo la descarga dual lleva DualBinary; una descarga que solo es binaria no.
+	if strings.Contains(opBlock(t, src, "public-api.v1.pdf_artifacts.download"), "DualBinary") {
+		t.Error("pdf_artifacts.download es solo binaria: no debe llevar DualBinary")
+	}
+	// Una propiedad con el esquema booleano `false` está reservada por el
+	// contrato: no se ofrece como campo.
+	if strings.Contains(opBlock(t, src, "public-api.v1.recurring_invoices.create"), `Name: "recurring_intent"`) {
+		t.Error("recurring_intent es una propiedad prohibida (esquema false): no debe generarse como campo")
+	}
+}

@@ -487,10 +487,10 @@ func TestTransportDocumentResponseSchemaIsFrozen(t *testing.T) {
 	var doc struct {
 		Components struct {
 			Schemas map[string]struct {
-				Properties map[string]struct {
-					Enum []any `json:"enum"`
-				} `json:"properties"`
-				Required []string `json:"required"`
+				// RawMessage: una propiedad puede ser el esquema booleano `false`
+				// (campo reservado), que no decodifica a un objeto.
+				Properties map[string]json.RawMessage `json:"properties"`
+				Required   []string                   `json:"required"`
 			} `json:"schemas"`
 		} `json:"components"`
 	}
@@ -523,9 +523,15 @@ func TestTransportDocumentResponseSchemaIsFrozen(t *testing.T) {
 	}
 
 	for key, wantEnum := range transportDocumentEnums {
-		prop, ok := schema.Properties[key]
+		raw, ok := schema.Properties[key]
 		if !ok {
 			continue // su ausencia ya la reporta la comparación de conjuntos
+		}
+		var prop struct {
+			Enum []any `json:"enum"`
+		}
+		if err := json.Unmarshal(raw, &prop); err != nil {
+			t.Fatalf("TransportDocument.%s no es un esquema de objeto: %v", key, err)
 		}
 		if gotEnum := stringEnumOf(prop.Enum); strings.Join(gotEnum, ",") != strings.Join(wantEnum, ",") {
 			t.Errorf("TransportDocument.%s.enum = %v, quiero %v", key, gotEnum, wantEnum)

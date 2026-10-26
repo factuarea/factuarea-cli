@@ -22,6 +22,9 @@ func validateRawJSONBody(body []byte, requireObject bool) ([]byte, error) {
 		return body, nil
 	}
 	dec := json.NewDecoder(bytes.NewReader(trimmed))
+	// UseNumber conserva el literal exacto de cada número (enteros grandes,
+	// decimales con ceros): el cuerpo se revalida, no se reinterpreta.
+	dec.UseNumber()
 	var v any
 	if err := dec.Decode(&v); err != nil {
 		return nil, apierr.Usagef("JSON inválido en --data: %v", err)

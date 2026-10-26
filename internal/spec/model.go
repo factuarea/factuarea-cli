@@ -17,6 +17,19 @@ type Operation struct {
 	// IdempotencyRequired: cabecera `Idempotency-Key` requerida por el spec
 	// (parámetro `in: header`, `name: Idempotency-Key`, `required: true`).
 	IdempotencyRequired bool
+	// HeaderParams: parámetros `in: header` declarados que la CLI no gestiona
+	// por su cuenta (se excluyen `Idempotency-Key`, `Factuarea-Version`,
+	// `X-Active-Profile` y las cabeceras de transporte). Si la operación declara
+	// una respuesta 304 y no declara `If-None-Match`, se añade sintético: el 304
+	// solo se alcanza con ese validador.
+	HeaderParams []Param
+	// ReturnsETag: alguna respuesta 2xx o 304 declara la cabecera `ETag`.
+	ReturnsETag bool
+	// NoRetry: la operación no debe reintentarse automáticamente (la CLI no
+	// repite la llamada ante 429/5xx ni errores de transporte). Sale de la
+	// extensión `x-no-retry: true`, de `x-speakeasy-retries.strategy: none` o de
+	// `noRetryOperations`.
+	NoRetry bool
 }
 
 type Param struct {
@@ -45,7 +58,14 @@ type BodyField struct {
 	Children []BodyField
 }
 
-type BinaryResponse struct{ ContentType string }
+// BinaryResponse describe una descarga cuyo 200 no es JSON. Dual marca la que
+// también declara `application/json` (p. ej. el activo de una plantilla: imagen
+// al leerlo, JSON si se pide el descriptor): el formato real lo decide el
+// Content-Type de la respuesta, no el spec.
+type BinaryResponse struct {
+	ContentType string
+	Dual        bool
+}
 
 func (o Operation) Mutating() bool {
 	switch o.Method {

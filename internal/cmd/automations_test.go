@@ -480,15 +480,7 @@ func TestAutomationsPortfolioScopeContractIsFrozen(t *testing.T) {
 	var doc struct {
 		Components struct {
 			Schemas map[string]struct {
-				Properties map[string]struct {
-					Type json.RawMessage `json:"type"`
-					// `[]any`, no `[]string`: el enum de un campo nullable trae un `null` y
-					// otros schemas del spec declaran enums numéricos/booleanos.
-					Enum       []any `json:"enum"`
-					Properties map[string]struct {
-						Type json.RawMessage `json:"type"`
-					} `json:"properties"`
-				} `json:"properties"`
+				Properties map[string]specProperty `json:"properties"`
 			} `json:"schemas"`
 		} `json:"components"`
 	}
@@ -558,10 +550,8 @@ func TestAutomationRunResponseContractIsFrozen(t *testing.T) {
 	var doc struct {
 		Components struct {
 			Schemas map[string]struct {
-				Properties map[string]struct {
-					Type json.RawMessage `json:"type"`
-				} `json:"properties"`
-				Required []string `json:"required"`
+				Properties map[string]specProperty `json:"properties"`
+				Required   []string                `json:"required"`
 			} `json:"schemas"`
 		} `json:"components"`
 	}

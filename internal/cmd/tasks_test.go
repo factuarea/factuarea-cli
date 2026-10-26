@@ -1203,11 +1203,8 @@ func TestTaskAndProjectResponseSchemasAreFrozen(t *testing.T) {
 	var doc struct {
 		Components struct {
 			Schemas map[string]struct {
-				Properties map[string]struct {
-					Type json.RawMessage `json:"type"`
-					Enum []any           `json:"enum"`
-				} `json:"properties"`
-				Required []string `json:"required"`
+				Properties map[string]specProperty `json:"properties"`
+				Required   []string                `json:"required"`
 			} `json:"schemas"`
 		} `json:"components"`
 	}
