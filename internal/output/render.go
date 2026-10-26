@@ -41,6 +41,9 @@ func PrintError(stderr io.Writer, err error, f Format) {
 				payload["data"] = api.Data
 			}
 			errorPayload := payload["error"].(map[string]any)
+			if api.RetryAfter != "" {
+				errorPayload["retry_after"] = api.RetryAfter
+			}
 			if api.Details != nil {
 				errorPayload["details"] = api.Details
 			}
@@ -57,6 +60,9 @@ func PrintError(stderr io.Writer, err error, f Format) {
 		}
 		if api.Code != "" {
 			fmt.Fprintf(stderr, "  código: %s\n", api.Code)
+		}
+		if api.RetryAfter != "" {
+			fmt.Fprintf(stderr, "  Retry-After: %s\n", api.RetryAfter)
 		}
 		if api.RequestID != "" {
 			fmt.Fprintf(stderr, "  request_id: %s\n", api.RequestID)

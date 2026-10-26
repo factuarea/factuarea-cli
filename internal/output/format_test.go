@@ -37,3 +37,21 @@ func TestPrintErrorHuman(t *testing.T) {
 		t.Fatalf("bad human error: %s", s)
 	}
 }
+
+func TestPrintErrorShowsRetryAfterInBothFormats(t *testing.T) {
+	err := &apierr.APIError{StatusCode: 503, Type: "service_unavailable_error", Message: "pendiente", RetryAfter: "12"}
+	var human, js bytes.Buffer
+	PrintError(&human, err, Human)
+	PrintError(&js, err, JSON)
+	if !strings.Contains(human.String(), "Retry-After: 12") {
+		t.Errorf("humano: %q", human.String())
+	}
+	if !strings.Contains(js.String(), `"retry_after":"12"`) {
+		t.Errorf("json: %q", js.String())
+	}
+	var none bytes.Buffer
+	PrintError(&none, &apierr.APIError{Message: "x"}, Human)
+	if strings.Contains(none.String(), "Retry-After") {
+		t.Errorf("sin cabecera no se imprime nada: %q", none.String())
+	}
+}

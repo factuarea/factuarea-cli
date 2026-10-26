@@ -292,15 +292,16 @@ pasa a viajar en la URL, donde se ve, se registra y se puede auditar; una clave
 que alcanza dos empresas ya no puede acabar escribiendo en la que no era sin que
 quede rastro de a cuál se apuntó.
 
-De las **508** operaciones del contrato, **432** cuelgan del eje de empresa y
-**60** del eje de cuenta (`/v1/accounts/{account}/…`: la cuenta propia, con su
-equipo, sus NIF, sus webhooks y sus request logs). Otras **16** no son de ninguno
+De las **714** operaciones del contrato, **633** cuelgan del eje de empresa y
+**64** del eje de cuenta (`/v1/accounts/{account}/…`: la cuenta propia, con su
+equipo, sus NIF, sus webhooks y sus request logs). Otras **17** no son de ninguno
 de los dos: **6** son las operaciones de cuentas gestionadas, donde `{account}`
-es la cuenta GESTIONADA y se trata como recurso; **5** son las rutas raíz de
-provisión e importación (`/v1/accounts` y `/v1/accounts/imports…`), sin cuenta en
-la ruta; y las **5** restantes son los catálogos y la identidad de raíz: `/v1/me`,
-`/v1/event-catalog`, `/v1/tax-catalog`, `/v1/payment-methods` y
-`/v1/payroll-export-formats` (6 + 5 + 5 = 16, y 432 + 60 + 16 = 508).
+es la cuenta GESTIONADA y se trata como recurso; **6** son las rutas raíz de
+provisión e importación (`/v1/accounts`, `/v1/accounts/provisioning-preview` y
+`/v1/accounts/imports…`), sin cuenta en la ruta; y las **5** restantes son los
+catálogos y la identidad de raíz: `/v1/me`, `/v1/event-catalog`,
+`/v1/tax-catalog`, `/v1/payment-methods` y `/v1/payroll-export-formats`
+(6 + 6 + 5 = 17, y 633 + 64 + 17 = 714).
 
 Lo que se pasa en ese segmento es el **`id` de la empresa** —el que publica
 `factuarea account show` en `data.scope[].id`—, nunca su NIF ni su nombre. El
@@ -629,6 +630,81 @@ factuarea projects columns delete <project_id> <column_id> \
 Los borrados de proyectos, columnas, campos personalizados, etiquetas, tareas (también `tasks bulk-delete`), comentarios, adjuntos y entradas de tiempo son irreversibles y piden `--confirm`; las mutaciones generan la cabecera `Idempotency-Key` si no pasas `--idempotency-key`.
 
 **`task-timers` no es el fichaje de jornada.** El temporizador y las entradas de `tasks time-entries` registran el tiempo dedicado a una tarea, para medirlo y facturarlo; no son el registro de jornada del módulo de control horario (`factuarea time-entries clock-in`, arriba), que tiene su propio scope y su propio registro inalterable.
+
+### Plantillas PDF y presentación de documentos
+
+Los comandos salen del OpenAPI, igual que el resto, y todos cuelgan del eje de
+empresa (`/v1/companies/{company}/…`): la empresa va como primer argumento
+posicional, con `--company` o, si tu credencial alcanza una sola, se resuelve
+sola (ver «La empresa como eje»). Los nuevos, por grupo:
+
+| Grupo | Comandos |
+| --- | --- |
+| `pdf-templates` | `list`, `create`, `find`, `update`, `duplicate`, `archive`, `restore`, `impact`, `publish-revision`, `revision`, `defaults-get`/`defaults-set`, `contact-default-get`/`contact-default-set`, `asset-upload`, `asset-get` |
+| `pdf-commercial-identities` | `list`, `create`, `find`, `update`, `archive`, `restore`, `impact`, `publish-revision`, `revision` |
+| `pdf-template-previews` | `create` |
+| `pdf-artifacts` | `prepare`, `render`, `show`, `download` |
+| `invoices`, `quotes`, `proformas`, `delivery-notes` | `get-presentation`, `assign-presentation`, `list-presentations`, `revise-presentation` |
+| `invoices administrative-revisions` | `index`, `store` |
+| `series` | `get-pdf-template`, `assign-pdf-template` |
+
+`series update` (PATCH) acepta además `--pdf-template-id` o `--null-pdf-template-id`
+(quita la plantilla de la serie), siempre acompañados de
+`--pdf-template-expected-version`.
+
+`quotes accept` y `proformas accept` aceptan la presentación revisada cuando la
+empresa tiene activa la presentación con revisiones (si no, se ignora):
+
+- `--presentation-precondition.<campo>` (los siete campos) es obligatorio en la
+  primera captura: un documento sin captura retenida o editado después de
+  capturarlo. Sale de una vista previa `persisted_draft` (`pdf-template-previews
+  create`), con `purpose` `complete` y `format` `a4`. Sin él, `428
+  pdf_presentation_precondition_required` y no se escribe nada.
+- `--expected-presentation-uuid` es opcional y cita la captura retenida que has
+  revisado; si ya no es la vigente, `409 pdf_presentation_conflict` y nada cambia.
+
+```bash
+factuarea quotes accept acme_co <quote> --expected-presentation-uuid <presentation_uuid> --json
+```
+
+```bash
+factuarea pdf-templates create --company acme_co --name "Factura clásica" --base-preset classic --json
+factuarea pdf-templates asset-upload --company acme_co --file-file logo.png --data '{"kind":"logo"}' --json
+factuarea pdf-templates asset-get acme_co <asset_id> -o logo.png
+factuarea invoices assign-presentation acme_co <uuid> --null-template-id --expected-version 1 --json
+factuarea invoices list-presentations acme_co <uuid> --page 1 --per_page 20 --json
+factuarea delivery-notes get-presentation acme_co <uuid> --json
+```
+
+`examples/document-templates.sh` recorre la receta completa contra un servidor de pruebas (`FACTUAREA_BASE_URL`), sin cuentas reales.
+
+**Cabeceras condicionales.** Las cabeceras que una operación declara en el spec son flags literales (`--if-match`, `--if-none-match`): el valor viaja tal cual, con sus comillas, y un valor vacío es un error de uso. `--show-etag` (en las operaciones que devuelven `ETag`) escribe `etag: <valor>` en **stderr** y no cambia stdout, de modo que se puede encadenar: `ETAG=$(factuarea pdf-templates find --company acme_co <id> --show-etag --json 2>&1 >/dev/null | sed -n 's/^etag: //p')`. Un `If-Match` obsoleto responde `412`; una versión (`expected_version`) obsoleta, `409`; sin ninguna precondición, `428`. El CLI no rellena versiones ni ETags por ti.
+
+**Presencia de campos.** El cuerpo distingue entre campo omitido (no se envía), `null`, vacío (`""`, `[]`), `0` y `false`: todos se envían tal cual si los pasas. Para `null` usa `--null-<campo>` (solo en campos que admiten null) o `null` en `-d`/`--data-file`; un campo requerido y nullable (como `template_id`) se satisface con `--null-template-id`. Los números de `-d`/`--data-file` conservan su literal.
+
+**Descargas binarias.** Una operación binaria (`pdf-artifacts download`, `invoices facturae`, `invoices pdf`…) escribe los bytes exactos a `-o` (PDF, XML, imagen, ZIP):
+
+- `200`: bytes a `-o` (o a stdout si no es un terminal).
+- `202`: aún no está listo; se imprime el JSON de estado y `retry-after: <s>` en stderr, y **no** se crea el fichero. Repite la llamada pasado ese tiempo.
+- `304` (con `--if-none-match`): éxito, sin salida y sin tocar el fichero existente.
+- `pdf-templates asset-get` es dual: según el `Content-Type` de la respuesta escribe la imagen a `-o` o imprime el JSON.
+- Los errores `429`/`503` exponen `retry_after` en el JSON de stderr.
+
+**Paginación por operación.** Solo las operaciones que declaran `starting_after` ofrecen `--paginate` (cursor, NDJSON). Los listados con `page`/`per_page` (plantillas, identidades, historial de presentaciones) hacen **una** petición por llamada; pasa `--page` y `--per_page` tú.
+
+**FACe sin reintento.** `invoices face-submissions submit` y `face-submissions cancel` hacen una sola llamada: ante `429`, `5xx` o un corte de conexión no se repiten, porque una transmisión incierta no debe duplicarse a ciegas. Si falla, consulta `invoices face-submissions list` / `face-submissions show` antes de volver a enviar. El resto de operaciones reintenta `429`/`5xx` conservando el mismo cuerpo y la misma `Idempotency-Key`, y respetando `Retry-After`.
+
+### Sincronizar el spec desde un fichero
+
+El spec embebido (`internal/spec/openapi.json`) se puede tomar de un fichero ya exportado, **copiándolo byte a byte**: sin normalizar ni reserializar, para que su sha256 sea el del origen.
+
+```bash
+make generate-from-file SPEC_FILE=/ruta/al/openapi.json   # cp + go run internal/gen/main.go
+sha256sum internal/spec/openapi.json                       # debe coincidir con el del origen
+factuarea version                                          # muestra los primeros 12 hex del hash embebido
+```
+
+`make generate` y `make generate-dev` sí normalizan (indentan y añaden salto final), porque su fuente es JSON compacto. Tras regenerar, adopta solo `internal/cmd/resources_gen.go`; no se edita a mano.
 
 ### Documentos de control del transporte (DeCA)
 

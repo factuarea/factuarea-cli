@@ -47,6 +47,9 @@ type APIError struct {
 	Data       json.RawMessage
 	Details    any
 	Errors     any
+	// RetryAfter es el valor literal de la cabecera `Retry-After` de la
+	// respuesta de error (429/503), vacío si no venía.
+	RetryAfter string
 }
 
 func (e *APIError) Error() string {

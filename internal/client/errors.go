@@ -34,6 +34,7 @@ func parseError(resp *Response) error {
 				Details:    raw.Error["details"],
 				Errors:     raw.Error["errors"],
 			}
+			api.RetryAfter = resp.Header.Get("Retry-After")
 			if api.RequestID == "" {
 				api.RequestID = resp.RequestID
 			}
@@ -51,6 +52,7 @@ func parseError(resp *Response) error {
 		Type:       synthesizeType(resp.StatusCode),
 		Message:    nonJSONMessage(resp),
 		RequestID:  resp.RequestID,
+		RetryAfter: resp.Header.Get("Retry-After"),
 	}
 }
 

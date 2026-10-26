@@ -38,6 +38,15 @@ func WithAPIVersion(v string) Option        { return func(c *Client) { c.apiVers
 
 func WithSleep(fn func(time.Duration)) Option { return func(c *Client) { c.sleep = fn } }
 
+// WithoutRetry devuelve una copia del cliente que no reintenta (ni 429/5xx ni
+// errores de transporte): una sola llamada. El cliente original no cambia, así
+// que sigue siendo seguro compartirlo con el resto de operaciones.
+func (c *Client) WithoutRetry() *Client {
+	cp := *c
+	cp.maxRetries = 0
+	return &cp
+}
+
 func New(apiKey string, opts ...Option) *Client {
 	c := &Client{
 		baseURL:    defaultBaseURL,
@@ -111,7 +120,9 @@ func (c *Client) Do(ctx context.Context, method, path string, body []byte, extra
 			RequestID:   httpResp.Header.Get("X-Request-Id"),
 		}
 
-		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+		// 304 es éxito sin cuerpo: respuesta a una petición condicional
+		// (`If-None-Match`) cuyo validador sigue vigente.
+		if (resp.StatusCode >= 200 && resp.StatusCode < 300) || resp.StatusCode == http.StatusNotModified {
 			return resp, nil
 		}
 

@@ -14,7 +14,12 @@ import (
 )
 
 func Load() (ops []Operation, nonConforming []string, err error) {
-	doc, err := libopenapi.NewDocument(Raw)
+	return LoadFrom(Raw)
+}
+
+// LoadFrom extrae las operaciones de un spec dado (Load usa el embebido).
+func LoadFrom(raw []byte) (ops []Operation, nonConforming []string, err error) {
+	doc, err := libopenapi.NewDocument(raw)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parse spec: %w", err)
 	}
@@ -104,8 +109,22 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 			o.PathParams = append(o.PathParams, param)
 		case "query":
 			o.QueryParams = append(o.QueryParams, param)
+		case "header":
+			if !managedHeaders[strings.ToLower(p.Name)] {
+				o.HeaderParams = append(o.HeaderParams, param)
+			}
 		}
 	}
+	if declaresResponse(op, "304") && !hasHeaderParam(o.HeaderParams, "If-None-Match") {
+		o.HeaderParams = append(o.HeaderParams, Param{
+			Name:        "If-None-Match",
+			In:          "header",
+			Type:        "string",
+			Description: "ETag que ya tienes; si no ha cambiado, la API responde 304 sin cuerpo",
+		})
+	}
+	o.ReturnsETag = returnsETag(op)
+	o.NoRetry = noRetry(op)
 	o.Body = buildBody(op)
 	o.BinaryResponse = buildBinaryResponse(op)
 	o.RequiredScope = stringExt(op.Extensions, "x-required-scope")
@@ -113,6 +132,91 @@ func buildOperation(op *v3.Operation, method, path string, groups []string, acti
 	o.IdempotencyRequired = idempotencyRequired(op)
 	applyOverrides(&o)
 	return o
+}
+
+// managedHeaders son las cabeceras `in: header` que la CLI ya pone ella misma
+// (clave de idempotencia, versión de API, perfil activo y transporte): no se
+// exponen como flag propio.
+var managedHeaders = map[string]bool{
+	"idempotency-key":   true,
+	"factuarea-version": true,
+	"x-active-profile":  true,
+	"authorization":     true,
+	"accept":            true,
+	"content-type":      true,
+	"content-length":    true,
+}
+
+// noRetryOperations son las operaciones que el spec no marca como no
+// reintentables pero que no deben repetirse sin que lo decida el usuario: el
+// envío y la cancelación a FACe pueden dejar una transmisión incierta en el
+// organismo (`face_transmission_uncertain`), y repetirla a ciegas arriesga un
+// doble envío. Un reintento es una decisión humana tras consultar el historial.
+var noRetryOperations = map[string]bool{
+	"public-api.v1.invoices.face_submissions.submit": true,
+	"public-api.v1.face_submissions.cancel":          true,
+}
+
+func hasHeaderParam(params []Param, name string) bool {
+	for _, p := range params {
+		if strings.EqualFold(p.Name, name) {
+			return true
+		}
+	}
+	return false
+}
+
+func declaresResponse(op *v3.Operation, code string) bool {
+	if op.Responses == nil || op.Responses.Codes == nil {
+		return false
+	}
+	_, ok := op.Responses.Codes.Get(code)
+	return ok
+}
+
+// returnsETag dice si alguna respuesta de éxito (2xx) o 304 declara `ETag`.
+func returnsETag(op *v3.Operation) bool {
+	if op.Responses == nil || op.Responses.Codes == nil {
+		return false
+	}
+	for pair := op.Responses.Codes.First(); pair != nil; pair = pair.Next() {
+		code := pair.Key()
+		if !strings.HasPrefix(code, "2") && code != "304" {
+			continue
+		}
+		resp := pair.Value()
+		if resp == nil || resp.Headers == nil {
+			continue
+		}
+		for h := resp.Headers.First(); h != nil; h = h.Next() {
+			if strings.EqualFold(h.Key(), "ETag") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// noRetry detecta la señal del spec (`x-no-retry: true` o
+// `x-speakeasy-retries.strategy: none`) y, si no la hay, la lista explícita.
+func noRetry(op *v3.Operation) bool {
+	if noRetryOperations[op.OperationId] || boolExt(op.Extensions, "x-no-retry") {
+		return true
+	}
+	if op.Extensions == nil {
+		return false
+	}
+	node, ok := op.Extensions.Get("x-speakeasy-retries")
+	if !ok || node == nil {
+		return false
+	}
+	var cfg struct {
+		Strategy string `yaml:"strategy"`
+	}
+	if err := node.Decode(&cfg); err != nil {
+		return false
+	}
+	return strings.EqualFold(cfg.Strategy, "none")
 }
 
 // idempotencyRequired detecta el parámetro `in: header`, `name: Idempotency-Key`
@@ -239,14 +343,16 @@ func buildBody(op *v3.Operation) *Body {
 			}
 		}
 		if mt.Schema != nil {
-			b.Fields = bodyFields(mt.Schema.Schema(), 0)
+			// El cuerpo puede ser un `$ref` con `examples` hermano: se clasifica
+			// por el esquema referido (ver fieldSchema).
+			b.Fields = bodyFields(fieldSchema(mt.Schema), 0)
 		}
 		return b
 	}
 
 	if mt, ok := content.Get("multipart/form-data"); ok && mt != nil && mt.Schema != nil {
 		b := &Body{Kind: "multipart"}
-		if sc := mt.Schema.Schema(); sc != nil {
+		if sc := fieldSchema(mt.Schema); sc != nil {
 			b.FileFields = binaryFields(sc, false)
 			b.FileArrayFields = binaryFields(sc, true)
 		}
@@ -305,6 +411,9 @@ func bodyFields(sc *base.Schema, depth int) []BodyField {
 		if ps == nil {
 			continue
 		}
+		if isForbiddenProperty(ps) {
+			continue
+		}
 		s := fieldSchema(ps)
 		if s == nil {
 			continue
@@ -314,6 +423,14 @@ func bodyFields(sc *base.Schema, depth int) []BodyField {
 		fields = append(fields, f)
 	}
 	return fields
+}
+
+// isForbiddenProperty detecta una propiedad declarada con el esquema booleano
+// `false` (JSON Schema: ningún valor es válido). El contrato reserva así campos
+// que la API no acepta todavía; ofrecerlos como flag solo conduciría a un 422.
+func isForbiddenProperty(ps *base.SchemaProxy) bool {
+	node := ps.GetValueNode()
+	return node != nil && node.Kind == yaml.ScalarNode && node.ShortTag() == "!!bool" && node.Value == "false"
 }
 
 // fieldSchema devuelve el esquema que clasifica un campo del cuerpo. Un campo
@@ -522,11 +639,25 @@ func arrayItemSchema(s *base.Schema) *base.Schema {
 	return proxy.Schema()
 }
 
+// itemSchemaType devuelve el tipo del elemento de un array. Un elemento que se
+// declara con `allOf` (el objeto base más sus extensiones) no lleva `type` en la
+// raíz: se toma el del primer miembro que lo declare.
 func itemSchemaType(item *base.Schema) []string {
 	if item == nil {
 		return nil
 	}
-	return item.Type
+	if len(item.Type) > 0 {
+		return item.Type
+	}
+	for _, sub := range item.AllOf {
+		if sub == nil {
+			continue
+		}
+		if t := itemSchemaType(sub.Schema()); len(t) > 0 {
+			return t
+		}
+	}
+	return nil
 }
 
 func isFreeMap(s *base.Schema) bool {
@@ -548,10 +679,12 @@ func buildBinaryResponse(op *v3.Operation) *BinaryResponse {
 		return nil
 	}
 	var firstNonJSON string
+	hasJSON := false
 	for ct := resp.Content.First(); ct != nil; ct = ct.Next() {
 		mediaType := ct.Key()
 		if strings.Contains(mediaType, "json") {
-			return nil
+			hasJSON = true
+			continue
 		}
 		if firstNonJSON == "" {
 			firstNonJSON = mediaType
@@ -560,7 +693,7 @@ func buildBinaryResponse(op *v3.Operation) *BinaryResponse {
 	if firstNonJSON == "" {
 		return nil
 	}
-	return &BinaryResponse{ContentType: firstNonJSON}
+	return &BinaryResponse{ContentType: firstNonJSON, Dual: hasJSON}
 }
 
 func exampleJSON(node *yaml.Node) string {

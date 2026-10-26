@@ -67,6 +67,9 @@ type genOp struct {
 	PathParams, QueryParams                    []genParam
 	Body                                       *genBody
 	BinaryContentType                          string
+	DualBinary                                 bool
+	HeaderParams                               []genParam
+	ReturnsETag, NoRetry                       bool
 }
 
 func generatedOps() []genOp {
@@ -81,7 +84,11 @@ func generatedOps() []genOp {
 			PathParams: []genParam{ {{range .PathParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },
 			QueryParams: []genParam{ {{range .QueryParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },
 			{{if .Body}}Body: &genBody{Kind: {{q .Body.Kind}}, Example: {{q .Body.Example}}, FileFields: []string{ {{range .Body.FileFields}}{{q .}}, {{end}} }, {{if .Body.FileArrayFields}}FileArrayFields: []string{ {{range .Body.FileArrayFields}}{{q .}}, {{end}} },{{end}} HasObjectArray: {{hasObjectArray .Body.Fields}}, Fields: []genBodyField{ {{template "fields" .Body.Fields}} }},{{end}}
-			{{if .BinaryResponse}}BinaryContentType: {{q .BinaryResponse.ContentType}},{{end}}
+			{{if .BinaryResponse}}BinaryContentType: {{q .BinaryResponse.ContentType}},{{if .BinaryResponse.Dual}} DualBinary: true,{{end}}{{end}}
+{{if .HeaderParams}}HeaderParams: []genParam{ {{range .HeaderParams}}{Name: {{q .Name}}, In: {{q .In}}, Type: {{q .Type}}, Description: {{q .Description}}, Required: {{.Required}}}, {{end}} },
+{{end}}{{if .ReturnsETag}}ReturnsETag: true,
+{{end}}{{if .NoRetry}}NoRetry: true,
+{{end}}
 		},
 {{- end}}
 	}

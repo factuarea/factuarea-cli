@@ -11,6 +11,120 @@ anteriores (hasta `v0.4.0`) no tienen entrada aquí.
 
 ## [Unreleased]
 
+`internal/spec/openapi.json` embebe el contrato v1 de **714 operaciones** en
+**572 paths** (sha256 `0219a93b…bf14`), y `internal/cmd/resources_gen.go` se
+ha regenerado entero desde él: **50 comandos nuevos**, todos en el eje de
+empresa, y ninguno retirado, renombrado ni movido de ruta. El árbol queda en
+633 operaciones del eje de empresa, 64 del eje de cuenta, 6 de cuentas
+gestionadas, 6 rutas raíz de provisión e importación y 5 catálogos e identidad
+de raíz.
+
+### Añadido
+
+- **Plantillas PDF y presentación de documentos.** Los 50 comandos nuevos
+  cuelgan de `/v1/companies/{company}/…`, así que llevan la empresa como el
+  resto del árbol (posicional, `--company` o resolución automática):
+
+  | Grupo | Comandos |
+  | --- | --- |
+  | `pdf-templates` (16) | `list`, `create`, `find`, `update`, `duplicate`, `archive`, `restore`, `impact`, `publish-revision`, `revision`, `defaults-get`/`defaults-set`, `contact-default-get`/`contact-default-set`, `asset-upload`, `asset-get` |
+  | `pdf-commercial-identities` (9) | `list`, `create`, `find`, `update`, `archive`, `restore`, `impact`, `publish-revision`, `revision` |
+  | `pdf-template-previews` (1) | `create` |
+  | `pdf-artifacts` (4) | `prepare`, `render`, `show`, `download` |
+  | `invoices`, `quotes`, `proformas`, `delivery-notes` (16) | `get-presentation`, `assign-presentation`, `list-presentations`, `revise-presentation` |
+  | `invoices administrative-revisions` (2) | `index`, `store` |
+  | `series` (2) | `get-pdf-template`, `assign-pdf-template` |
+
+  ```bash
+  factuarea pdf-templates list acme_co --json
+  factuarea invoices assign-presentation acme_co <invoice> --template-id <template> --expected-version 1 --json
+  factuarea pdf-artifacts download --company acme_co <artifact> -o factura.pdf
+  ```
+
+  La marca de una identidad comercial (`pdf-commercial-identities create` y
+  `publish-revision`) admite una versión para fondo oscuro y un tamaño:
+  `--configuration.logo-dark-asset-id`,
+  `--configuration.brand-image-dark-asset-id`,
+  `--configuration.dark-background-fallback` (`silhouette`, por defecto, o
+  `plate`) y `--configuration.brand-size` (`small`, `medium` o `large`). En la
+  configuración de una plantilla, `branding.size` admite `inherit`, que toma el
+  tamaño de la identidad; va en el cuerpo (`-d`/`--data-file`), igual que en la
+  identidad sin guardar de `pdf-template-previews create`, que acepta los
+  mismos campos.
+
+  `series update` acepta además `--pdf-template-id` o `--null-pdf-template-id`,
+  con `--pdf-template-expected-version`. La receta completa está en
+  `examples/document-templates.sh`.
+
+- **Aceptar con la presentación revisada.** `quotes accept` y `proformas accept`
+  ganan `--presentation-precondition.<campo>` (los siete campos de una vista
+  previa `persisted_draft`, obligatorios en la primera captura cuando la
+  presentación con revisiones está activa; sin ellos, `428`) y
+  `--expected-presentation-uuid` (opcional: cita la captura retenida que has
+  revisado; si ya no es la vigente, `409 pdf_presentation_conflict` y nada
+  cambia). Con la presentación con revisiones desactivada, se ignoran.
+
+- **Comisiones de Stripe como gasto** (cambio del contrato que la API pública
+  sirve desde su v1.17.2, posterior a la v0.9.0 de la CLI).
+  `stripe-autoinvoicing accounts update` gana `--fee-expenses-enabled`,
+  `--fee-expenses-tax-treatment` (`reverse_charge_eu` o `exempt`) y
+  `--fee-expenses-since` (`YYYY-MM`). Activarlo exige el módulo de compras del
+  plan y, en la misma petición o ya guardados, el tratamiento y el mes de
+  inicio. La cuenta conectada informa además de esos campos y de
+  `connection_method` `platform` (la cuenta de Stripe propia), y la composición
+  de los payouts gana `refunds_total`, `standalone_fee_total` y `other_total`.
+
+- **Cabeceras condicionales.** Las cabeceras que una operación declara en el
+  contrato son flags literales: `--if-match` e `--if-none-match` (esta última
+  también cuando la operación declara un `304`). El valor viaja tal cual, con
+  sus comillas, y un valor vacío es un error de uso. `--show-etag` escribe
+  `etag: <valor>` en stderr sin tocar stdout.
+
+- **Null explícito.** `--null-<campo>` envía `null` en los campos que lo
+  admiten. Omitido, `null`, `""`, `[]`, `0` y `false` se distinguen también en
+  `-d`/`--data-file`, y los números conservan su literal.
+
+- **Descargas con estado.** Un `200` escribe los bytes exactos en `-o`; un
+  `202` imprime el JSON de estado y `retry-after` en stderr sin crear el
+  fichero; un `304` es éxito sin salida y sin tocar el fichero existente.
+  `pdf-templates asset-get` es dual: según el `Content-Type` de la respuesta
+  escribe la imagen o imprime el JSON. Los errores `429`/`503` exponen
+  `retry_after`.
+
+### Cambiado
+
+- **Contrato resincronizado con el tipo de plantilla.** Las mismas 714
+  operaciones y 572 paths, sin comandos nuevos ni retirados. Las plantillas PDF
+  ganan `document_kind` (`commercial` o `transport-document`): `pdf-templates
+  create` lo acepta, `list` lo ofrece como filtro y las respuestas lo devuelven.
+  Una plantilla nunca cambia de tipo. `duplicate` lo acepta opcional: omitido,
+  la copia conserva el tipo, y con `transport-document` sobre una comercial crea
+  una plantilla de control nueva que solo copia diseño, letra, colores y marca.
+  De control a comercial, o un valor desconocido, es `422`
+  `invalid_pdf_template_configuration` con `param` `document_kind`, y sin el
+  módulo de documentos de transporte es `403` `feature_not_available_in_plan`.
+  `pdf-templates defaults-set` solo admite plantillas
+  de control (`transport-document`) en el valor por defecto de los documentos de
+  transporte. Trece operaciones declaran ahora `503` reintentable
+  (`pdf_engine_unreachable`, con `Retry-After` y sin nada escrito) cuando el
+  motor de PDF no responde: `invoices issue`, `invoices send`,
+  `quotes send`, `proformas send`, `delivery-notes send`, `quotes accept`,
+  `proformas accept`, `invoices substitute-simplified`, `revise-presentation`
+  de facturas, presupuestos, proformas y albaranes y la vista previa del
+  borrador de factura. Las doce primeras lo necesitan solo para comprobar la
+  presentación revisada o construir la revisión. Los fallos terminales del
+  motor siguen siendo el `500` `pdf_engine_profile_unavailable`. Las
+  descripciones de `tax_rate` y `retention_rate` de las líneas explican la
+  elección por `tax_rate_id` o `retention_rate_id` y el `422`
+  `parameter_invalid_value` con subcódigo `tax_rate_mismatch` cuando no
+  coinciden.
+- **FACe sin reintento automático.** `invoices face-submissions submit` y
+  `face-submissions cancel` hacen una sola llamada: una transmisión incierta no
+  se repite a ciegas. Consulta `invoices face-submissions list` antes de volver
+  a enviar.
+- Un campo que el contrato reserva (esquema `false`) ya no genera flag, y los
+  cuerpos que referencian un esquema con ejemplos ganan sus flags tipados.
+
 ## [0.9.0] - 2026-10-17
 
 El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spec/openapi.json` embebe el documento de **664 operaciones** en **534 paths**, el mismo que sirve producción desde el despliegue del 2026-10-17, y `internal/cmd/resources_gen.go` se ha regenerado entero desde él.
