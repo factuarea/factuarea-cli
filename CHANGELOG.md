@@ -11,6 +11,8 @@ anteriores (hasta `v0.4.0`) no tienen entrada aquí.
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-26
+
 `internal/spec/openapi.json` embebe el contrato v1 de **714 operaciones** en
 **572 paths** (sha256 `0219a93b…bf14`), y `internal/cmd/resources_gen.go` se
 ha regenerado entero desde él: **50 comandos nuevos**, todos en el eje de
@@ -292,5 +294,6 @@ El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spe
   `deliveries`), `account request-logs`, `account nif-transfers` y la hoja
   `account provisioning-usage`.
 
-[Unreleased]: https://github.com/factuarea/factuarea-cli/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/factuarea/factuarea-cli/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/factuarea/factuarea-cli/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/factuarea/factuarea-cli/compare/v0.8.0...v0.9.0
