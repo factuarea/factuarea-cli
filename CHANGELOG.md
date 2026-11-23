@@ -11,6 +11,65 @@ anteriores (hasta `v0.4.0`) no tienen entrada aquí.
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-11-23
+
+`internal/spec/openapi.json` embebe el contrato v1 de **736 operaciones** en
+**585 paths** (sha256 `452552e0…c446`), el que sirve producción con la API en
+v1.17.79, y `internal/cmd/resources_gen.go` se ha regenerado entero desde él:
+**ningún comando nuevo, retirado, renombrado ni movido de ruta**. El árbol
+conserva sus recuentos (651 operaciones del eje de empresa, 68 del eje de
+cuenta, 6 de cuentas gestionadas, 6 rutas raíz de provisión e importación y 5
+catálogos e identidad de raíz). Cambian dos comandos (una flag nueva) y la
+forma de la factura y de las reglas de cobro que devuelven los existentes.
+
+### Añadido
+
+- **Causa de exención en las reglas de cobro de Stripe.** `stripe-autoinvoicing
+  accounts charge-rules create` y `update` aceptan `--exemption-reason` (y
+  `--null-exemption-reason` para enviarla como `null`): la causa de exención
+  (`E1` a `E6`) o de no sujeción (`N1`, `N2`) que llevarán las líneas de la
+  factura que genere la regla. Solo vale con `--outcome invoice` y `--vat-rate
+  0`: con cualquier otro tipo de IVA, sin `--vat-rate`, con `do_not_invoice` o
+  con un valor fuera de esa lista responde `422 charge_rule_invalid` con
+  `exemption_reason` en `error.param`. Sin ella, las líneas salen a 0 % sin
+  causa. `update` reemplaza la regla entera: omitir la flag borra la causa
+  guardada. Las reglas que devuelven `charge-rules list`, `create`, `update` y
+  `reorder` incluyen `exemption_reason` (`null` si no hay causa).
+
+  ```bash
+  factuarea stripe-autoinvoicing accounts charge-rules create acme_co <account> \
+    --condition.type metadata_equals --condition.key tipo --condition.value formacion \
+    --outcome invoice --concept "Formación" --vat-rate 0 --exemption-reason E1
+  ```
+
+### Cambiado
+
+- **La factura publica su cadena de rectificación.** Las respuestas de
+  `invoices show`, `list` y de las demás operaciones que devuelven una factura
+  (23 en total) añaden tres campos: `superseded_by` (`{id, number}` de la factura rectificativa
+  por sustitución que ha reemplazado a esta, o `null`), `credited_amount`
+  (lo que las notas de abono de la cadena restan de lo que exige la factura) e
+  `inherited_paid_amount` (los cobros registrados en la original que cuentan
+  para la rectificativa que la sustituye; ya van incluidos en `paid_amount`).
+  Son campos de salida: la CLI los imprime tal cual y no hay flags nuevas.
+- **`paid_amount` y `pending_amount` se miden a lo largo de la cadena.** Una
+  rectificativa que sustituye a la original suma los cobros de esa original, y
+  una original sustituida publica `0.00` en ambos (ya no exige cobro ni vence).
+  En una factura viva, `pending_amount = total_to_pay - credited_amount -
+  paid_amount`; una nota de abono aplicada publica `0.00`, no un importe
+  negativo. El `pending_amount` se mide contra `total_to_pay`, no contra
+  `total`.
+- **Errores 422 nuevos al registrar un cobro y al recordar.**
+  `factuarea invoices payments-create` responde `422 business_rule_violation`
+  con subcódigo `invoice_not_payable` (estado que no admite cobros) o
+  `invoice_superseded_by_corrective` (original sustituida por una
+  rectificativa: el cobro se registra en la rectificativa).
+  `factuarea invoices reminder-preview` y `send-reminder` responden `422
+  reminder_not_applicable` cuando no hay nada que recordar: la factura ha sido
+  sustituida (se recuerda desde la rectificativa) o no queda importe pendiente
+  tras sus rectificativas. La CLI los trata como cualquier 422 (código de salida
+  y cuerpo del error sin cambios).
+
 ## [0.11.0] - 2026-11-23
 
 `internal/spec/openapi.json` embebe el contrato v1 de **736 operaciones** en
@@ -399,6 +458,8 @@ El artefacto de este repositorio YA viaja con el contrato del eje: `internal/spe
   `deliveries`), `account request-logs`, `account nif-transfers` y la hoja
   `account provisioning-usage`.
 
-[Unreleased]: https://github.com/factuarea/factuarea-cli/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/factuarea/factuarea-cli/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/factuarea/factuarea-cli/compare/v0.11.0...v0.12.0
+[0.11.0]: https://github.com/factuarea/factuarea-cli/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/factuarea/factuarea-cli/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/factuarea/factuarea-cli/compare/v0.8.0...v0.9.0
