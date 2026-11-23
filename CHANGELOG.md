@@ -11,6 +11,111 @@ anteriores (hasta `v0.4.0`) no tienen entrada aquí.
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-11-23
+
+`internal/spec/openapi.json` embebe el contrato v1 de **736 operaciones** en
+**585 paths** (sha256 `cb196fec…45e7`), el que sirve producción, y
+`internal/cmd/resources_gen.go` se ha regenerado entero desde él: **22 comandos
+nuevos** y ninguno retirado, renombrado ni movido de ruta. El árbol queda en 651
+operaciones del eje de empresa, 68 del eje de cuenta, 6 de cuentas gestionadas,
+6 rutas raíz de provisión e importación y 5 catálogos e identidad de raíz. Los
+eventos `client.*` salen del contrato: ver *Cambiado — rotura*.
+
+### Cambiado — rotura
+
+- **Los cuatro eventos `client.*` desaparecen.** `client.created`,
+  `client.updated`, `client.deleted` y `client.metadata_changed` salen del
+  enumerado `type` de `factuarea account webhooks test` y de `factuarea
+  webhook-endpoints test-event`: `--type client.created` es ahora un error de
+  uso (código de salida `2`, antes de enviar nada). Usa `contact.created`,
+  `contact.updated` y `contact.deleted`. No hay `contact.metadata_changed`: un
+  cambio de metadatos o notas de un contacto llega como `contact.updated`.
+  `factuarea listen --events client.created` no falla, pero ya no llegará ningún
+  evento así; `factuarea trigger contact.created` no cambia.
+- **Identidad fiscal extranjera de un contacto.** La respuesta `alternative_id`
+  no lleva `object` (el API nunca lo devolvió) y su `type` es uno de `nif_iva`,
+  `passport`, `country_id`, `residence_certificate`, `other_document` y
+  `not_registered`; `tax_id_foreign` y `national_id` solo se aceptan de entrada.
+
+### Añadido
+
+- **Packs, promociones, productos en la web y plazas de la cuenta.** Los 22
+  comandos nuevos:
+
+  | Grupo | Comandos |
+  | --- | --- |
+  | `packs` (11) | `list`, `create`, `show`, `update`, `archive`, `restore`, `delete`, `price-breakdown`, `images upload`, `images update`, `images delete` |
+  | `promotions` (6) | `list`, `create`, `show`, `update`, `cancel`, `delete` |
+  | `products` (1) | `bulk-channels` |
+  | `additional-nif-seats` (3) | `status`, `preview`, `update` |
+  | `employee-seats` (1) | `update` |
+
+  ```bash
+  factuarea packs list acme_co --json
+  factuarea promotions show --company acme_co <promotion> --json
+  factuarea products bulk-channels acme_co --ids <product>,<product> --channels.web --json
+  factuarea additional-nif-seats status --json
+  ```
+
+  Los de `packs`, `promotions` y `products` cuelgan de
+  `/v1/companies/{company}/…` y llevan la empresa como el resto del árbol;
+  piden los scopes `packs:*`, `promotions:*` y `products:write`. Los de plazas
+  son del eje de cuenta. `additional-nif-seats update` y `employee-seats update`
+  fijan las plazas contratadas (`--contracted-seats`) y son irreversibles: la
+  cuenta se escribe siempre como argumento y piden `--confirm`.
+- **Identidad fiscal extranjera en la escritura de contactos.** `factuarea
+  contacts create`, `update` y `bulk-create` aceptan `alternative_id` (`type`,
+  `value`, `country_code`) en el cuerpo, la misma forma que devuelve la lectura,
+  de modo que un contacto extranjero se lee y se reenvía tal cual; en `create` y
+  `update` también como flags (`--alternative-id.type`, `--alternative-id.value`
+  y `--alternative-id.country-code`). Los campos planos `alternative_id_type`,
+  `alternative_id_value` y `alternative_id_country_code` siguen valiendo.
+- **Productos en la web.** `products create` y `update` aceptan `--slug`,
+  `--summary`, `--seo.title`, `--seo.description` y `--channels.web`.
+  `products list` filtra por `--channel`, `--slug` y la ventana
+  `--updated[gte]`/`--updated[lte]`, y con `--view storefront` devuelve solo lo
+  que una tienda puede mostrar; `products show` acepta también `--view`. El
+  día para el que se resuelve la promoción se elige con `--date` en `products
+  list`, `show`, `search`, `find-by-sku`, `find-by-external-id` y en `variants
+  list`, `presentations list` y `configurations list`.
+- **Tarifas.** `price-lists list` y `price-lists items list` filtran por
+  `--updated[gte]`/`--updated[lte]`. `price-lists resolve` y `resolve-many`
+  aceptan `--channel` (`documents` o `web`), `--date` y `--client-id` (el
+  contacto con rol de cliente cuya tarifa por defecto se aplica).
+- **Plazas de empleados.** `employee-seats cancel` acepta `--deactivate` y
+  `--accept-offer-package-loss`, y `employee-seats preview` el valor absoluto
+  `--contracted_seats`.
+- `stripe-autoinvoicing accounts update` acepta `--email-invoice-to-payer`.
+- **Tipos de evento nuevos** en `--type` de `account webhooks test` y de
+  `webhook-endpoints test-event`: `product.deleted`, `pack.*` (`created`,
+  `updated`, `archived`, `restored`, `deleted`), `promotion.*` (`created`,
+  `updated`, `started`, `ended`, `cancelled`, `deleted`) y `price_list.*`
+  (`created`, `updated`, `deleted`, `item_updated`, `item_deleted`); en `account
+  webhooks test`, además, `account.seats_updated` y
+  `account.offer_package_ended`.
+
+### Cambiado
+
+- Máximos publicados de un contacto: `address.line_2` 100 (antes 255),
+  `address.postal_code` 10 (20), `alternative_id_value` 50 (100) y
+  `bank_accounts[].bic` 11 (20; 8 u 11 caracteres). El servidor ya los aplicaba
+  y la CLI no valida longitudes. Un valor más largo responde `422
+  invalid_param_value` con el campo en `error.param`: antes `address.line_2` y
+  `address.postal_code` daban `500`, y `alternative_id_value` y el BIC daban
+  `422` con otro `code` y `subcode` (`alternative_id_value_invalid`,
+  `bank_account_bic_invalid`).
+- `factuarea contacts find-by-tax-id` acepta el NIF con espacios, guiones o
+  puntos; `contacts import` y su simulación normalizan el NIF antes de
+  deduplicar e informan `value_too_long` con los máximos nuevos. La
+  documentación de `factuarea quotes accept` dice ahora lo que el API ya hacía:
+  un presupuesto con la validez vencida se puede aceptar.
+- Nueve códigos de error salen del catálogo: `client_has_documents`,
+  `client_import_too_large`, `client_requires_tax_identity` y
+  `supplier_has_documents` (rutas retiradas el 2026-09-16) y
+  `forge_webhook_signature_invalid`, `invalid_pdf_artifact_fingerprint`,
+  `invalid_task_reference`, `quote_expired` y `webhook_endpoint_degraded`, que
+  el API nunca devolvió. La CLI no los lleva en ningún sitio: nada cambia.
+
 ## [0.10.0] - 2026-10-26
 
 `internal/spec/openapi.json` embebe el contrato v1 de **714 operaciones** en
