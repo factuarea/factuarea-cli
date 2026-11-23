@@ -292,16 +292,16 @@ pasa a viajar en la URL, donde se ve, se registra y se puede auditar; una clave
 que alcanza dos empresas ya no puede acabar escribiendo en la que no era sin que
 quede rastro de a cuál se apuntó.
 
-De las **714** operaciones del contrato, **633** cuelgan del eje de empresa y
-**64** del eje de cuenta (`/v1/accounts/{account}/…`: la cuenta propia, con su
-equipo, sus NIF, sus webhooks y sus request logs). Otras **17** no son de ninguno
+De las **736** operaciones del contrato, **651** cuelgan del eje de empresa y
+**68** del eje de cuenta (`/v1/accounts/{account}/…`: la cuenta propia, con su
+equipo, sus NIF, sus plazas, sus webhooks y sus request logs). Otras **17** no son de ninguno
 de los dos: **6** son las operaciones de cuentas gestionadas, donde `{account}`
 es la cuenta GESTIONADA y se trata como recurso; **6** son las rutas raíz de
 provisión e importación (`/v1/accounts`, `/v1/accounts/provisioning-preview` y
 `/v1/accounts/imports…`), sin cuenta en la ruta; y las **5** restantes son los
 catálogos y la identidad de raíz: `/v1/me`, `/v1/event-catalog`,
 `/v1/tax-catalog`, `/v1/payment-methods` y `/v1/payroll-export-formats`
-(6 + 6 + 5 = 17, y 633 + 64 + 17 = 714).
+(6 + 6 + 5 = 17, y 651 + 68 + 17 = 736).
 
 Lo que se pasa en ese segmento es el **`id` de la empresa** —el que publica
 `factuarea account show` en `data.scope[].id`—, nunca su NIF ni su nombre. El

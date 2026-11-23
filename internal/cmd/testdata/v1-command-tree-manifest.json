@@ -1,10 +1,10 @@
 {
   "$meta": {
-    "source_digest": "6ec087d0d39bb4cc62d2051c3a960f9d5d7c641c3ad3a4d0db9f28d75c40a44b",
-    "measured_commit": "6332d0a7c8",
+    "source_digest": "2566ded607d7c8db2ef389fb3d14731c79f7a8c9036470c15ef71128eb626343",
+    "measured_commit": "1a91318359",
     "generated_by": "desde la raiz del repo (factuarea), con el documento congelado en backend/api.json:  python3 -c 'import json;O=\"backend/docs/api/v1-command-tree-manifest.json\";m=json.load(open(O))[\"$meta\"];d=json.load(open(\"backend/api.json\"));M=[\"get\",\"post\",\"put\",\"patch\",\"delete\"];ops=[{\"operation_id\":o[\"operationId\"],\"method\":x.upper(),\"path\":p,\"path_params\":[q[\"name\"] for q in o.get(\"parameters\",[]) if q.get(\"in\")==\"path\"],\"command\":\" \".join([\"factuarea\"]+[s.replace(\"_\",\"-\") for s in o[\"operationId\"].removeprefix(\"public-api.v1.\").split(\".\")])} for p,it in d[\"paths\"].items() for x in M if it.get(x) for o in [it[x]]];m[\"operations\"]=len(ops);m[\"paths\"]=len(d[\"paths\"]);json.dump({\"$meta\":m,\"operations\":ops},open(O,\"w\"),indent=2,ensure_ascii=False);open(O,\"a\").write(\"\\n\")'  -- el programa RECONSTRUYE operations[] desde backend/api.json y CONSERVA literalmente $meta.source_digest, $meta.measured_commit y $meta.generated_by del fichero existente, asi que regenerarlo es idempotente. source_digest es el sha256 CANONICO del documento (parsear -> ordenar claves recursivamente -> descartar x-codeSamples -> serializar sin espacios -> sha256; `canonicalize` de ../factuarea-node/scripts/spec-sync.mjs), NUNCA el sha256 crudo del fichero, que para el mismo contrato cambia con el sangrado. NO EDITAR A MANO: el gate ../factuarea-cli/internal/cmd/axis_tree_test.go compara este manifiesto contra el arbol de comandos de la CLI y re-deriva cada `command` desde su `operation_id`.",
-    "operations": 714,
-    "paths": 572
+    "operations": 736,
+    "paths": 585
   },
   "operations": [
     {
@@ -237,6 +237,16 @@
         "identity"
       ],
       "command": "factuarea pdf-commercial-identities archive"
+    },
+    {
+      "operation_id": "public-api.v1.packs.archive",
+      "method": "POST",
+      "path": "/companies/{company}/packs/{pack}/archive",
+      "path_params": [
+        "company",
+        "pack"
+      ],
+      "command": "factuarea packs archive"
     },
     {
       "operation_id": "public-api.v1.projects.archive",
@@ -515,6 +525,15 @@
         "company"
       ],
       "command": "factuarea tasks bulk-status"
+    },
+    {
+      "operation_id": "public-api.v1.products.bulk_channels",
+      "method": "POST",
+      "path": "/companies/{company}/products/bulk-channels",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea products bulk-channels"
     },
     {
       "operation_id": "public-api.v1.contacts.bulk_create",
@@ -874,6 +893,16 @@
         "faceSubmission"
       ],
       "command": "factuarea face-submissions cancel"
+    },
+    {
+      "operation_id": "public-api.v1.promotions.cancel",
+      "method": "POST",
+      "path": "/companies/{company}/promotions/{promotion}/cancel",
+      "path_params": [
+        "company",
+        "promotion"
+      ],
+      "command": "factuarea promotions cancel"
     },
     {
       "operation_id": "public-api.v1.recurring_invoices.cancel",
@@ -1423,6 +1452,24 @@
       "command": "factuarea account nif-transfers create"
     },
     {
+      "operation_id": "public-api.v1.packs.list",
+      "method": "GET",
+      "path": "/companies/{company}/packs",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea packs list"
+    },
+    {
+      "operation_id": "public-api.v1.packs.create",
+      "method": "POST",
+      "path": "/companies/{company}/packs",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea packs create"
+    },
+    {
       "operation_id": "public-api.v1.pdf_template_previews.create",
       "method": "POST",
       "path": "/companies/{company}/pdf-template-previews",
@@ -1562,6 +1609,24 @@
         "company"
       ],
       "command": "factuarea projects create"
+    },
+    {
+      "operation_id": "public-api.v1.promotions.list",
+      "method": "GET",
+      "path": "/companies/{company}/promotions",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea promotions list"
+    },
+    {
+      "operation_id": "public-api.v1.promotions.create",
+      "method": "POST",
+      "path": "/companies/{company}/promotions",
+      "path_params": [
+        "company"
+      ],
+      "command": "factuarea promotions create"
     },
     {
       "operation_id": "public-api.v1.purchase_invoices.list",
@@ -2064,6 +2129,58 @@
       "command": "factuarea invoices delete"
     },
     {
+      "operation_id": "public-api.v1.packs.show",
+      "method": "GET",
+      "path": "/companies/{company}/packs/{pack}",
+      "path_params": [
+        "company",
+        "pack"
+      ],
+      "command": "factuarea packs show"
+    },
+    {
+      "operation_id": "public-api.v1.packs.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/packs/{pack}",
+      "path_params": [
+        "company",
+        "pack"
+      ],
+      "command": "factuarea packs update"
+    },
+    {
+      "operation_id": "public-api.v1.packs.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/packs/{pack}",
+      "path_params": [
+        "company",
+        "pack"
+      ],
+      "command": "factuarea packs delete"
+    },
+    {
+      "operation_id": "public-api.v1.packs.images.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/packs/{pack}/images/{image}",
+      "path_params": [
+        "company",
+        "pack",
+        "image"
+      ],
+      "command": "factuarea packs images update"
+    },
+    {
+      "operation_id": "public-api.v1.packs.images.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/packs/{pack}/images/{image}",
+      "path_params": [
+        "company",
+        "pack",
+        "image"
+      ],
+      "command": "factuarea packs images delete"
+    },
+    {
       "operation_id": "public-api.v1.price-lists.show",
       "method": "GET",
       "path": "/companies/{company}/price-lists/{priceList}",
@@ -2290,6 +2407,36 @@
         "project"
       ],
       "command": "factuarea projects delete"
+    },
+    {
+      "operation_id": "public-api.v1.promotions.show",
+      "method": "GET",
+      "path": "/companies/{company}/promotions/{promotion}",
+      "path_params": [
+        "company",
+        "promotion"
+      ],
+      "command": "factuarea promotions show"
+    },
+    {
+      "operation_id": "public-api.v1.promotions.update",
+      "method": "PATCH",
+      "path": "/companies/{company}/promotions/{promotion}",
+      "path_params": [
+        "company",
+        "promotion"
+      ],
+      "command": "factuarea promotions update"
+    },
+    {
+      "operation_id": "public-api.v1.promotions.delete",
+      "method": "DELETE",
+      "path": "/companies/{company}/promotions/{promotion}",
+      "path_params": [
+        "company",
+        "promotion"
+      ],
+      "command": "factuarea promotions delete"
     },
     {
       "operation_id": "public-api.v1.purchase_invoices.show",
@@ -3353,6 +3500,24 @@
       "command": "factuarea taxes active"
     },
     {
+      "operation_id": "public-api.v1.additional-nif-seats.status",
+      "method": "GET",
+      "path": "/accounts/{account}/additional-nif-seats",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea additional-nif-seats status"
+    },
+    {
+      "operation_id": "public-api.v1.additional-nif-seats.update",
+      "method": "PATCH",
+      "path": "/accounts/{account}/additional-nif-seats",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea additional-nif-seats update"
+    },
+    {
       "operation_id": "public-api.v1.agenda.list",
       "method": "GET",
       "path": "/companies/{company}/agenda",
@@ -3617,6 +3782,15 @@
       "command": "factuarea employee-seats status"
     },
     {
+      "operation_id": "public-api.v1.employee-seats.update",
+      "method": "PATCH",
+      "path": "/accounts/{account}/employee-seats",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea employee-seats update"
+    },
+    {
       "operation_id": "public-api.v1.employee-seats.preview",
       "method": "GET",
       "path": "/accounts/{account}/employee-seats/preview",
@@ -3746,6 +3920,16 @@
         "company"
       ],
       "command": "factuarea time-balances monthly-sheet"
+    },
+    {
+      "operation_id": "public-api.v1.packs.price_breakdown",
+      "method": "GET",
+      "path": "/companies/{company}/packs/{pack}/price-breakdown",
+      "path_params": [
+        "company",
+        "pack"
+      ],
+      "command": "factuarea packs price-breakdown"
     },
     {
       "operation_id": "public-api.v1.payouts.show",
@@ -5255,6 +5439,15 @@
       "command": "factuarea pdf-artifacts prepare"
     },
     {
+      "operation_id": "public-api.v1.additional-nif-seats.preview",
+      "method": "GET",
+      "path": "/accounts/{account}/additional-nif-seats/preview",
+      "path_params": [
+        "account"
+      ],
+      "command": "factuarea additional-nif-seats preview"
+    },
+    {
       "operation_id": "public-api.v1.contacts.preview_import",
       "method": "POST",
       "path": "/companies/{company}/contacts/import/preview",
@@ -5742,6 +5935,16 @@
         "identity"
       ],
       "command": "factuarea pdf-commercial-identities restore"
+    },
+    {
+      "operation_id": "public-api.v1.packs.restore",
+      "method": "POST",
+      "path": "/companies/{company}/packs/{pack}/restore",
+      "path_params": [
+        "company",
+        "pack"
+      ],
+      "command": "factuarea packs restore"
     },
     {
       "operation_id": "public-api.v1.purchase_scans.restore",
@@ -6820,6 +7023,16 @@
         "company"
       ],
       "command": "factuarea verifactu settings update"
+    },
+    {
+      "operation_id": "public-api.v1.packs.images.upload",
+      "method": "POST",
+      "path": "/companies/{company}/packs/{pack}/images",
+      "path_params": [
+        "company",
+        "pack"
+      ],
+      "command": "factuarea packs images upload"
     },
     {
       "operation_id": "public-api.v1.products.gallery.upload",
